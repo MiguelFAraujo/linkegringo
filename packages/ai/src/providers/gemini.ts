@@ -257,12 +257,10 @@ export class GeminiAiProvider implements AiProvider {
       },
     });
 
-    const rawJson = extractJsonFromResponse<any>(response.text || '{}');
+    let rawJson = extractJsonFromResponse<any>(response.text || '{}');
 
-    // Strictly sanitize all em-dashes and en-dashes across rewritten content
-    if (rawJson?.rewritten) {
-      rawJson.rewritten = deepSanitizeDashes(rawJson.rewritten);
-    }
+    // Strictly sanitize all em-dashes and en-dashes across all rewritten content, critique, and summaries
+    rawJson = deepSanitizeDashes(rawJson);
 
     return profileAnalysisSchema.parse(rawJson);
   }

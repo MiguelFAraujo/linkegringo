@@ -70,11 +70,11 @@ describe('Helper Utilities', () => {
 });
 
 describe('Prompts & Deterministic Rubric', () => {
-  it('PARSE_AND_DIAGNOSE_SYSTEM_PROMPT includes 5-pillar objective rubric and 88-100 recognition', async () => {
+  it('PARSE_AND_DIAGNOSE_SYSTEM_PROMPT includes 5-pillar objective rubric and 92-100 recognition', async () => {
     const { PARSE_AND_DIAGNOSE_SYSTEM_PROMPT } = await import('./prompts.js');
     expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('Objective Scoring Rubric (5 Pillars - Deterministic Evaluation 0-100)');
     expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('Framework XYZ');
-    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('RECOGNITION OF ALREADY OPTIMIZED PROFILES (88 to 100 points)');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('RECOGNITION OF ALREADY OPTIMIZED PROFILES (92 to 100 points)');
     expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('DO NOT invent fictitious problems');
   });
 

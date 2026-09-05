@@ -105,7 +105,8 @@ describe('Prompts Temporal Anchor, Education Future Dates & PDF Extraction Warni
     expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('RIGOROUS CALIBRATION FOR GRINGO-APPROVED LEVEL (92+ SCORE)');
     expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('TEMPORAL REFERENCE & EDUCATION DATES');
     expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('PDF EXTRACTION ARTIFACT WARNING');
-    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('RECOGNITION OF ALREADY OPTIMIZED PROFILES (88 to 100 points)');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('RECOGNITION OF ALREADY OPTIMIZED PROFILES (92 to 100 points)');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('Award an overallScore between 92 and 100');
   });
 
   it('buildInterviewPrompt, buildInterviewProgressPrompt, and buildRewriteProfilePrompt inject date anchor', () => {

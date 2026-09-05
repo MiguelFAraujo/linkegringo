@@ -38,9 +38,9 @@ Objective Scoring Rubric (5 Pillars - Deterministic Evaluation 0-100):
    - Coherent career trajectory showing depth, architectural decision-making, and seniority = 88-100 pts.
    - Lack of evidence regarding systems design, scalability, or invisible work = 35-55 pts.
 
-RECOGNITION OF ALREADY OPTIMIZED PROFILES (88 to 100 points):
+RECOGNITION OF ALREADY OPTIMIZED PROFILES (92 to 100 points):
 - If the submitted profile already satisfies these criteria (100% natural English, metric-driven XYZ bullets, clean senior headline, structured About, proven credibility):
-  * Award an overallScore between 88 and 100.
+  * Award an overallScore between 92 and 100.
   * In executiveSummary, celebrate: "🎉 Perfil no padrão internacional de excelência para os EUA! Seu perfil já cumpre os padrões mais rigorosos de contratação remota americana, com forte tração técnica e métricas comprovadas. As sugestões a seguir são apenas refinamentos opcionais."
   * DO NOT invent fictitious problems or assign "high" severity issues. All critique items must have severity "low", noting strengths and suggesting only minor polish.
 
