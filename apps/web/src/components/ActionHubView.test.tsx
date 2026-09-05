@@ -150,5 +150,36 @@ describe('ActionHubView Component', () => {
     // evidenceCoverage: 91 - 37 = +54 pts
     expect(screen.getByText('+54 pts')).toBeDefined();
   });
+
+  it('renders zero and negative deltas cleanly without +- formatting for high-scoring initial profiles', () => {
+    const highInitialReview = {
+      ...MOCK_REVIEW,
+      overallScore: 94,
+      scores: {
+        searchRelevance: 95,
+        humanVoice: 95,
+        credibility: 96,
+        positioningClarity: 97,
+        evidenceCoverage: 91,
+      },
+    };
+
+    render(
+      <ActionHubView
+        originalProfile={MOCK_PROFILE}
+        initialReview={highInitialReview}
+        analysis={sampleAnalysis}
+        onStartNew={vi.fn()}
+      />,
+    );
+
+    // Initial 94, new 94 -> 0 pts (matches hero and multiple criteria)
+    const zeroBadges = screen.getAllByText('0 pts');
+    expect(zeroBadges.length).toBeGreaterThanOrEqual(1);
+    // humanVoice: 92 - 95 = -3 pts (never +-3 pts)
+    expect(screen.getByText('-3 pts')).toBeDefined();
+    expect(screen.queryByText('+-3 pts')).toBeNull();
+  });
 });
+
 

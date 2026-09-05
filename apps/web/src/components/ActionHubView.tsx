@@ -201,7 +201,7 @@ export function ActionHubView({
             <div className="flex flex-col items-center">
               <TrendingUp className="w-6 h-6 text-emerald-400 animate-bounce" />
               <span className="text-[10px] font-bold font-mono text-emerald-400 mt-1">
-                +{newScore - initialScore} pts
+                {newScore - initialScore >= 0 ? `+${newScore - initialScore}` : newScore - initialScore} pts
               </span>
             </div>
 
@@ -272,6 +272,7 @@ export function ActionHubView({
           <div className="grid grid-cols-1 gap-3.5">
             {criteriaBreakdown.map((c) => {
               const delta = c.after - c.before;
+              const deltaText = delta > 0 ? `+${delta} pts` : `${delta} pts`;
               const Icon = c.icon;
               return (
                 <div
@@ -300,10 +301,16 @@ export function ActionHubView({
                         <span className="text-emerald-400 font-bold text-sm">{c.after}</span>
                       </div>
                       <Badge
-                        variant="success"
-                        className="font-mono text-xs font-bold py-0.5 px-2 bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                        variant={delta > 0 ? 'success' : 'outline'}
+                        className={`font-mono text-xs font-bold py-0.5 px-2 ${
+                          delta > 0
+                            ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                            : delta === 0
+                            ? 'bg-slate-800 text-slate-400 border-slate-700'
+                            : 'bg-amber-500/15 text-amber-400 border-amber-500/30'
+                        }`}
                       >
-                        +{delta} pts
+                        {deltaText}
                       </Badge>
                     </div>
                   </div>
