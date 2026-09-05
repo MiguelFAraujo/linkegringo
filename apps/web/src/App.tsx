@@ -214,6 +214,7 @@ export function App() {
         plan: interviewPlan,
         answers,
         previousFacts: facts,
+        roundNumber: interviewRound,
       });
 
       // Merge newly extracted facts with existing facts
@@ -225,8 +226,13 @@ export function App() {
       }
       setFacts(mergedFacts);
 
-      // Multi-round progression: if AI determines candidate needs deeper technical evidence
-      if (progress.readyForGeneration === false && progress.questions && progress.questions.length > 0) {
+      // Multi-round progression: if AI determines candidate needs deeper technical evidence (max 2 rounds)
+      if (
+        progress.readyForGeneration === false &&
+        progress.questions &&
+        progress.questions.length > 0 &&
+        interviewRound < 2
+      ) {
         setInterviewPlan({ questions: progress.questions });
         setInterviewRound((prev) => prev + 1);
         setStep('interview');
@@ -243,6 +249,36 @@ export function App() {
 
   // User action: skip remaining questions and proceed directly to facts confirmation
   const handleSkipToFacts = () => {
+    // If skipping before facts were extracted, generate baseline facts from profile
+    if (facts.length === 0 && profile) {
+      const baselineFacts: ConfirmedFact[] = [];
+      profile.experiences.forEach((exp, i) => {
+        baselineFacts.push({
+          id: `profile-exp-${i}`,
+          statement: `Atuou como ${exp.title} na empresa ${exp.companyName}${
+            exp.description ? `: ${exp.description.replace(/\n+/g, ' ').slice(0, 140)}` : ''
+          }`,
+          source: 'linkedin-profile',
+          sourceReference: `Experiência: ${exp.companyName}`,
+          confirmed: true,
+        });
+      });
+      if (profile.skills && profile.skills.length > 0) {
+        baselineFacts.push({
+          id: 'profile-skills-baseline',
+          statement: `Domínio comprovado das tecnologias: ${profile.skills
+            .slice(0, 8)
+            .map((s) => s.name)
+            .join(', ')}`,
+          source: 'linkedin-profile',
+          sourceReference: 'Skills do Perfil',
+          confirmed: true,
+        });
+      }
+      if (baselineFacts.length > 0) {
+        setFacts(baselineFacts);
+      }
+    }
     setStep('facts');
   };
 
@@ -371,6 +407,7 @@ export function App() {
 
         {step === 'interview' && interviewPlan && (
           <InterviewView
+            key={`interview-round-${interviewRound}`}
             plan={interviewPlan}
             onSubmitAnswers={handleSubmitAnswers}
             onSkipToFacts={handleSkipToFacts}

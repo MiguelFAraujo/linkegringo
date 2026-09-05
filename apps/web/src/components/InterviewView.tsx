@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -36,9 +36,15 @@ export function InterviewView({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answersMap, setAnswersMap] = useState<Record<string, { value: string; skipped: boolean }>>({});
 
+  // Reset question index and answers when round or plan changes
+  useEffect(() => {
+    setCurrentIndex(0);
+    setAnswersMap({});
+  }, [roundNumber, plan]);
+
   const currentQ = questions[currentIndex];
   const totalQuestions = questions.length;
-  const progressPercent = Math.round(((currentIndex + 1) / totalQuestions) * 100);
+  const progressPercent = totalQuestions > 0 ? Math.round(((currentIndex + 1) / totalQuestions) * 100) : 100;
 
   const currentAnswer = answersMap[currentQ?.id] || { value: '', skipped: false };
 
@@ -101,8 +107,19 @@ export function InterviewView({
 
   if (!currentQ) {
     return (
-      <div className="text-center py-12">
+      <div className="text-center py-12 space-y-4">
         <p className="text-slate-400">Nenhuma pergunta encontrada para esta rodada.</p>
+        {onSkipToFacts && (
+          <Button
+            type="button"
+            variant="default"
+            size="sm"
+            onClick={onSkipToFacts}
+            className="text-xs font-semibold"
+          >
+            Avançar direto para validação de fatos
+          </Button>
+        )}
       </div>
     );
   }
