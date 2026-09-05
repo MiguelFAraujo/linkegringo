@@ -23,7 +23,7 @@ export function InterviewGuideCard() {
       >
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-[11px] font-bold text-emerald-400 border-emerald-500/30 bg-emerald-500/10">
+            <Badge variant="outline" className="text-xs font-bold text-emerald-400 border-emerald-500/30 bg-emerald-500/10">
               <Sparkles className="w-3 h-3 mr-1 text-amber-400" /> Guia de Bolso Anti-Prolixo
             </Badge>
             <span className="text-xs text-slate-400 hidden sm:inline">Framework para Entrevistas nos EUA</span>
@@ -69,28 +69,28 @@ export function InterviewGuideCard() {
 
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
               <div className="p-3.5 rounded-xl border border-slate-800 bg-slate-950/60 space-y-1">
-                <span className="text-[11px] font-bold font-mono text-emerald-400 uppercase">1. Context</span>
+                <span className="text-xs font-bold font-mono text-emerald-400 uppercase">1. Context</span>
                 <p className="text-xs text-slate-300">
                   Em 1 frase: Qual era o sistema e a stack ("At Fintech X, we had a core payments monolith handling 2M requests/day").
                 </p>
               </div>
 
               <div className="p-3.5 rounded-xl border border-slate-800 bg-slate-950/60 space-y-1">
-                <span className="text-[11px] font-bold font-mono text-amber-400 uppercase">2. Problem</span>
+                <span className="text-xs font-bold font-mono text-amber-400 uppercase">2. Problem</span>
                 <p className="text-xs text-slate-300">
                   Qual era o gargalo crítico ("During peak hours, connection pool exhaustion caused p99 latency to spike past 2 seconds").
                 </p>
               </div>
 
               <div className="p-3.5 rounded-xl border border-slate-800 bg-slate-950/60 space-y-1">
-                <span className="text-[11px] font-bold font-mono text-teal-400 uppercase">3. Action</span>
+                <span className="text-xs font-bold font-mono text-teal-400 uppercase">3. Action</span>
                 <p className="text-xs text-slate-300">
                   O que VOCÊ projetou e implementou ("I led the migration to an asynchronous event-driven model using Kafka with idempotent consumers").
                 </p>
               </div>
 
               <div className="p-3.5 rounded-xl border border-slate-800 bg-slate-950/60 space-y-1">
-                <span className="text-[11px] font-bold font-mono text-emerald-300 uppercase">4. Result</span>
+                <span className="text-xs font-bold font-mono text-emerald-300 uppercase">4. Result</span>
                 <p className="text-xs text-slate-300">
                   O impacto mensurável entregue ("We dropped p99 latency to 85ms and had zero payment timeouts during Black Friday").
                 </p>

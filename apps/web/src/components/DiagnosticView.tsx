@@ -36,7 +36,7 @@ export function DiagnosticView({ profile, review, onProceedToObjective }: Diagno
 
   const getScoreLabel = (score: number) => {
     if (score >= 92) return 'Perfil Nível Gringo Aprovado (Padrão EUA)';
-    if (score >= 70) return 'Perfil Pronto para o Mercado Americano';
+    if (score >= 70) return 'Perfil Competitivo, mas com Ajustes Necessários';
     if (score >= 55) return 'Perfil Razoável, mas com Gargalos Críticos';
     if (score >= 40) return 'Invisível ou com Baixo Sinal de Senioridade';
     return 'Gravemente Desalinhado com Recrutadores dos EUA';
