@@ -78,6 +78,54 @@ describe('Prompts & Deterministic Rubric', () => {
     expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('DO NOT invent fictitious problems');
   });
 
+  it('PARSE_AND_DIAGNOSE_SYSTEM_PROMPT strictly prohibits false benchmarks and invented praise', async () => {
+    const { PARSE_AND_DIAGNOSE_SYSTEM_PROMPT } = await import('./prompts.js');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('STRICT PROHIBITION OF FALSE BENCHMARKS & FABRICATED PRAISE');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('um dos melhores resumos avaliados');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('top X%');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('melhor que a média');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('100% factual, strictly technical');
+  });
+
+  it('PARSE_AND_DIAGNOSE_SYSTEM_PROMPT codifies exhaustive US recruiter red flags catalog and clean section rules', async () => {
+    const { PARSE_AND_DIAGNOSE_SYSTEM_PROMPT, buildParseAndDiagnosePrompt } = await import('./prompts.js');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('EXHAUSTIVE CATALOG OF US TECH RECRUITER RED FLAGS');
+    
+    // Headline
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('Headline Red Flags:');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('Open to work');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('Passionate');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('Ninja');
+
+    // About / Summary
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('About / Summary Red Flags:');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('opening technical hook');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('generic soft skills');
+
+    // Experiences
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('Experiences Red Flags:');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('responsável por');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('STAR framework');
+
+    // Skills & Education
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('Skills & Education Red Flags:');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('Skill salad');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('basic commodity utility tools');
+
+    // Overall Career Coherence
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('Overall Career Coherence & Trajectory Red Flags');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('job hopping');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('Inflated job titles');
+
+    // Rules for sections without red flags
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('RULES FOR SECTIONS WITHOUT RED FLAGS (issues.length === 0)');
+
+    // buildParseAndDiagnosePrompt critique audit rules
+    const prompt = buildParseAndDiagnosePrompt();
+    expect(prompt).toContain('CRITIQUE AUDIT RULES:');
+    expect(prompt).toContain('US Tech Recruiter Red Flags catalog');
+  });
+
   it('REWRITE_PROFILE_SYSTEM_PROMPT prohibits invented product niches and enforces role fidelity and headline formula', async () => {
     const { REWRITE_PROFILE_SYSTEM_PROMPT } = await import('./prompts.js');
     expect(REWRITE_PROFILE_SYSTEM_PROMPT).toContain('STRICT PROHIBITION OF INVENTED PRODUCT NICHES');
