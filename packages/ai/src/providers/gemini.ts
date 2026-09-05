@@ -28,6 +28,12 @@ import {
   PARSE_AND_DIAGNOSE_SYSTEM_PROMPT,
   REWRITE_PROFILE_SYSTEM_PROMPT,
 } from '../prompts.js';
+import {
+  parseAndDiagnoseSchema as geminiParseAndDiagnoseSchema,
+  interviewPlanSchema as geminiInterviewPlanSchema,
+  interviewProgressSchema as geminiInterviewProgressSchema,
+  rewrittenProfileSchema as geminiRewrittenProfileSchema,
+} from '../schemas.js';
 
 export function cleanBase64(data: string): string {
   const commaIdx = data.indexOf(',');
@@ -126,6 +132,7 @@ export class GeminiAiProvider implements AiProvider {
     pdfBase64?: string;
     pdfText?: string;
     cvPdfBase64?: string;
+    currentDate?: string;
   }): Promise<ParseAndDiagnoseResult> {
     const parts: any[] = [];
 
@@ -148,7 +155,7 @@ export class GeminiAiProvider implements AiProvider {
     }
 
     parts.push({
-      text: buildParseAndDiagnosePrompt(input.pdfText),
+      text: buildParseAndDiagnosePrompt(input.pdfText, input.currentDate),
     });
 
     const response = await this.ai.models.generateContent({
@@ -157,6 +164,7 @@ export class GeminiAiProvider implements AiProvider {
       config: {
         systemInstruction: PARSE_AND_DIAGNOSE_SYSTEM_PROMPT,
         responseMimeType: 'application/json',
+        responseSchema: geminiParseAndDiagnoseSchema,
         temperature: 0.1,
       },
     });
@@ -171,14 +179,16 @@ export class GeminiAiProvider implements AiProvider {
   async generateInterview(input: {
     profile: Profile;
     objective: CareerObjective;
+    currentDate?: string;
   }): Promise<InterviewPlan> {
-    const prompt = buildInterviewPrompt(input.profile, input.objective);
+    const prompt = buildInterviewPrompt(input.profile, input.objective, input.currentDate);
     const response = await this.ai.models.generateContent({
       model: this.model,
       contents: prompt,
       config: {
         systemInstruction: INTERVIEW_SYSTEM_PROMPT,
         responseMimeType: 'application/json',
+        responseSchema: geminiInterviewPlanSchema,
         temperature: 0.1,
       },
     });
@@ -194,6 +204,7 @@ export class GeminiAiProvider implements AiProvider {
     answers: InterviewAnswer[];
     previousFacts: ConfirmedFact[];
     roundNumber?: number;
+    currentDate?: string;
   }): Promise<InterviewProgress> {
     const prompt = buildInterviewProgressPrompt(
       input.profile,
@@ -202,6 +213,7 @@ export class GeminiAiProvider implements AiProvider {
       input.answers,
       input.previousFacts,
       input.roundNumber,
+      input.currentDate,
     );
 
     const response = await this.ai.models.generateContent({
@@ -210,6 +222,7 @@ export class GeminiAiProvider implements AiProvider {
       config: {
         systemInstruction: INTERVIEW_PROGRESS_SYSTEM_PROMPT,
         responseMimeType: 'application/json',
+        responseSchema: geminiInterviewProgressSchema,
         temperature: 0.1,
       },
     });
@@ -223,12 +236,14 @@ export class GeminiAiProvider implements AiProvider {
     objective: CareerObjective;
     confirmedFacts: ConfirmedFact[];
     initialReview?: ProfileReview;
+    currentDate?: string;
   }): Promise<ProfileAnalysis> {
     const prompt = buildRewriteProfilePrompt(
       input.profile,
       input.objective,
       input.confirmedFacts,
       input.initialReview,
+      input.currentDate,
     );
 
     const response = await this.ai.models.generateContent({
@@ -237,6 +252,7 @@ export class GeminiAiProvider implements AiProvider {
       config: {
         systemInstruction: REWRITE_PROFILE_SYSTEM_PROMPT,
         responseMimeType: 'application/json',
+        responseSchema: geminiRewrittenProfileSchema,
         temperature: 0.1,
       },
     });
