@@ -10,6 +10,10 @@ import type {
 export const TARGET_MARKET = 'United States';
 export const TARGET_LANGUAGE = 'en';
 
+export function formatCurrentDate(date: Date = new Date()): string {
+  return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}
+
 export const PARSE_AND_DIAGNOSE_SYSTEM_PROMPT = `You are an elite LinkedIn profile strategist and US tech recruiter specializing in positioning Brazilian software engineers and tech professionals for high-paying remote roles in the United States.
 
 You will receive a LinkedIn PDF profile export (and optionally a resume/CV).
@@ -40,6 +44,22 @@ RECOGNITION OF ALREADY OPTIMIZED PROFILES (88 to 100 points):
   * In executiveSummary, celebrate: "🎉 Perfil no padrão internacional de excelência para os EUA! Seu perfil já cumpre os padrões mais rigorosos de contratação remota americana, com forte tração técnica e métricas comprovadas. As sugestões a seguir são apenas refinamentos opcionais."
   * DO NOT invent fictitious problems or assign "high" severity issues. All critique items must have severity "low", noting strengths and suggesting only minor polish.
 
+RIGOROUS CALIBRATION FOR GRINGO-APPROVED LEVEL (92+ SCORE):
+- overallScore >= 92 requires:
+  1. 100% natural, idiomatic American English.
+  2. Ultra-concise, high-signal headline: strictly senior role anchor, 3-4 core technologies, architectural scope (e.g., Distributed Systems, High-Throughput APIs), and cloud/DevOps. ZERO buzzwords ("passionate", "problem solver"), zero corporate clichés, and ZERO fabricated vertical product niches (no "CRM", "ERP", "Retail" unless explicitly supported by work history).
+  3. Structured About section with strong hook, architectural scale philosophy, and categorized tech stack.
+  4. Hard, quantifiable metrics in EVERY SINGLE professional experience bullet (XYZ / STAR framework: %, $, latency reduction in ms, requests/sec, throughput, scale).
+- Profiles in English that lack hard quantifiable metrics across experiences or have generic headlines MUST NOT receive 92+. Cap them at 85 maximum.
+- ONLY award overallScore >= 92 if the profile already demonstrates exceptional technical traction and measurable impact across all 5 pillars.
+
+TEMPORAL REFERENCE & EDUCATION DATES:
+- Evaluate candidate career chronology against the current real-world date.
+- In the Education section, future dates (e.g. 2026-2028) indicate EXPECTED graduation or completion dates. This is completely standard and standard practice on LinkedIn; NEVER penalize or flag future education dates as errors, discrepancies, or inconsistencies.
+
+PDF EXTRACTION ARTIFACT WARNING:
+- The extracted LinkedIn PDF loses paragraph breaks, delivering Summary and descriptions as a single run-on block. This is purely a technical artifact of PDF parsing, NOT how the candidate wrote it on LinkedIn. NEVER critique, penalize, or comment that the Summary is "too dense", "too long", or "lacks line breaks or whitespace". Evaluate solely the substance, positioning clarity, and evidence.
+
 Typical unoptimized profiles (Portuguese text, passive duties, missing metrics, buzzword headlines):
 - overallScore: Typically between 35 and 55.
 - executiveSummary: 2-3 direct sentences in Portuguese highlighting the exact bottlenecks.
@@ -51,8 +71,18 @@ CRITICAL RULES:
 - Clean up any PDF extraction artifacts (broken line breaks, repeated page headers).
 - Portuguese for coaching feedback, critiques, and rationale; English for role titles and technical terms.`;
 
-export function buildParseAndDiagnosePrompt(rawText?: string): string {
-  return `Analyze the candidate's LinkedIn PDF export and return a JSON object with EXACTLY this structure:
+export function buildParseAndDiagnosePrompt(rawText?: string, currentDate?: string): string {
+  const dateAnchor = currentDate ?? formatCurrentDate();
+  return `Current Real-World Date: ${dateAnchor}
+
+TEMPORAL ANCHOR & CALENDAR CONTEXT:
+Today is ${dateAnchor}. Evaluate all candidate dates with respect to this real-world reference date.
+- In the Education section, future dates (e.g. 2026-2028) indicate EXPECTED graduation or completion dates. This is completely standard on LinkedIn and MUST NEVER be flagged as an error, discrepancy, or suspicious date.
+
+PDF EXTRACTION ARTIFACT WARNING:
+The extracted LinkedIn PDF loses paragraph breaks, delivering Summary and descriptions as a single run-on block. This is purely a technical artifact of PDF parsing, NOT how the candidate wrote it on LinkedIn. NEVER critique, penalize, or comment that the Summary is "too dense", "too long", or "lacks line breaks or whitespace". Evaluate solely the substance, positioning clarity, and evidence.
+
+Analyze the candidate's LinkedIn PDF export and return a JSON object with EXACTLY this structure:
 {
   "profile": {
     "publicId": "<string or slug from linkedin url>",
@@ -162,8 +192,15 @@ Rules:
 - NEVER ask questions about any technology in "excludedTechnologies".
 - Return ONLY valid JSON.`;
 
-export function buildInterviewPrompt(profile: Profile, objective: CareerObjective): string {
-  return `Generate an adaptive interview plan for this candidate targeting "${objective.primaryRole}".
+export function buildInterviewPrompt(
+  profile: Profile,
+  objective: CareerObjective,
+  currentDate?: string,
+): string {
+  const dateAnchor = currentDate ?? formatCurrentDate();
+  return `Current Real-World Date: ${dateAnchor}
+
+Generate an adaptive interview plan for this candidate targeting "${objective.primaryRole}".
 
 Candidate Objective:
 ${JSON.stringify(objective, null, 2)}
@@ -208,8 +245,12 @@ export function buildInterviewProgressPrompt(
   answers: InterviewAnswer[],
   previousFacts: ConfirmedFact[],
   roundNumber: number = 1,
+  currentDate?: string,
 ): string {
-  return `Evaluate interview progress and extract verifiable facts.
+  const dateAnchor = currentDate ?? formatCurrentDate();
+  return `Current Real-World Date: ${dateAnchor}
+
+Evaluate interview progress and extract verifiable facts.
 
 Current Evaluation Round: Round ${roundNumber} of 2.${roundNumber >= 2 ? ' THIS IS ROUND 2 (FINAL ROUND): You MUST set readyForGeneration: true and questions: [].' : ''}
 
@@ -280,8 +321,16 @@ export function buildRewriteProfilePrompt(
   objective: CareerObjective,
   confirmedFacts: ConfirmedFact[],
   initialReview?: ProfileReview,
+  currentDate?: string,
 ): string {
-  return `Generate the final rewritten profile and new score.
+  const dateAnchor = currentDate ?? formatCurrentDate();
+  return `Current Real-World Date: ${dateAnchor}
+
+TEMPORAL REFERENCE & EDUCATION DATES:
+Today is ${dateAnchor}.
+- In the Education section, future dates indicate expected graduation or completion dates. Maintain them accurately.
+
+Generate the final rewritten profile and new score.
 
 Target Objective:
 ${JSON.stringify(objective, null, 2)}
