@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Textarea } from './ui/textarea';
 import { Progress } from './ui/progress';
 import {
-  Lightbulb,
+  Info,
   ArrowRight,
   ArrowLeft,
   SkipForward,
   CheckCircle2,
   Sparkles,
-  HelpCircle,
   Briefcase,
   FastForward,
+  MinusCircle,
 } from 'lucide-react';
 import type { InterviewAnswer, InterviewPlan } from '@linkegringo/core';
 
@@ -22,6 +22,8 @@ interface InterviewViewProps {
   onSubmitAnswers: (answers: InterviewAnswer[]) => Promise<void>;
   isLoading: boolean;
   roundNumber?: number;
+  overallScore?: number;
+  isPolishMode?: boolean;
   onSkipToFacts?: () => void;
 }
 
@@ -30,11 +32,15 @@ export function InterviewView({
   onSubmitAnswers,
   isLoading,
   roundNumber = 1,
+  overallScore,
+  isPolishMode,
   onSkipToFacts,
 }: InterviewViewProps) {
   const questions = plan.questions;
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answersMap, setAnswersMap] = useState<Record<string, { value: string; skipped: boolean }>>({});
+
+  const isElitePolish = Boolean(isPolishMode || (overallScore && overallScore >= 92));
 
   // Reset question index and answers when round or plan changes
   useEffect(() => {
@@ -61,6 +67,17 @@ export function InterviewView({
     setAnswersMap({
       ...answersMap,
       [currentQ.id]: { value: '', skipped: true },
+    });
+    if (currentIndex < totalQuestions - 1) {
+      setCurrentIndex(currentIndex + 1);
+    }
+  };
+
+  const handleNotApplicable = () => {
+    if (!currentQ) return;
+    setAnswersMap({
+      ...answersMap,
+      [currentQ.id]: { value: 'Não se aplica ao meu contexto', skipped: true },
     });
     if (currentIndex < totalQuestions - 1) {
       setCurrentIndex(currentIndex + 1);
@@ -125,36 +142,52 @@ export function InterviewView({
   }
 
   const isLastQuestion = currentIndex === totalQuestions - 1;
-  const hasAnsweredCurrent = currentAnswer.value.trim().length > 0 || currentAnswer.skipped;
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in duration-300">
       {/* Top Header & Progress */}
       <div className="space-y-2">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs text-slate-400">
-          <span className="font-semibold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            {roundNumber >= 2
+          <span className="font-semibold uppercase tracking-wider text-blue-400 flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+            {isElitePolish
+              ? 'Modo Lapidação (Elite Polish Mode)'
+              : roundNumber >= 2
               ? `Rodada ${roundNumber}: Aprofundamento de Arquitetura & Escala`
-              : `Entrevista de Coaching Técnico • Rodada ${roundNumber}`}
+              : `Entrevista de Aprofundamento • Rodada ${roundNumber}`}
           </span>
           <span className="font-mono">
             Pergunta {currentIndex + 1} de {totalQuestions}
           </span>
         </div>
-        {roundNumber >= 2 && (
-          <div className="p-3 rounded-xl bg-emerald-950/25 border border-emerald-500/20 text-xs text-emerald-300/90 leading-relaxed">
-            💡 <strong>Aprofundamento Técnico:</strong> A IA identificou pontos adicionais de métricas e arquitetura para fazer seu perfil se destacar nos EUA.
+
+        {/* Polish Mode Banner */}
+        {isElitePolish && (
+          <div className="p-3.5 rounded-xl bg-blue-950/40 border border-blue-500/30 text-xs text-blue-200 flex items-start gap-2.5">
+            <Sparkles className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <strong className="text-white">Modo Lapidação Ativo:</strong> Seu perfil já cumpre os requisitos de excelência dos EUA. Estas perguntas visam refinar nuances de arquitetura, resiliência e escala sob estresse.
+            </div>
           </div>
         )}
+
+        {roundNumber >= 2 && !isElitePolish && (
+          <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-300 leading-relaxed flex items-start gap-2">
+            <Info className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <strong>Aprofundamento Técnico:</strong> A IA identificou pontos adicionais de métricas e arquitetura para consolidar seu perfil.
+            </div>
+          </div>
+        )}
+
         <Progress value={progressPercent} />
       </div>
 
       {/* Main Question Card */}
-      <Card className="border-slate-800 bg-slate-900/80 shadow-2xl">
+      <Card className="border border-slate-800 bg-slate-900/80 shadow-2xl">
         <CardHeader className="space-y-3 pb-4">
           <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="outline" className="text-[11px] text-emerald-400 border-emerald-500/30">
+            <Badge variant="outline" className="text-[11px] text-blue-400 border-blue-500/30">
               {categoryLabels[currentQ.category] || currentQ.category}
             </Badge>
 
@@ -172,22 +205,33 @@ export function InterviewView({
         </CardHeader>
 
         <CardContent className="space-y-5">
-          {/* Coaching Tip Box */}
-          <div className="p-4 rounded-xl bg-emerald-950/30 border border-emerald-500/30 text-emerald-200/90 space-y-1.5">
-            <div className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider text-emerald-400">
-              <Lightbulb className="w-4 h-4 text-amber-400 flex-shrink-0" />
-              Por que recrutadores gringos querem saber disso?
+          {/* Criterion Box */}
+          <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 text-slate-300 space-y-1.5">
+            <div className="flex items-center gap-2 font-semibold text-xs uppercase tracking-wider text-blue-400">
+              <Info className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
+              Critério dos recrutadores dos EUA
             </div>
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed pl-6">
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed pl-5">
               {currentQ.reason}
             </p>
           </div>
 
           {/* Answer Input */}
           <div className="space-y-2">
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
-              Sua Resposta (em Português ou Inglês)
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                Sua Resposta
+              </label>
+              <button
+                type="button"
+                onClick={handleNotApplicable}
+                className="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+                title="Marcar que esta pergunta não se aplica ao seu histórico profissional"
+              >
+                <MinusCircle className="w-3.5 h-3.5 text-slate-400" />
+                <span>Não se aplica ao meu contexto</span>
+              </button>
+            </div>
 
             {currentQ.answerType === 'single-choice' && currentQ.options ? (
               <div className="space-y-2">
@@ -198,7 +242,7 @@ export function InterviewView({
                     onClick={() => handleTextChange(opt)}
                     className={`w-full text-left p-3 rounded-xl border text-xs sm:text-sm transition-all cursor-pointer ${
                       currentAnswer.value === opt
-                        ? 'border-emerald-500 bg-emerald-500/15 text-white font-medium'
+                        ? 'border-blue-500 bg-blue-500/15 text-white font-medium'
                         : 'border-slate-800 bg-slate-950/60 text-slate-300 hover:border-slate-700'
                     }`}
                   >
@@ -211,13 +255,14 @@ export function InterviewView({
                 rows={4}
                 value={currentAnswer.value}
                 onChange={(e) => handleTextChange(e.target.value)}
-                placeholder="Ex: Na migração, lidamos com ~2M req/dia e reduzimos a latência de 350ms para 80ms configurando pool de conexões e particionamento..."
-                className="text-sm leading-relaxed"
+                placeholder="Ex: Na migração, sustentamos ~2M req/dia e reduzimos a latência de 350ms para 80ms configurando pool de conexões e particionamento..."
+                className="text-sm leading-relaxed bg-slate-950/80 border-slate-700/80"
               />
             )}
 
-            <p className="text-[11px] text-slate-500">
-              💡 Não se preocupe com o inglês agora. Escreva em português se preferir; a IA transformará os fatos em inglês americano nativo.
+            <p className="text-[11px] text-slate-500 flex items-center gap-1.5">
+              <Info className="w-3 h-3 text-slate-400 flex-shrink-0" />
+              <span>Responda em português ou inglês. Os fatos técnicos serão sintetizados com precisão na reescrita final.</span>
             </p>
           </div>
 
@@ -242,7 +287,7 @@ export function InterviewView({
                 onClick={handleSkip}
                 disabled={isLoading}
                 className="text-slate-400 hover:text-slate-200 text-xs gap-1"
-                title="Pular se não se aplicar ou não lembrar de números"
+                title="Pular pergunta sem preencher"
               >
                 <SkipForward className="w-3.5 h-3.5" /> Pular pergunta
               </Button>
@@ -254,7 +299,7 @@ export function InterviewView({
                   size="sm"
                   onClick={onSkipToFacts}
                   disabled={isLoading}
-                  className="text-slate-400 hover:text-amber-300 text-xs gap-1"
+                  className="text-slate-400 hover:text-slate-200 text-xs gap-1"
                   title="Finalizar entrevista antecipadamente e avançar direto para os fatos"
                 >
                   <FastForward className="w-3.5 h-3.5" /> Finalizar entrevista antecipadamente
@@ -270,7 +315,7 @@ export function InterviewView({
                   size="lg"
                   disabled={isLoading}
                   onClick={handleFinish}
-                  className="w-full sm:w-auto font-bold gap-2 text-sm shadow-lg shadow-emerald-950/50"
+                  className="w-full sm:w-auto font-bold gap-2 text-sm bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-950/50"
                 >
                   {isLoading ? (
                     <div className="flex items-center gap-2">
@@ -279,7 +324,7 @@ export function InterviewView({
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
-                      <span>Validar Fatos Técnicos</span>
+                      <span>Revisar dados confirmados</span>
                       <CheckCircle2 className="w-4 h-4" />
                     </div>
                   )}
@@ -290,7 +335,7 @@ export function InterviewView({
                   variant="default"
                   size="default"
                   onClick={handleNext}
-                  className="w-full sm:w-auto font-semibold gap-2 text-sm"
+                  className="w-full sm:w-auto font-semibold gap-2 text-sm bg-blue-600 hover:bg-blue-500 text-white"
                 >
                   <span>Próxima</span>
                   <ArrowRight className="w-4 h-4" />
@@ -313,7 +358,7 @@ export function InterviewView({
             disabled={isLoading}
             className="text-xs gap-1.5 border-slate-700 text-slate-300 hover:text-white"
           >
-            <FastForward className="w-3.5 h-3.5 text-amber-400" />
+            <FastForward className="w-3.5 h-3.5 text-blue-400" />
             <span>Avançar direto para validação de fatos</span>
           </Button>
         </div>

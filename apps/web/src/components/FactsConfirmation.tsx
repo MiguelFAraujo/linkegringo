@@ -61,14 +61,14 @@ export function FactsConfirmation({
     <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in duration-300">
       <Card className="border-slate-800 bg-slate-900/80 shadow-2xl">
         <CardHeader className="space-y-2">
-          <div className="inline-flex items-center gap-2 text-emerald-400 text-xs font-semibold uppercase tracking-wider">
-            <ShieldCheck className="w-4 h-4" /> Passo 4: Garantia Anti-Alucinação
+          <div className="inline-flex items-center gap-2 text-blue-400 text-xs font-semibold uppercase tracking-wider">
+            <ShieldCheck className="w-4 h-4" /> Validação Factual
           </div>
-          <CardTitle className="text-2xl font-black text-white">
-            Confirme os Fatos Técnicos do seu Perfil
+          <CardTitle className="text-2xl font-bold text-white">
+            Confirmação de dados extraídos
           </CardTitle>
           <CardDescription className="text-slate-300">
-            A IA nunca inventará empresas ou métricas falsas. Apenas os fatos marcados como verdadeiros abaixo serão usados na reescrita final em inglês.
+            Apenas os fatos técnicos confirmados abaixo serão incorporados na versão em inglês do seu perfil.
           </CardDescription>
         </CardHeader>
 
@@ -177,17 +177,16 @@ export function FactsConfirmation({
               size="lg"
               disabled={confirmedCount === 0 || isLoading}
               onClick={handleSubmit}
-              className="w-full sm:w-auto font-bold gap-2 text-sm shadow-xl shadow-emerald-950/60"
+              className="w-full sm:w-auto font-bold gap-2 text-sm bg-blue-600 hover:bg-blue-500 text-white shadow-xl shadow-blue-950/60"
             >
               {isLoading ? (
                 <div className="flex items-center gap-2">
                   <div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                  <span>Gerando Perfil em Inglês Nativo...</span>
+                  <span>Gerando Perfil em Inglês...</span>
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-amber-300" />
-                  <span>Gerar Perfil Otimizado (Hub de Ação)</span>
+                  <span>Gerar perfil em inglês</span>
                   <ArrowRight className="w-4 h-4" />
                 </div>
               )}

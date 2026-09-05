@@ -25,6 +25,7 @@ import type { Profile, ProfileAnalysis, ProfileReview } from '@linkegringo/core'
 import { copyToClipboard, fireConfetti } from '@/lib/file-utils';
 import { InterviewGuideCard } from './InterviewGuideCard';
 import { FormattedText } from './ui/formatted-text';
+import { CandidateAvatar } from './ui/candidate-avatar';
 
 interface ActionHubViewProps {
   originalProfile: Profile;
@@ -171,16 +172,35 @@ export function ActionHubView({
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-300 pb-12">
       {/* Score Evolution Hero */}
-      <Card className="border-emerald-500/40 bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950/40 shadow-2xl p-6 sm:p-8">
+      <Card className="border border-slate-800 bg-slate-900/80 shadow-2xl p-6 sm:p-8">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
-          <div className="space-y-2">
-            <Badge variant="success" className="gap-1.5 py-1 px-3 text-xs">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              Perfil Transformado com Sucesso!
-            </Badge>
-            <h1 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
-              Evolução da Nota do seu Perfil
-            </h1>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3.5 justify-center sm:justify-start">
+              <CandidateAvatar
+                publicId={originalProfile.publicId}
+                name={`${originalProfile.firstName || ''} ${originalProfile.lastName || ''}`.trim()}
+                size="lg"
+                className="ring-2 ring-slate-800"
+              />
+              <div className="text-left">
+                <h2 className="text-base font-bold text-white">
+                  {originalProfile.firstName} {originalProfile.lastName}
+                </h2>
+                <p className="text-xs text-blue-400 font-medium">
+                  {analysis.profileDirection.primaryRole || analysis.profileDirection.positioning}
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <Badge variant="success" className="gap-1.5 py-0.5 px-2.5 text-xs bg-blue-500/10 text-blue-300 border-blue-500/30">
+                <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+                Perfil Otimizado com Sucesso
+              </Badge>
+              <h1 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+                Perfil Otimizado
+              </h1>
+            </div>
             <FormattedText
               text={analysis.executiveSummary}
               as="p"
@@ -359,9 +379,9 @@ export function ActionHubView({
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <ListChecks className="w-5 h-5 text-emerald-400" />
+                <ListChecks className="w-5 h-5 text-blue-400" />
                 <CardTitle className="text-lg sm:text-xl text-white">
-                  Checklist de 5 Minutos no LinkedIn
+                  Passos para atualizar o LinkedIn
                 </CardTitle>
               </div>
               <CardDescription className="text-xs sm:text-sm text-slate-400">

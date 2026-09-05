@@ -16,9 +16,9 @@ describe('DiagnosticView Component', () => {
     );
 
     expect(screen.getByText('42')).toBeDefined();
-    expect(screen.queryByText(/🎉 Perfil Nível Gringo Aprovado/i)).toBeNull();
+    expect(screen.queryByText(/Perfil Aprovado para Vagas nos EUA/i)).toBeNull();
     expect(screen.getByText(/Otimizar Perfil/i)).toBeDefined();
-    expect(screen.getByText(/Definir Objetivo & Avançar/i)).toBeDefined();
+    expect(screen.getByText(/Avançar para a entrevista/i)).toBeDefined();
   });
 
   it('does NOT render celebratory banner when score is 91 (under 92 cutoff)', () => {
@@ -37,7 +37,7 @@ describe('DiagnosticView Component', () => {
     );
 
     expect(screen.getByText('91')).toBeDefined();
-    expect(screen.queryByText(/🎉 Perfil Nível Gringo Aprovado/i)).toBeNull();
+    expect(screen.queryByText(/Perfil Aprovado para Vagas nos EUA/i)).toBeNull();
     expect(screen.getByText(/Otimizar Perfil/i)).toBeDefined();
   });
 
@@ -53,7 +53,7 @@ describe('DiagnosticView Component', () => {
         positioningClarity: 92,
         evidenceCoverage: 89,
       },
-      executiveSummary: '🎉 Perfil no padrão internacional de excelência para os EUA!',
+      executiveSummary: 'Perfil no padrão internacional de excelência para os EUA!',
       critique: [
         {
           section: 'Headline',
@@ -75,9 +75,9 @@ describe('DiagnosticView Component', () => {
 
     expect(screen.getByText('92')).toBeDefined();
     // Celebratory badge and banner should be present
-    const approvedBadges = screen.getAllByText(/🎉 Perfil Nível Gringo Aprovado/i);
+    const approvedBadges = screen.getAllByText(/Perfil Aprovado para Vagas nos EUA/i);
     expect(approvedBadges.length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText(/Seu perfil já cumpre os padrões de contratação dos EUA!/i)).toBeDefined();
+    expect(screen.getByText(/Seu perfil já cumpre os padrões de contratação dos EUA/i)).toBeDefined();
     expect(screen.getByText(/Lapidar Perfil/i)).toBeDefined();
     expect(screen.getByText(/Lapidar Detalhes & Avançar/i)).toBeDefined();
 

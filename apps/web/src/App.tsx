@@ -4,7 +4,6 @@ import { OnboardingModal } from './components/OnboardingModal';
 import { ApiKeyDialog } from './components/ApiKeyDialog';
 import { FileUploadDropzone } from './components/FileUploadDropzone';
 import { DiagnosticView } from './components/DiagnosticView';
-import { ObjectiveForm } from './components/ObjectiveForm';
 import { InterviewView } from './components/InterviewView';
 import { FactsConfirmation } from './components/FactsConfirmation';
 import { ActionHubView } from './components/ActionHubView';
@@ -34,7 +33,7 @@ import type {
   ProfileReview,
 } from '@linkegringo/core';
 
-export type FlowStep = 'upload' | 'diagnostic' | 'objective' | 'interview' | 'facts' | 'action-hub';
+export type FlowStep = 'upload' | 'diagnostic' | 'interview' | 'facts' | 'action-hub';
 
 interface SessionState {
   step: FlowStep;
@@ -78,9 +77,9 @@ export function App() {
       if (safeStep === 'action-hub' && !saved.analysis) {
         safeStep = saved.facts && saved.facts.length > 0 ? 'facts' : 'diagnostic';
       } else if (safeStep === 'facts' && (!saved.facts || saved.facts.length === 0)) {
-        safeStep = saved.interviewPlan ? 'interview' : 'objective';
+        safeStep = saved.interviewPlan ? 'interview' : 'diagnostic';
       } else if (safeStep === 'interview' && !saved.interviewPlan) {
-        safeStep = 'objective';
+        safeStep = 'diagnostic';
       }
 
       setStep(safeStep);
@@ -128,6 +127,7 @@ export function App() {
     pdfBase64: string;
     cvPdfBase64?: string;
     fileName: string;
+    targetRole?: string;
   }) => {
     setIsLoading(true);
     setErrorMessage(null);
@@ -137,11 +137,21 @@ export function App() {
       const result = await provider.parseAndDiagnose({
         pdfBase64: files.pdfBase64,
         cvPdfBase64: files.cvPdfBase64,
+        targetRole: files.targetRole,
         currentDate: formatCurrentDate(),
       });
 
       setProfile(result.profile);
       setReview(result.review);
+      if (files.targetRole) {
+        setObjective({
+          targetMarket: 'United States',
+          primaryRole: files.targetRole,
+          seniority: 'senior',
+          workPreference: 'remote',
+          excludedTechnologies: [],
+        });
+      }
       setStep('diagnostic');
     } catch (err: any) {
       console.error('Erro na análise do perfil:', err);
@@ -154,7 +164,7 @@ export function App() {
   };
 
   // Instant Demo Mode
-  const handleLoadDemo = async () => {
+  const handleLoadDemo = async (targetRole?: string) => {
     setIsLoading(true);
     setErrorMessage(null);
     setProviderId('demo');
@@ -162,9 +172,16 @@ export function App() {
 
     try {
       const provider = createAiProvider('demo');
-      const result = await provider.parseAndDiagnose({});
+      const result = await provider.parseAndDiagnose({ targetRole });
       setProfile(result.profile);
       setReview(result.review);
+      setObjective({
+        targetMarket: 'United States',
+        primaryRole: targetRole || result.review.profileDirection.primaryRole,
+        seniority: 'senior',
+        workPreference: 'remote',
+        excludedTechnologies: [],
+      });
       setStep('diagnostic');
     } catch (err: any) {
       console.error('Erro no modo demo:', err);
@@ -174,16 +191,20 @@ export function App() {
     }
   };
 
-  // Step 2 ➔ Step 3: From Raio-X to Objective
-  const handleProceedToObjective = () => {
-    setStep('objective');
-  };
-
-  // Step 3 ➔ Step 4: From Objective to Interview
-  const handleSubmitObjective = async (newObjective: CareerObjective) => {
-    if (!profile) return;
+  // Step 2 ➔ Step 3: From Diagnostic directly to Interview (Eliminating intermediate Objective step)
+  const handleProceedToInterview = async (chosenRole?: string) => {
+    if (!profile || !review) return;
     setIsLoading(true);
     setErrorMessage(null);
+
+    const primaryRole = chosenRole || objective?.primaryRole || review.profileDirection?.primaryRole || 'Senior Software Engineer';
+    const newObjective: CareerObjective = {
+      targetMarket: review.targetMarket || 'United States',
+      primaryRole,
+      seniority: 'senior',
+      workPreference: 'remote',
+      excludedTechnologies: [],
+    };
     setObjective(newObjective);
 
     try {
@@ -191,6 +212,7 @@ export function App() {
       const plan = await provider.generateInterview({
         profile,
         objective: newObjective,
+        review,
         currentDate: formatCurrentDate(),
       });
 
@@ -205,7 +227,7 @@ export function App() {
     }
   };
 
-  // Step 4 ➔ Step 5: Submit Interview Answers to Facts or Next Round
+  // Step 3 ➔ Step 4: Submit Interview Answers to Facts or Next Round
   const handleSubmitAnswers = async (answers: InterviewAnswer[]) => {
     if (!profile || !objective || !interviewPlan) return;
     setIsLoading(true);
@@ -289,18 +311,26 @@ export function App() {
     setStep('facts');
   };
 
-  // Step 5 ➔ Step 6: Confirm Facts and Generate Action Hub Profile
+  // Step 4 ➔ Step 5: Confirm Facts and Generate Action Hub Profile
   const handleConfirmFactsAndGenerate = async (confirmedFacts: ConfirmedFact[]) => {
-    if (!profile || !objective) return;
+    if (!profile) return;
     setIsLoading(true);
     setErrorMessage(null);
     setFacts(confirmedFacts);
+
+    const activeObjective: CareerObjective = objective || {
+      targetMarket: review?.targetMarket || 'United States',
+      primaryRole: review?.profileDirection?.primaryRole || 'Senior Software Engineer',
+      seniority: 'senior',
+      workPreference: 'remote',
+      excludedTechnologies: [],
+    };
 
     try {
       const provider = getActiveProvider();
       const finalAnalysis = await provider.generateRewrittenProfile({
         profile,
-        objective,
+        objective: activeObjective,
         confirmedFacts,
         initialReview: review || undefined,
         currentDate: formatCurrentDate(),
@@ -365,7 +395,7 @@ export function App() {
   const hasActiveSession = Boolean(profile && review);
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
+    <div className="min-h-screen flex flex-col bg-[#0B0F17] text-slate-100">
       <Header
         apiKey={apiKey}
         providerId={providerId}
@@ -385,7 +415,7 @@ export function App() {
             <button
               type="button"
               onClick={() => setErrorMessage(null)}
-              className="text-rose-400 hover:text-white font-bold px-2 py-1"
+              className="text-rose-400 hover:text-white font-bold px-2 py-1 cursor-pointer"
             >
               Fechar
             </button>
@@ -408,16 +438,8 @@ export function App() {
           <DiagnosticView
             profile={profile}
             review={review}
-            onProceedToObjective={handleProceedToObjective}
-          />
-        )}
-
-        {step === 'objective' && review && (
-          <ObjectiveForm
-            initialReview={review}
-            onSubmitObjective={handleSubmitObjective}
-            onBack={() => setStep('diagnostic')}
-            isLoading={isLoading}
+            onProceedToInterview={handleProceedToInterview}
+            onProceedToObjective={handleProceedToInterview}
           />
         )}
 
@@ -429,6 +451,8 @@ export function App() {
             onSkipToFacts={handleSkipToFacts}
             isLoading={isLoading}
             roundNumber={interviewRound}
+            overallScore={review?.overallScore}
+            isPolishMode={Boolean(review && review.overallScore >= 92)}
           />
         )}
 

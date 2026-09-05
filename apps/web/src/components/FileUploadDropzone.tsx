@@ -1,8 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
+import { Input } from './ui/input';
 import {
-  UploadCloud,
   FileText,
   FileCheck,
   X,
@@ -11,16 +11,27 @@ import {
   ShieldCheck,
   AlertCircle,
   Plus,
+  Info,
+  Briefcase,
 } from 'lucide-react';
 import { fileToBase64 } from '@/lib/file-utils';
+
+export const QUICK_TARGET_ROLES = [
+  'Senior Backend Engineer',
+  'Senior Full Stack Engineer',
+  'Senior Frontend Engineer',
+  'Staff Engineer',
+  'Mobile Engineer (iOS/Android)',
+];
 
 interface FileUploadDropzoneProps {
   onAnalyze: (files: {
     pdfBase64: string;
     cvPdfBase64?: string;
     fileName: string;
+    targetRole?: string;
   }) => Promise<void>;
-  onLoadDemo: () => void;
+  onLoadDemo: (targetRole?: string) => void;
   isLoading: boolean;
   onOpenApiKeyDialog: () => void;
   hasApiKey: boolean;
@@ -37,6 +48,7 @@ export function FileUploadDropzone({
 }: FileUploadDropzoneProps) {
   const [linkedinFile, setLinkedinFile] = useState<File | null>(null);
   const [cvFile, setCvFile] = useState<File | null>(null);
+  const [targetRole, setTargetRole] = useState('Senior Backend Engineer');
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -115,6 +127,7 @@ export function FileUploadDropzone({
         pdfBase64,
         cvPdfBase64,
         fileName: linkedinFile.name,
+        targetRole: targetRole.trim() || undefined,
       });
     } catch (err: any) {
       console.error('Erro ao ler arquivos:', err);
@@ -132,36 +145,74 @@ export function FileUploadDropzone({
     <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in duration-300">
       {/* Hero Intro */}
       <div className="text-center space-y-3">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-semibold border border-emerald-500/20">
-          <Sparkles className="w-3.5 h-3.5" />
-          IA Especializada em Vagas Internacionais para Brasileiros
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-semibold border border-blue-500/20">
+          <ShieldCheck className="w-3.5 h-3.5" />
+          Posicionamento Técnico Internacional
         </div>
         <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
           Destrave seu Perfil do LinkedIn para{' '}
-          <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
+          <span className="text-blue-400">
             Recrutadores dos EUA
           </span>
         </h1>
         <p className="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto">
-          Faça o upload do seu perfil em PDF. Descubra sua nota atual (Raio-X), passe por uma entrevista adaptativa com dicas de coaching e receba o perfil pronto em inglês nativo.
+          Faça o upload do seu perfil em PDF e defina seu cargo-alvo. Receba um diagnóstico técnico detalhado, passe pela entrevista de aprofundamento e receba o perfil pronto em inglês nativo.
         </p>
       </div>
 
       {/* Main Dropzone Card */}
-      <Card className="border-2 border-dashed border-slate-800 hover:border-slate-700 bg-slate-900/60 transition-all shadow-2xl">
+      <Card className="border border-slate-800 bg-slate-900/60 shadow-2xl">
         <CardContent className="p-6 sm:p-8 space-y-6">
+          {/* Target Role Selector */}
+          <div className="space-y-2.5 p-4 rounded-xl border border-slate-800 bg-slate-950/50">
+            <div className="flex items-center justify-between">
+              <label htmlFor="target-role" className="text-xs font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                <Briefcase className="w-3.5 h-3.5 text-blue-400" />
+                Cargo Alvo nos EUA
+              </label>
+              <span className="text-[11px] text-slate-500">Alinha o escrutínio e as palavras-chave</span>
+            </div>
+
+            <Input
+              id="target-role"
+              type="text"
+              value={targetRole}
+              onChange={(e) => setTargetRole(e.target.value)}
+              placeholder="Ex: Senior Backend Engineer, Senior Full Stack Engineer..."
+              className="text-sm bg-slate-900/90 border-slate-700/80 focus-visible:border-blue-500"
+            />
+
+            <div className="flex flex-wrap items-center gap-1.5 pt-1">
+              <span className="text-[11px] text-slate-400 mr-1">Sugestões rápidas:</span>
+              {QUICK_TARGET_ROLES.map((role) => (
+                <button
+                  key={role}
+                  type="button"
+                  onClick={() => setTargetRole(role)}
+                  className={`px-2.5 py-1 rounded-lg text-xs transition-colors border cursor-pointer ${
+                    targetRole === role
+                      ? 'bg-blue-600/20 text-blue-300 border-blue-500/40 font-medium'
+                      : 'bg-slate-900/60 text-slate-400 hover:text-slate-200 border-slate-800 hover:border-slate-700'
+                  }`}
+                >
+                  {role}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Primary Upload: LinkedIn PDF */}
           <div
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
             onClick={() => !linkedinFile && linkedinInputRef.current?.click()}
-            className={`relative rounded-2xl p-8 border-2 transition-all flex flex-col items-center justify-center text-center cursor-pointer ${
+            className={`relative rounded-2xl p-8 border-2 border-dashed transition-all flex flex-col items-center justify-center text-center cursor-pointer ${
               isDragging
-                ? 'border-emerald-500 bg-emerald-500/10 scale-[1.01]'
+                ? 'border-blue-500 bg-blue-500/10 scale-[1.01]'
                 : linkedinFile
-                ? 'border-emerald-500/50 bg-emerald-950/20 cursor-default'
-                : 'border-slate-700/80 bg-slate-900/80 hover:border-emerald-500/50 hover:bg-slate-850'
+                ? 'border-blue-500/50 bg-blue-950/20 cursor-default'
+                : 'border-slate-700/80 bg-slate-900/80 hover:border-blue-500/50 hover:bg-slate-850'
             }`}
           >
             <input
@@ -175,7 +226,7 @@ export function FileUploadDropzone({
             {linkedinFile ? (
               <div className="w-full flex items-center justify-between gap-4 p-2">
                 <div className="flex items-center gap-3 text-left overflow-hidden">
-                  <div className="h-12 w-12 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0">
+                  <div className="h-12 w-12 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center flex-shrink-0">
                     <FileCheck className="h-6 w-6" />
                   </div>
                   <div className="truncate">
@@ -202,19 +253,20 @@ export function FileUploadDropzone({
               </div>
             ) : (
               <div className="space-y-3">
-                <div className="h-16 w-16 mx-auto rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center shadow-inner">
-                  <UploadCloud className="h-8 w-8" />
+                <div className="h-14 w-14 mx-auto rounded-2xl bg-blue-500/10 text-blue-400 flex items-center justify-center shadow-inner">
+                  <FileText className="h-7 w-7" />
                 </div>
                 <div>
-                  <p className="font-bold text-lg text-white">
+                  <p className="font-bold text-base text-white">
                     Arraste o PDF do seu LinkedIn aqui
                   </p>
-                  <p className="text-sm text-slate-400 mt-1">
-                    ou clique para procurar no seu computador
+                  <p className="text-xs text-slate-400 mt-1">
+                    ou clique para selecionar no computador
                   </p>
                 </div>
-                <div className="inline-flex items-center gap-1.5 text-xs text-slate-500 bg-slate-950/60 px-3 py-1 rounded-full border border-slate-800">
-                  <span>💡 No LinkedIn: Perfil ➔ Mais ➔ Salvar como PDF</span>
+                <div className="inline-flex items-center gap-1.5 text-xs text-slate-400 bg-slate-950/60 px-3 py-1 rounded-full border border-slate-800">
+                  <Info className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                  <span>No LinkedIn: Perfil ➔ Mais ➔ Salvar como PDF</span>
                 </div>
               </div>
             )}
@@ -233,7 +285,7 @@ export function FileUploadDropzone({
             {cvFile ? (
               <div className="flex items-center justify-between p-3 rounded-xl border border-slate-800 bg-slate-950/40">
                 <div className="flex items-center gap-2.5 truncate">
-                  <FileText className="w-4 h-4 text-teal-400 flex-shrink-0" />
+                  <FileText className="w-4 h-4 text-blue-400 flex-shrink-0" />
                   <span className="text-xs text-slate-200 truncate">{cvFile.name}</span>
                   <span className="text-[11px] text-slate-500">({formatFileSize(cvFile.size)})</span>
                 </div>
@@ -254,7 +306,7 @@ export function FileUploadDropzone({
                 className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-slate-800 hover:border-slate-700 bg-slate-950/30 text-xs text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Adicionar Currículo em PDF adicional (Opcional para enriquecer métricas)</span>
+                <span>Adicionar Currículo em PDF (Opcional para enriquecer métricas)</span>
               </button>
             )}
           </div>
@@ -272,7 +324,7 @@ export function FileUploadDropzone({
             <Button
               type="button"
               variant="outline"
-              onClick={onLoadDemo}
+              onClick={() => onLoadDemo(targetRole || undefined)}
               className="w-full sm:w-auto text-amber-400 hover:text-amber-300 border-amber-500/30 hover:bg-amber-500/10 text-xs"
             >
               <Sparkles className="w-4 h-4" />
@@ -285,16 +337,16 @@ export function FileUploadDropzone({
               size="lg"
               disabled={!linkedinFile || isLoading}
               onClick={handleSubmit}
-              className="w-full sm:w-auto font-bold text-sm shadow-lg shadow-emerald-950/50"
+              className="w-full sm:w-auto font-bold text-sm bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-950/50"
             >
               {isLoading ? (
                 <div className="flex items-center gap-2">
                   <div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                  <span>Extraindo Perfil & Gerando Raio-X...</span>
+                  <span>Extraindo Perfil & Analisando...</span>
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <span>Iniciar Análise (Raio-X)</span>
+                  <span>Analisar Perfil</span>
                   <ArrowRight className="w-4 h-4" />
                 </div>
               )}

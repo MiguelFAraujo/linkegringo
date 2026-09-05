@@ -28,7 +28,7 @@ describe('App Component', () => {
     expect(screen.getByText(/Destrave seu Perfil do LinkedIn/i)).toBeDefined();
   });
 
-  it('runs demo mode through diagnostic, objective, and allows skipping interview to facts with populated baseline facts', async () => {
+  it('runs demo mode through diagnostic, directly to interview, and allows skipping interview to facts with populated baseline facts', async () => {
     render(<App />);
 
     // Click demo mode button
@@ -37,23 +37,15 @@ describe('App Component', () => {
 
     // Should arrive at Diagnostic view
     await waitFor(() => {
-      expect(screen.getByText(/Raio-X Inicial do LinkedIn/i)).toBeDefined();
+      expect(screen.getByText(/Diagnóstico do Perfil/i)).toBeDefined();
     });
 
-    // Advance to Objective
-    const proceedBtn = screen.getByText(/Otimizar Perfil/i);
+    // Advance to Interview directly (ObjectiveForm was eliminated)
+    const proceedBtn = screen.getByText(/Avançar para a entrevista/i);
     fireEvent.click(proceedBtn);
 
     await waitFor(() => {
-      expect(screen.getByText(/Defina seu Cargo-Alvo para os EUA/i)).toBeDefined();
-    });
-
-    // Advance to Interview
-    const startInterviewBtn = screen.getByText(/Iniciar Entrevista com Dicas de Coaching/i);
-    fireEvent.click(startInterviewBtn);
-
-    await waitFor(() => {
-      expect(screen.getByText(/Entrevista de Coaching Técnico • Rodada 1/i)).toBeDefined();
+      expect(screen.getByText(/Entrevista de Aprofundamento • Rodada 1/i)).toBeDefined();
     });
 
     // Skip interview early via "Finalizar entrevista antecipadamente"
@@ -62,12 +54,11 @@ describe('App Component', () => {
 
     // Should transition to Facts Confirmation with baseline facts extracted from profile
     await waitFor(() => {
-      expect(screen.getByText(/Passo 4: Garantia Anti-Alucinação/i)).toBeDefined();
-      expect(screen.getByText(/Confirme os Fatos Técnicos do seu Perfil/i)).toBeDefined();
+      expect(screen.getByText(/Confirmação de dados extraídos/i)).toBeDefined();
     });
 
     // Verify facts were populated from candidate profile (not 0)
-    const generateBtn = screen.getByText(/Gerar Perfil Otimizado/i).closest('button');
+    const generateBtn = screen.getByText(/Gerar perfil em inglês/i).closest('button');
     expect(generateBtn?.hasAttribute('disabled')).toBe(false);
     expect(screen.getAllByText(/Atuou como/i).length).toBeGreaterThanOrEqual(1);
   });

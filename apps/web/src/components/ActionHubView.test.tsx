@@ -72,7 +72,7 @@ describe('ActionHubView Component', () => {
       />,
     );
 
-    expect(screen.getByText(/Checklist de 5 Minutos no LinkedIn/i)).toBeDefined();
+    expect(screen.getByText(/Passos para atualizar o LinkedIn/i)).toBeDefined();
     expect(screen.getByText(/0 \/ 5 concluídos/i)).toBeDefined();
 
     const headlineCheckbox = screen.getByText(/1\. Atualize sua Headline no LinkedIn/i);
@@ -81,7 +81,7 @@ describe('ActionHubView Component', () => {
     expect(screen.getByText(/1 \/ 5 concluídos/i)).toBeDefined();
   });
 
-  it('renders the Anti-Prolix Framework pocket guide card', () => {
+  it('renders the technical interview preparation guide card', () => {
     render(
       <ActionHubView
         originalProfile={MOCK_PROFILE}
@@ -92,9 +92,9 @@ describe('ActionHubView Component', () => {
     );
 
     expect(
-      screen.getByText(/Próximo Passo: Como Mandar Bem nas Entrevistas da Gringa/i),
+      screen.getByText(/Preparação para Entrevistas nos EUA/i),
     ).toBeDefined();
-    expect(screen.getByText(/Guia de Bolso Anti-Prolixo/i)).toBeDefined();
+    expect(screen.getByText(/Guia de Preparação Técnica/i)).toBeDefined();
     expect(screen.getByText(/1\. Context/i)).toBeDefined();
     expect(screen.getByText(/2\. Problem/i)).toBeDefined();
     expect(screen.getByText(/3\. Action/i)).toBeDefined();

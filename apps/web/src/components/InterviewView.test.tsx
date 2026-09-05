@@ -36,9 +36,9 @@ describe('InterviewView Component', () => {
       />,
     );
 
-    expect(screen.getByText(/Entrevista de Coaching Técnico • Rodada 1/i)).toBeDefined();
+    expect(screen.getByText(/Entrevista de Aprofundamento • Rodada 1/i)).toBeDefined();
     expect(screen.getByText(/Qual o volume de transações com Kafka\?/i)).toBeDefined();
-    expect(screen.getByText(/Por que recrutadores gringos querem saber disso\?/i)).toBeDefined();
+    expect(screen.getByText(/Critério dos recrutadores dos EUA/i)).toBeDefined();
     expect(screen.getByText(/Pergunta 1 de 2/i)).toBeDefined();
   });
 
@@ -91,7 +91,7 @@ describe('InterviewView Component', () => {
       />,
     );
 
-    const textarea = screen.getByPlaceholderText(/Ex: Na migração, lidamos com ~2M req\/dia/i);
+    const textarea = screen.getByPlaceholderText(/Ex: Na migração, sustentamos ~2M req\/dia/i);
     fireEvent.change(textarea, { target: { value: 'Processamos mais de 50M de eventos/dia com Kafka' } });
 
     const nextBtn = screen.getByText(/Próxima/i);
@@ -112,7 +112,7 @@ describe('InterviewView Component', () => {
     );
 
     // Advance to question 2 in round 1
-    const textarea = screen.getByPlaceholderText(/Ex: Na migração, lidamos com ~2M req\/dia/i);
+    const textarea = screen.getByPlaceholderText(/Ex: Na migração, sustentamos ~2M req\/dia/i);
     fireEvent.change(textarea, { target: { value: 'Kafka stream processing' } });
     const nextBtn = screen.getByText(/Próxima/i);
     fireEvent.click(nextBtn);
