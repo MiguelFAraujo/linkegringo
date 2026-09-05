@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createAiProvider, getAvailableProviders } from './registry.js';
 import { cleanBase64, extractJsonFromResponse } from './providers/gemini.js';
 
@@ -135,6 +135,142 @@ describe('Prompts & Deterministic Rubric', () => {
 
     expect(analysis.rewritten.headline).toContain('Senior Full Stack Engineer');
     expect(analysis.rewritten.headline).not.toContain('Senior Backend Engineer');
+  });
+});
+
+describe('fetchGeminiModels', () => {
+  it('throws error when apiKey is empty', async () => {
+    const { fetchGeminiModels } = await import('./registry.js');
+    await expect(fetchGeminiModels('')).rejects.toThrow('Chave de API do Gemini não informada.');
+    await expect(fetchGeminiModels('   ')).rejects.toThrow('Chave de API do Gemini não informada.');
+  });
+
+  it('throws error with details when API responds with error status', async () => {
+    const { fetchGeminiModels } = await import('./registry.js');
+    const originalFetch = globalThis.fetch;
+    try {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 400,
+        statusText: 'Bad Request',
+        json: async () => ({
+          error: { message: 'API key not valid. Please pass a valid API key.' },
+        }),
+        text: async () => '',
+      } as any);
+
+      await expect(fetchGeminiModels('invalid-key')).rejects.toThrow(
+        'Falha ao buscar modelos do Google Gemini (400): API key not valid.',
+      );
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it('filters non-generateContent and non-gemini models, maps badges and sorts properly', async () => {
+    const { fetchGeminiModels } = await import('./registry.js');
+    const originalFetch = globalThis.fetch;
+    try {
+      const mockApiResponse = {
+        models: [
+          {
+            name: 'models/text-embedding-004',
+            displayName: 'Text Embedding 004',
+            description: 'Embedding model',
+            supportedGenerationMethods: ['embedContent'],
+          },
+          {
+            name: 'models/imagen-3.0-generate-002',
+            displayName: 'Imagen 3',
+            description: 'Image generation',
+            supportedGenerationMethods: ['generateContent'],
+          },
+          {
+            name: 'models/gemini-1.5-flash',
+            displayName: 'Gemini 1.5 Flash',
+            description: 'Fast and versatile model',
+            supportedGenerationMethods: ['generateContent', 'countTokens'],
+            inputTokenLimit: 1048576,
+            outputTokenLimit: 8192,
+          },
+          {
+            name: 'models/gemini-2.0-flash',
+            displayName: 'Gemini 2.0 Flash',
+            description: 'Next generation multimodal',
+            supportedGenerationMethods: ['generateContent'],
+            inputTokenLimit: 1048576,
+            outputTokenLimit: 8192,
+          },
+          {
+            name: 'models/gemini-2.5-flash',
+            displayName: 'Gemini 2.5 Flash Preview',
+            description: 'Advanced reasoning preview',
+            supportedGenerationMethods: ['generateContent'],
+            inputTokenLimit: 1048576,
+            outputTokenLimit: 8192,
+          },
+          {
+            name: 'models/gemini-1.5-pro',
+            displayName: 'Gemini 1.5 Pro',
+            description: 'Complex reasoning',
+            supportedGenerationMethods: ['generateContent'],
+            inputTokenLimit: 2097152,
+            outputTokenLimit: 8192,
+          },
+        ],
+      };
+
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => mockApiResponse,
+      } as any);
+
+      const models = await fetchGeminiModels('valid-test-key');
+
+      // Only gemini models with generateContent should remain
+      expect(models.length).toBe(4);
+      expect(models.some((m) => m.id === 'text-embedding-004')).toBe(false);
+      expect(models.some((m) => m.id === 'imagen-3.0-generate-002')).toBe(false);
+
+      // Verify IDs have stripped prefix
+      expect(models.map((m) => m.id)).toEqual([
+        'gemini-2.0-flash',
+        'gemini-2.5-flash',
+        'gemini-1.5-flash',
+        'gemini-1.5-pro',
+      ]);
+
+      // Check badges
+      const flash20 = models.find((m) => m.id === 'gemini-2.0-flash');
+      expect(flash20?.badge).toBe('Recomendado');
+      expect(flash20?.inputTokenLimit).toBe(1048576);
+
+      const flash25 = models.find((m) => m.id === 'gemini-2.5-flash');
+      expect(flash25?.badge).toBe('Experimental');
+
+      const flash15 = models.find((m) => m.id === 'gemini-1.5-flash');
+      expect(flash15?.badge).toBe('Estável');
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it('returns empty array when API returns no models', async () => {
+    const { fetchGeminiModels } = await import('./registry.js');
+    const originalFetch = globalThis.fetch;
+    try {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ models: [] }),
+      } as any);
+
+      const result = await fetchGeminiModels('test-key');
+      expect(result).toEqual([]);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 });
 

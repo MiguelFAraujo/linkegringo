@@ -101,24 +101,153 @@ export function extractJsonFromResponse<T = unknown>(text: string): T {
   return JSON.parse(cleaned) as T;
 }
 
+export interface GeminiProviderOptions {
+  apiKey: string;
+  model?: string;
+  retryDelayMs?: number;
+}
+
+export function isTransientOrHighDemandError(err: any): boolean {
+  if (!err) return false;
+  const str = String(
+    err?.message || err?.statusText || err?.status || (typeof err === 'string' ? err : ''),
+  ).toLowerCase();
+  const code = Number(err?.status || err?.code || err?.error?.code);
+  return (
+    code === 503 ||
+    code === 429 ||
+    str.includes('503') ||
+    str.includes('429') ||
+    str.includes('high demand') ||
+    str.includes('unavailable') ||
+    str.includes('temporarily') ||
+    str.includes('overloaded') ||
+    str.includes('spikes in demand') ||
+    str.includes('resource has been exhausted') ||
+    str.includes('quota') ||
+    str.includes('rate limit')
+  );
+}
+
+export function isAuthError(err: any): boolean {
+  if (!err) return false;
+  const str = String(
+    err?.message || err?.statusText || err?.status || (typeof err === 'string' ? err : ''),
+  ).toLowerCase();
+  const code = Number(err?.status || err?.code || err?.error?.code);
+  return (
+    code === 401 ||
+    code === 403 ||
+    str.includes('api_key_invalid') ||
+    str.includes('api key not valid') ||
+    str.includes('invalid api key') ||
+    str.includes('permission_denied')
+  );
+}
+
+export function getFallbackModels(primaryModel: string): string[] {
+  const defaults = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.5-flash'];
+  const list = [primaryModel, ...defaults];
+  return Array.from(new Set(list));
+}
+
 export class GeminiAiProvider implements AiProvider {
   readonly id = 'gemini';
-  readonly name = 'Google Gemini 2.5 Flash';
   private ai: GoogleGenAI;
   private model: string;
+  private retryDelayMs: number;
 
-  constructor(config: { apiKey: string; model?: string }) {
+  constructor(config: GeminiProviderOptions) {
     if (!config.apiKey) {
       throw new Error('Chave de API do Gemini não informada.');
     }
     this.ai = new GoogleGenAI({ apiKey: config.apiKey });
-    this.model = config.model || 'gemini-2.5-flash';
+    this.model = config.model || 'gemini-2.0-flash';
+    this.retryDelayMs = typeof config.retryDelayMs === 'number' ? config.retryDelayMs : 1500;
+  }
+
+  get name(): string {
+    return `Google Gemini (${this.model})`;
+  }
+
+  getModel(): string {
+    return this.model;
+  }
+
+  private async executeGenerateContent(params: {
+    contents: any;
+    config?: any;
+  }): Promise<any> {
+    const candidateModels = getFallbackModels(this.model);
+    const maxRetriesPerModel = 2; // Up to 3 attempts per model
+    let lastError: any = null;
+
+    for (let mIdx = 0; mIdx < candidateModels.length; mIdx++) {
+      const candidate = candidateModels[mIdx];
+
+      for (let attempt = 0; attempt <= maxRetriesPerModel; attempt++) {
+        try {
+          const response = await this.ai.models.generateContent({
+            model: candidate,
+            contents: params.contents,
+            config: params.config,
+          });
+
+          // If a contingency model succeeded, keep it as active model for subsequent calls
+          if (candidate !== this.model) {
+            console.info(
+              `[GeminiAiProvider] Modelo de contingência "${candidate}" respondeu com sucesso. Mantendo este modelo para os próximos passos.`,
+            );
+            this.model = candidate;
+          }
+
+          return response;
+        } catch (err: any) {
+          lastError = err;
+
+          if (isAuthError(err)) {
+            throw new Error(
+              'Chave de API do Gemini inválida ou sem permissão. Verifique sua chave no Google AI Studio (aistudio.google.com).',
+            );
+          }
+
+          if (!isTransientOrHighDemandError(err)) {
+            throw err;
+          }
+
+          console.warn(
+            `[GeminiAiProvider] Erro transitório / alta demanda no modelo "${candidate}" (tentativa ${attempt + 1}/${maxRetriesPerModel + 1}):`,
+            err?.message || err,
+          );
+
+          if (attempt < maxRetriesPerModel) {
+            const delay = this.retryDelayMs * Math.pow(2, attempt) + Math.random() * 300;
+            await new Promise((resolve) => setTimeout(resolve, delay));
+            continue;
+          }
+
+          if (mIdx < candidateModels.length - 1) {
+            const nextCandidate = candidateModels[mIdx + 1];
+            console.warn(
+              `[GeminiAiProvider] Modelo "${candidate}" sobrecarregado após tentativas. Alternando automaticamente para contingência "${nextCandidate}"...`,
+            );
+          }
+        }
+      }
+    }
+
+    const detailMsg = lastError?.message || lastError?.status || '503 Service Unavailable';
+    throw new Error(
+      `Os servidores do Google Gemini estão sob alta demanda temporária (erro 503/429).\n` +
+      `Tentamos automaticamente os modelos ${candidateModels.join(', ')}, mas todos relataram sobrecarga momentânea.\n` +
+      `Detalhe da Google: ${detailMsg}\n\n` +
+      `Por favor, aguarde alguns instantes e clique para tentar novamente.`
+    );
   }
 
   async testConnection(): Promise<boolean> {
     try {
-      const response = await this.ai.models.generateContent({
-        model: this.model,
+      const response = await this.executeGenerateContent({
         contents: 'Ping. Responda apenas "OK".',
       });
       return Boolean(response.text && response.text.length > 0);
@@ -158,8 +287,7 @@ export class GeminiAiProvider implements AiProvider {
       text: buildParseAndDiagnosePrompt(input.pdfText, input.currentDate),
     });
 
-    const response = await this.ai.models.generateContent({
-      model: this.model,
+    const response = await this.executeGenerateContent({
       contents: parts,
       config: {
         systemInstruction: PARSE_AND_DIAGNOSE_SYSTEM_PROMPT,
@@ -192,8 +320,7 @@ export class GeminiAiProvider implements AiProvider {
     currentDate?: string;
   }): Promise<InterviewPlan> {
     const prompt = buildInterviewPrompt(input.profile, input.objective, input.currentDate);
-    const response = await this.ai.models.generateContent({
-      model: this.model,
+    const response = await this.executeGenerateContent({
       contents: prompt,
       config: {
         systemInstruction: INTERVIEW_SYSTEM_PROMPT,
@@ -226,8 +353,7 @@ export class GeminiAiProvider implements AiProvider {
       input.currentDate,
     );
 
-    const response = await this.ai.models.generateContent({
-      model: this.model,
+    const response = await this.executeGenerateContent({
       contents: prompt,
       config: {
         systemInstruction: INTERVIEW_PROGRESS_SYSTEM_PROMPT,
@@ -256,8 +382,7 @@ export class GeminiAiProvider implements AiProvider {
       input.currentDate,
     );
 
-    const response = await this.ai.models.generateContent({
-      model: this.model,
+    const response = await this.executeGenerateContent({
       contents: prompt,
       config: {
         systemInstruction: REWRITE_PROFILE_SYSTEM_PROMPT,
