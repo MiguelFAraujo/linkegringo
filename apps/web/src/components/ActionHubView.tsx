@@ -164,7 +164,7 @@ export function ActionHubView({
   const completedChecklistCount = checklist.filter((i) => i.completed).length;
 
   return (
-    <div className="max-w-[1440px] mx-auto w-full space-y-8 animate-in fade-in duration-300 pb-12">
+    <div className="max-w-[1600px] mx-auto w-full space-y-8 animate-in fade-in duration-300 pb-16">
       {/* Score Evolution Hero */}
       <Card className="border border-[#1E293B] bg-[#0F1623]/80 shadow-2xl p-6 sm:p-8">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
@@ -638,93 +638,97 @@ export function ActionHubView({
         </Tabs>
       </div>
 
-      {/* Level 3: Balanced 2-Column Operational Grid (Checklist + Interview Guide) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* 6 Cols: 5-Minute Interactive Checklist */}
-        <div className="lg:col-span-6">
-          <Card className="border-[#1E293B] bg-[#0F1623]/80 shadow-xl h-full">
-            <CardHeader className="p-5 sm:p-6 pb-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <ListChecks className="w-4 h-4 text-blue-400" />
-                    <CardTitle className="text-base sm:text-lg font-bold text-white tracking-tight">
-                      Passos para atualizar o LinkedIn
-                    </CardTitle>
-                  </div>
-                  <CardDescription className="text-xs text-slate-400">
-                    Abra o LinkedIn em outra aba e marque os itens conforme atualizar seu perfil.
-                  </CardDescription>
-                </div>
-
-                <Badge variant="outline" className="text-xs text-slate-300 border-[#1E293B] bg-[#090D14]">
-                  {completedChecklistCount} / {checklist.length} concluídos
-                </Badge>
+      {/* Level 3: 5-Minute Interactive Checklist in Full Width (Consecutive Row) */}
+      <Card className="border-[#1E293B] bg-[#0F1623]/80 shadow-xl w-full">
+        <CardHeader className="p-5 sm:p-6 pb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <ListChecks className="w-4 h-4 text-blue-400" />
+                <CardTitle className="text-base sm:text-lg font-bold text-white tracking-tight">
+                  Passos para atualizar o LinkedIn
+                </CardTitle>
               </div>
-            </CardHeader>
+              <CardDescription className="text-xs text-slate-400">
+                Abra o LinkedIn em outra aba e marque os itens conforme atualizar seu perfil.
+              </CardDescription>
+            </div>
 
-            <CardContent className="p-5 sm:p-6 pt-0 space-y-2.5">
-              {checklist.map((item) => (
-                <div
-                  key={item.id}
-                  role="checkbox"
-                  aria-checked={item.completed}
-                  tabIndex={0}
-                  onClick={() => handleToggleChecklist(item.id)}
-                  onKeyDown={(e) => {
-                    if (e.key === ' ' || e.key === 'Enter') {
-                      e.preventDefault();
-                      handleToggleChecklist(item.id);
-                    }
-                  }}
-                  className={`flex items-start gap-3.5 p-3.5 rounded-xl border transition-all cursor-pointer select-none focus:outline-none focus:ring-1 focus:ring-blue-500/50 ${
-                    item.completed
-                      ? 'border-emerald-500/30 bg-emerald-950/15 text-slate-400'
-                      : 'border-[#1E293B] bg-[#090D14]/50 text-slate-200 hover:border-slate-700'
-                  }`}
-                >
-                  <div
-                    className={`mt-0.5 h-4 w-4 rounded flex items-center justify-center transition-colors flex-shrink-0 ${
-                      item.completed
-                        ? 'bg-emerald-500 text-white'
-                        : 'border border-slate-700 bg-slate-900/80'
-                    }`}
-                  >
-                    {item.completed && <Check className="w-3 h-3 stroke-[3]" />}
-                  </div>
+            <div className="flex items-center gap-3 self-start sm:self-auto">
+              <Badge variant="outline" className="text-xs text-slate-300 border-[#1E293B] bg-[#090D14] font-mono">
+                {completedChecklistCount} / {checklist.length} concluídos
+              </Badge>
 
-                  <div className="flex-1 min-w-0">
-                    <p
-                      className={`text-xs sm:text-sm font-semibold ${
-                        item.completed ? 'line-through text-slate-500' : 'text-white'
+              <a
+                href="https://www.linkedin.com/in/me/"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 font-semibold"
+              >
+                <span>Abrir perfil no LinkedIn</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+          </div>
+        </CardHeader>
+
+        <CardContent className="p-5 sm:p-6 pt-0">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+            {checklist.map((item) => (
+              <div
+                key={item.id}
+                role="checkbox"
+                aria-checked={item.completed}
+                tabIndex={0}
+                onClick={() => handleToggleChecklist(item.id)}
+                onKeyDown={(e) => {
+                  if (e.key === ' ' || e.key === 'Enter') {
+                    e.preventDefault();
+                    handleToggleChecklist(item.id);
+                  }
+                }}
+                className={`flex flex-col justify-between p-4 rounded-xl border transition-all cursor-pointer select-none focus:outline-none focus:ring-1 focus:ring-blue-500/50 ${
+                  item.completed
+                    ? 'border-emerald-500/30 bg-emerald-950/15 text-slate-400'
+                    : 'border-[#1E293B] bg-[#090D14]/60 text-slate-200 hover:border-slate-700 hover:bg-[#090D14]/90'
+                }`}
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <div
+                      className={`h-5 w-5 rounded flex items-center justify-center transition-colors flex-shrink-0 ${
+                        item.completed
+                          ? 'bg-emerald-500 text-white'
+                          : 'border border-slate-700 bg-slate-900/80'
                       }`}
                     >
-                      {item.label}
-                    </p>
-                    <FormattedText text={item.detail} as="p" className="text-xs text-slate-400 mt-0.5 leading-relaxed" />
+                      {item.completed && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                    </div>
+
+                    <span className="text-[10px] font-mono text-slate-500">
+                      {item.completed ? 'Concluído' : 'Pendente'}
+                    </span>
                   </div>
+
+                  <p
+                    className={`text-xs sm:text-sm font-semibold leading-tight ${
+                      item.completed ? 'line-through text-slate-500' : 'text-white'
+                    }`}
+                  >
+                    {item.label}
+                  </p>
+
+                  <FormattedText text={item.detail} as="p" className="text-xs text-slate-400 mt-1 leading-relaxed line-clamp-3" />
                 </div>
-              ))}
-
-              <div className="pt-2 text-right">
-                <a
-                  href="https://www.linkedin.com/in/me/"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 font-semibold"
-                >
-                  <span>Abrir meu perfil no LinkedIn</span>
-                  <ExternalLink className="w-3 h-3" />
-                </a>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* 6 Cols: Interview Preparation Guide */}
-        <div className="lg:col-span-6">
-          <InterviewGuideCard />
-        </div>
+      {/* Level 4: Interview Preparation Guide in Full Width (Consecutive Row) */}
+      <div className="w-full">
+        <InterviewGuideCard />
       </div>
 
       {/* Bottom Footer Actions */}

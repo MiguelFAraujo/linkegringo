@@ -66,7 +66,7 @@ export function InterviewGuideCard() {
               Evite narrativas prolixas. Estruture cada resposta técnica em no máximo 2 minutos utilizando o framework:
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
               <div className="p-3.5 rounded-xl border border-[#1E293B] bg-[#090D14]/60 space-y-1.5">
                 <span className="text-xs font-bold text-blue-400 block">1. Context</span>
                 <p className="text-xs text-slate-300 leading-relaxed">

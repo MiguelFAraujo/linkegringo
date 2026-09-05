@@ -407,7 +407,7 @@ export function App() {
         hasActiveSession={hasActiveSession}
       />
 
-      <main className="flex-1 max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-12 py-6 sm:py-8">
+      <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-12 py-6 sm:py-8">
         {/* Error notification banner */}
         {errorMessage && (
           <div className="max-w-3xl mx-auto mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 flex items-center justify-between gap-3 text-xs sm:text-sm">

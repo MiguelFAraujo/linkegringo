@@ -80,15 +80,21 @@ export function TabsContent({
   value,
   className,
   children,
+  forceMount,
   ...props
-}: React.HTMLAttributes<HTMLDivElement> & { value: string }) {
+}: React.HTMLAttributes<HTMLDivElement> & { value: string; forceMount?: boolean }) {
   const context = React.useContext(TabsContext);
   if (!context) throw new Error('TabsContent must be used within Tabs');
 
-  if (context.value !== value) return null;
+  const isSelected = context.value === value;
+  if (!isSelected && !forceMount) return null;
 
   return (
-    <div className={cn('mt-4 focus-visible:outline-none', className)} {...props}>
+    <div
+      className={cn('mt-4 focus-visible:outline-none', !isSelected && 'hidden', className)}
+      hidden={!isSelected}
+      {...props}
+    >
       {children}
     </div>
   );
