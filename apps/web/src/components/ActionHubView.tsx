@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
+import { Progress } from './ui/progress';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
 import {
   Sparkles,
@@ -15,6 +16,10 @@ import {
   ArrowRight,
   ExternalLink,
   Share2,
+  BarChart3,
+  ShieldCheck,
+  Target,
+  Search,
 } from 'lucide-react';
 import type { Profile, ProfileAnalysis, ProfileReview } from '@linkegringo/core';
 import { copyToClipboard, fireConfetti } from '@/lib/file-utils';
@@ -42,6 +47,50 @@ export function ActionHubView({
 }: ActionHubViewProps) {
   const initialScore = initialReview?.overallScore ?? analysis.initialScore ?? 42;
   const newScore = analysis.overallScore;
+
+  // 5 Technical Criteria comparison (Before vs After)
+  const criteriaBreakdown = [
+    {
+      id: 'searchRelevance',
+      name: 'Relevância de Busca (Search Relevance)',
+      description: 'Correspondência semântica e indexação booleana de palavras-chave técnicas do seu cargo.',
+      icon: Search,
+      before: initialReview?.scores?.searchRelevance ?? Math.max(30, Math.round(initialScore * 0.95)),
+      after: analysis.scores.searchRelevance,
+    },
+    {
+      id: 'humanVoice',
+      name: 'Tom de Voz Humano (Human Voice)',
+      description: 'Inglês americano nativo, naturalidade executiva e ausência de termos traduzidos ao pé da letra.',
+      icon: Sparkles,
+      before: initialReview?.scores?.humanVoice ?? Math.max(30, Math.round(initialScore * 1.05)),
+      after: analysis.scores.humanVoice,
+    },
+    {
+      id: 'credibility',
+      name: 'Credibilidade Técnica (Credibility)',
+      description: 'Sinal de senioridade inequívoca, decisões arquiteturais complexas e autonomia comprovada.',
+      icon: ShieldCheck,
+      before: initialReview?.scores?.credibility ?? Math.max(25, Math.round(initialScore * 0.9)),
+      after: analysis.scores.credibility,
+    },
+    {
+      id: 'positioningClarity',
+      name: 'Clareza de Posicionamento (Positioning Clarity)',
+      description: 'Headline limpa e focada em sistemas de alta escala, sem nichos inventados ou clichês.',
+      icon: Target,
+      before: initialReview?.scores?.positioningClarity ?? Math.max(25, Math.round(initialScore * 0.85)),
+      after: analysis.scores.positioningClarity,
+    },
+    {
+      id: 'evidenceCoverage',
+      name: 'Cobertura de Evidências (Evidence Coverage)',
+      description: 'Resultados comprovados com números, %, latência e escala no framework STAR/XYZ.',
+      icon: BarChart3,
+      before: initialReview?.scores?.evidenceCoverage ?? Math.max(25, Math.round(initialScore * 0.88)),
+      after: analysis.scores.evidenceCoverage,
+    },
+  ];
 
   // Fire celebratory confetti when component mounts!
   useEffect(() => {
@@ -196,6 +245,100 @@ export function ActionHubView({
             )}
           </Button>
         </div>
+      </Card>
+
+      {/* 5 Technical Criteria Breakdown (Before vs After) */}
+      <Card className="border-slate-800 bg-slate-900/80 shadow-xl">
+        <CardHeader className="p-6 pb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-emerald-400" />
+                <CardTitle className="text-lg sm:text-xl text-white">
+                  Breakdown dos 5 Critérios Técnicos (Antes vs Depois)
+                </CardTitle>
+              </div>
+              <CardDescription className="text-xs sm:text-sm text-slate-400">
+                Evolução detalhada em cada pilar avaliado pelos recrutadores e algoritmos dos EUA.
+              </CardDescription>
+            </div>
+            <Badge variant="outline" className="text-xs font-mono text-emerald-400 border-emerald-500/30 self-start sm:self-auto">
+              5 Pilares Técnicos
+            </Badge>
+          </div>
+        </CardHeader>
+
+        <CardContent className="p-6 pt-0 space-y-3.5">
+          <div className="grid grid-cols-1 gap-3.5">
+            {criteriaBreakdown.map((c) => {
+              const delta = c.after - c.before;
+              const Icon = c.icon;
+              return (
+                <div
+                  key={c.id}
+                  className="p-4 rounded-xl border border-slate-800/80 bg-slate-950/40 space-y-3"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-start gap-2.5">
+                      <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 mt-0.5 sm:mt-0 flex-shrink-0">
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs sm:text-sm font-bold text-white flex items-center gap-2">
+                          {c.name}
+                        </h4>
+                        <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed">
+                          {c.description}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2.5 self-end sm:self-center flex-shrink-0">
+                      <div className="flex items-center gap-1.5 text-xs font-mono">
+                        <span className="text-rose-400 font-bold">{c.before}</span>
+                        <span className="text-slate-600">➔</span>
+                        <span className="text-emerald-400 font-bold text-sm">{c.after}</span>
+                      </div>
+                      <Badge
+                        variant="success"
+                        className="font-mono text-xs font-bold py-0.5 px-2 bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                      >
+                        +{delta} pts
+                      </Badge>
+                    </div>
+                  </div>
+
+                  {/* Comparative Progress Bars */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 text-[11px]">
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-slate-400">
+                        <span className="text-rose-400 font-medium">Antes (Original)</span>
+                        <span className="font-mono font-semibold text-rose-400">{c.before}%</span>
+                      </div>
+                      <Progress
+                        value={c.before}
+                        indicatorClassName="bg-rose-500/80"
+                        className="h-2 bg-slate-900 border border-slate-800"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-slate-400">
+                        <span className="text-emerald-400 font-medium">Depois (Versão dos EUA)</span>
+                        <span className="font-mono font-semibold text-emerald-400">{c.after}%</span>
+                      </div>
+                      <Progress
+                        value={c.after}
+                        indicatorClassName="bg-emerald-500"
+                        className="h-2 bg-slate-900 border border-slate-800"
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
       </Card>
 
       {/* 5-Minute Interactive Checklist */}

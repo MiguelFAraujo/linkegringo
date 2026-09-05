@@ -111,7 +111,44 @@ describe('ActionHubView Component', () => {
       />,
     );
 
-    expect(screen.getByText(/Antes \(LinkedIn Original\)/i)).toBeDefined();
-    expect(screen.getByText(/Depois \(Versão dos EUA\)/i)).toBeDefined();
+    const beforeBadges = screen.getAllByText(/Antes \(LinkedIn Original\)/i);
+    expect(beforeBadges.length).toBeGreaterThanOrEqual(1);
+
+    const afterBadges = screen.getAllByText(/Depois \(Versão dos EUA\)/i);
+    expect(afterBadges.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('renders the 5 technical criteria breakdown comparing Before vs After with progress and delta badges', () => {
+    render(
+      <ActionHubView
+        originalProfile={MOCK_PROFILE}
+        initialReview={MOCK_REVIEW}
+        analysis={sampleAnalysis}
+        onStartNew={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText(/Breakdown dos 5 Critérios Técnicos \(Antes vs Depois\)/i)).toBeDefined();
+    expect(screen.getByText(/5 Pilares Técnicos/i)).toBeDefined();
+
+    // 5 criteria names
+    expect(screen.getByText(/Relevância de Busca \(Search Relevance\)/i)).toBeDefined();
+    expect(screen.getByText(/Tom de Voz Humano \(Human Voice\)/i)).toBeDefined();
+    expect(screen.getByText(/Credibilidade Técnica \(Credibility\)/i)).toBeDefined();
+    expect(screen.getByText(/Clareza de Posicionamento \(Positioning Clarity\)/i)).toBeDefined();
+    expect(screen.getByText(/Cobertura de Evidências \(Evidence Coverage\)/i)).toBeDefined();
+
+    // Specific deltas:
+    // searchRelevance: 95 - 48 = +47 pts
+    expect(screen.getByText('+47 pts')).toBeDefined();
+    // humanVoice: 92 - 52 = +40 pts
+    expect(screen.getByText('+40 pts')).toBeDefined();
+    // credibility: 96 - 38 = +58 pts
+    expect(screen.getByText('+58 pts')).toBeDefined();
+    // positioningClarity: 97 - 35 = +62 pts
+    expect(screen.getByText('+62 pts')).toBeDefined();
+    // evidenceCoverage: 91 - 37 = +54 pts
+    expect(screen.getByText('+54 pts')).toBeDefined();
   });
 });
+
