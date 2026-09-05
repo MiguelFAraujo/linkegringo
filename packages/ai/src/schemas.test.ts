@@ -96,15 +96,16 @@ describe('Prompts Temporal Anchor, Education Future Dates & PDF Extraction Warni
     const prompt = buildParseAndDiagnosePrompt('Raw text sample', 'September 2026');
     expect(prompt).toContain('Current Real-World Date: September 2026');
     expect(prompt).toContain('In the Education section, future dates (e.g. 2026-2028) indicate EXPECTED graduation');
-    expect(prompt).toContain('MUST NEVER be flagged as an error, discrepancy, or suspicious date');
-    expect(prompt).toContain('PDF EXTRACTION ARTIFACT WARNING');
-    expect(prompt).toContain('NEVER critique, penalize, or comment that the Summary is "too dense"');
+    expect(prompt).toContain('CONTEXT ON THE DATA SOURCE & LINKEDIN FORMATTING');
+    expect(prompt).toContain('The candidate\'s live profile on LinkedIn is already properly formatted');
+    expect(prompt).toContain('NEVER critique, penalize, or comment on paragraphs, line breaks, or spacing');
   });
 
-  it('PARSE_AND_DIAGNOSE_SYSTEM_PROMPT includes 92+ rigorous calibration and education date rules', () => {
+  it('PARSE_AND_DIAGNOSE_SYSTEM_PROMPT includes 92+ rigorous calibration, context on data source, and education date rules', () => {
     expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('RIGOROUS CALIBRATION FOR GRINGO-APPROVED LEVEL (92+ SCORE)');
     expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('TEMPORAL REFERENCE & EDUCATION DATES');
-    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('PDF EXTRACTION ARTIFACT WARNING');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('CONTEXT ON THE DATA SOURCE & LINKEDIN FORMATTING');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('take it as a given fact that the candidate\'s visual formatting');
     expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('RECOGNITION OF ALREADY OPTIMIZED PROFILES (92 to 100 points)');
     expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('Award an overallScore between 92 and 100');
   });

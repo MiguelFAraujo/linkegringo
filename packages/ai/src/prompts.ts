@@ -57,8 +57,12 @@ TEMPORAL REFERENCE & EDUCATION DATES:
 - Evaluate candidate career chronology against the current real-world date.
 - In the Education section, future dates (e.g. 2026-2028) indicate EXPECTED graduation or completion dates. This is completely standard and standard practice on LinkedIn; NEVER penalize or flag future education dates as errors, discrepancies, or inconsistencies.
 
-PDF EXTRACTION ARTIFACT WARNING:
-- The extracted LinkedIn PDF loses paragraph breaks, delivering Summary and descriptions as a single run-on block. This is purely a technical artifact of PDF parsing, NOT how the candidate wrote it on LinkedIn. NEVER critique, penalize, or comment that the Summary is "too dense", "too long", or "lacks line breaks or whitespace". Evaluate solely the substance, positioning clarity, and evidence.
+CONTEXT ON THE DATA SOURCE & LINKEDIN FORMATTING:
+- The candidate's real profile on LinkedIn is ALREADY visually well-structured, properly paragraphed, and formatted with clean line breaks on their live profile page.
+- The raw document you receive comes from LinkedIn's "Save to PDF" export, which technically merges and flattens all text, removing line breaks and concatenating paragraphs into a single continuous run-on block. This raw text does NOT reflect the candidate's actual profile layout or writing style.
+- Therefore, you MUST take it as a given fact that the candidate's visual formatting, line spacing, and paragraphing on LinkedIn are already flawless.
+- Your evaluation must focus 100% on the intellectual substance: positioning clarity, technical depth, quantifiable impact, and credible evidence.
+- NEVER advise, warn, or comment on paragraphs, line breaks, text density, or spacing—the candidate's actual live profile is already properly formatted. Never critique or penalize the Summary as "too dense" or "lacking line breaks".
 
 Typical unoptimized profiles (Portuguese text, passive duties, missing metrics, buzzword headlines):
 - overallScore: Typically between 35 and 55.
@@ -79,8 +83,8 @@ TEMPORAL ANCHOR & CALENDAR CONTEXT:
 Today is ${dateAnchor}. Evaluate all candidate dates with respect to this real-world reference date.
 - In the Education section, future dates (e.g. 2026-2028) indicate EXPECTED graduation or completion dates. This is completely standard on LinkedIn and MUST NEVER be flagged as an error, discrepancy, or suspicious date.
 
-PDF EXTRACTION ARTIFACT WARNING:
-The extracted LinkedIn PDF loses paragraph breaks, delivering Summary and descriptions as a single run-on block. This is purely a technical artifact of PDF parsing, NOT how the candidate wrote it on LinkedIn. NEVER critique, penalize, or comment that the Summary is "too dense", "too long", or "lacks line breaks or whitespace". Evaluate solely the substance, positioning clarity, and evidence.
+CONTEXT ON THE DATA SOURCE & LINKEDIN FORMATTING:
+The candidate's live profile on LinkedIn is already properly formatted with clean line breaks and paragraphs. The text below is from LinkedIn's PDF export which concatenates sentences together into a continuous block. Assume the visual formatting on LinkedIn is already flawless. Focus 100% on technical substance, impact, and evidence. NEVER critique, penalize, or comment on paragraphs, line breaks, or spacing.
 
 Analyze the candidate's LinkedIn PDF export and return a JSON object with EXACTLY this structure:
 {

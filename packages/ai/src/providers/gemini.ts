@@ -171,7 +171,17 @@ export class GeminiAiProvider implements AiProvider {
 
     const rawJson = extractJsonFromResponse<{ profile: unknown; review: unknown }>(response.text || '{}');
     const profile = profileSchema.parse(rawJson.profile);
-    const review = profileReviewSchema.parse(rawJson.review);
+    const rawReview = profileReviewSchema.parse(rawJson.review);
+
+    // Safety filter: strip any rogue issue mentioning PDF line breaks or paragraph artifacts
+    const artifactRegex = /artefato.*pdf|quebra.*par[aá]grafo|linha.*corrida|falta de quebra|espa[çc]amento.*resumo/i;
+    const review = {
+      ...rawReview,
+      critique: rawReview.critique.map((c) => ({
+        ...c,
+        issues: c.issues.filter((issue) => !artifactRegex.test(issue)),
+      })),
+    };
 
     return { profile, review };
   }
