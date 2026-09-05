@@ -29,11 +29,13 @@ export interface AiProvider {
     pdfBase64?: string;
     pdfText?: string;
     cvPdfBase64?: string;
+    currentDate?: string;
   }): Promise<ParseAndDiagnoseResult>;
 
   generateInterview(input: {
     profile: Profile;
     objective: CareerObjective;
+    currentDate?: string;
   }): Promise<InterviewPlan>;
 
   evaluateProgress(input: {
@@ -43,6 +45,7 @@ export interface AiProvider {
     answers: InterviewAnswer[];
     previousFacts: ConfirmedFact[];
     roundNumber?: number;
+    currentDate?: string;
   }): Promise<InterviewProgress>;
 
   generateRewrittenProfile(input: {
@@ -50,5 +53,6 @@ export interface AiProvider {
     objective: CareerObjective;
     confirmedFacts: ConfirmedFact[];
     initialReview?: ProfileReview;
+    currentDate?: string;
   }): Promise<ProfileAnalysis>;
 }

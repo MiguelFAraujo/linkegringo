@@ -20,7 +20,7 @@ import {
   hasSeenOnboarding,
   setOnboardingSeen,
 } from './lib/storage';
-import { createAiProvider } from '@linkegringo/ai';
+import { createAiProvider, formatCurrentDate } from '@linkegringo/ai';
 import type {
   CareerObjective,
   ConfirmedFact,
@@ -133,6 +133,7 @@ export function App() {
       const result = await provider.parseAndDiagnose({
         pdfBase64: files.pdfBase64,
         cvPdfBase64: files.cvPdfBase64,
+        currentDate: formatCurrentDate(),
       });
 
       setProfile(result.profile);
@@ -186,6 +187,7 @@ export function App() {
       const plan = await provider.generateInterview({
         profile,
         objective: newObjective,
+        currentDate: formatCurrentDate(),
       });
 
       setInterviewPlan(plan);
@@ -215,6 +217,7 @@ export function App() {
         answers,
         previousFacts: facts,
         roundNumber: interviewRound,
+        currentDate: formatCurrentDate(),
       });
 
       // Merge newly extracted facts with existing facts
@@ -296,6 +299,7 @@ export function App() {
         objective,
         confirmedFacts,
         initialReview: review || undefined,
+        currentDate: formatCurrentDate(),
       });
 
       setAnalysis(finalAnalysis);
