@@ -193,6 +193,7 @@ export class GeminiAiProvider implements AiProvider {
     plan: InterviewPlan;
     answers: InterviewAnswer[];
     previousFacts: ConfirmedFact[];
+    roundNumber?: number;
   }): Promise<InterviewProgress> {
     const prompt = buildInterviewProgressPrompt(
       input.profile,
@@ -200,6 +201,7 @@ export class GeminiAiProvider implements AiProvider {
       input.plan,
       input.answers,
       input.previousFacts,
+      input.roundNumber,
     );
 
     const response = await this.ai.models.generateContent({

@@ -42,6 +42,7 @@ export interface AiProvider {
     plan: InterviewPlan;
     answers: InterviewAnswer[];
     previousFacts: ConfirmedFact[];
+    roundNumber?: number;
   }): Promise<InterviewProgress>;
 
   generateRewrittenProfile(input: {

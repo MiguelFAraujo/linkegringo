@@ -207,8 +207,11 @@ export function buildInterviewProgressPrompt(
   plan: InterviewPlan,
   answers: InterviewAnswer[],
   previousFacts: ConfirmedFact[],
+  roundNumber: number = 1,
 ): string {
   return `Evaluate interview progress and extract verifiable facts.
+
+Current Evaluation Round: Round ${roundNumber} of 2.${roundNumber >= 2 ? ' THIS IS ROUND 2 (FINAL ROUND): You MUST set readyForGeneration: true and questions: [].' : ''}
 
 Objective:
 ${JSON.stringify(objective, null, 2)}

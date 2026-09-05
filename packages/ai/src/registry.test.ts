@@ -92,5 +92,49 @@ describe('Prompts & Deterministic Rubric', () => {
     expect(INTERVIEW_PROGRESS_SYSTEM_PROMPT).toContain('Maximum 2 interview rounds');
     expect(INTERVIEW_PROGRESS_SYSTEM_PROMPT).toContain('readyForGeneration: true');
   });
+
+  it('buildInterviewProgressPrompt includes round number and final round constraint when round >= 2', async () => {
+    const { buildInterviewProgressPrompt } = await import('./prompts.js');
+    const { MOCK_PROFILE } = await import('./providers/mock.js');
+    const objective = {
+      targetMarket: 'United States',
+      primaryRole: 'Senior Full Stack Engineer',
+      seniority: 'senior',
+      workPreference: 'remote' as const,
+      excludedTechnologies: [],
+    };
+    const plan = { questions: [] };
+    const answers: any[] = [];
+    const facts: any[] = [];
+
+    const round1Prompt = buildInterviewProgressPrompt(MOCK_PROFILE, objective, plan, answers, facts, 1);
+    expect(round1Prompt).toContain('Current Evaluation Round: Round 1 of 2.');
+    expect(round1Prompt).not.toContain('THIS IS ROUND 2 (FINAL ROUND)');
+
+    const round2Prompt = buildInterviewProgressPrompt(MOCK_PROFILE, objective, plan, answers, facts, 2);
+    expect(round2Prompt).toContain('Current Evaluation Round: Round 2 of 2.');
+    expect(round2Prompt).toContain('THIS IS ROUND 2 (FINAL ROUND): You MUST set readyForGeneration: true and questions: []');
+  });
+
+  it('MockAiProvider respects candidate primaryRole in rewritten headline', async () => {
+    const { createAiProvider } = await import('./registry.js');
+    const { MOCK_PROFILE } = await import('./providers/mock.js');
+    const provider = createAiProvider('demo');
+
+    const analysis = await provider.generateRewrittenProfile({
+      profile: MOCK_PROFILE,
+      objective: {
+        targetMarket: 'United States',
+        primaryRole: 'Senior Full Stack Engineer',
+        seniority: 'senior',
+        workPreference: 'remote',
+        excludedTechnologies: [],
+      },
+      confirmedFacts: [],
+    });
+
+    expect(analysis.rewritten.headline).toContain('Senior Full Stack Engineer');
+    expect(analysis.rewritten.headline).not.toContain('Senior Backend Engineer');
+  });
 });
 

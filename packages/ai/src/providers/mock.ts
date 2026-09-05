@@ -190,6 +190,7 @@ export class DemoAiProvider implements AiProvider {
     plan: InterviewPlan;
     answers: InterviewAnswer[];
     previousFacts: ConfirmedFact[];
+    roundNumber?: number;
   }): Promise<InterviewProgress> {
     await new Promise((resolve) => setTimeout(resolve, 600));
 
@@ -275,8 +276,7 @@ export class DemoAiProvider implements AiProvider {
         },
       ],
       rewritten: {
-        headline:
-          'Senior Backend Engineer | Distributed Systems, Java & Spring Boot | High-Throughput Event-Driven Architectures (Kafka, AWS)',
+        headline: `${input.objective.primaryRole || 'Senior Backend Engineer'} | Java, Spring Boot, React | Distributed Systems & High-Throughput APIs | AWS, Docker`,
         summary:
           'Senior Backend Engineer with 6+ years of experience designing and scaling fault-tolerant distributed systems and mission-critical financial APIs. Proven track record in decoupling monoliths into resilient microservices, optimizing database throughput, and building event-driven pipelines handling millions of daily transactions.\n\nDeeply focused on operational excellence, observability (metrics, tracing, p99 latency reduction), and automated CI/CD workflows that enable engineering teams to ship safely at high velocity.\n\nCore Technologies: Java 21, Spring Boot, Apache Kafka, PostgreSQL, Docker, Kubernetes, AWS, Microservices Architecture, Distributed Systems.',
         experiences: [
