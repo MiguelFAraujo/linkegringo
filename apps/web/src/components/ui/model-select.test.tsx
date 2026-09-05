@@ -5,27 +5,27 @@ import { ModelSelect, type ModelOption, formatTokenLimit, formatTokensSummary } 
 
 const mockModels: ModelOption[] = [
   {
-    id: 'gemini-2.0-flash',
-    displayName: 'Gemini 2.0 Flash',
+    id: 'gemini-3.5-flash',
+    displayName: 'Gemini 3.5 Flash',
     description: 'Ultra rápido e estável',
     badge: 'Recomendado',
     inputTokenLimit: 1048576,
     outputTokenLimit: 8192,
   },
   {
-    id: 'gemini-2.5-flash',
-    displayName: 'Gemini 2.5 Flash',
-    description: 'Raciocínio experimental',
-    badge: 'Experimental',
+    id: 'gemini-3.6-flash',
+    displayName: 'Gemini 3.6 Flash',
+    description: 'Versão atualizada recomendada',
+    badge: 'Mais Recente',
     inputTokenLimit: 1048576,
     outputTokenLimit: 8192,
   },
   {
-    id: 'gemini-1.5-pro',
-    displayName: 'Gemini 1.5 Pro',
-    description: 'Contexto amplo de 2M tokens',
-    badge: 'Estável',
-    inputTokenLimit: 2097152,
+    id: 'gemini-3.7-flash',
+    displayName: 'Gemini 3.7 Flash',
+    description: 'Alta Performance',
+    badge: 'Alta Performance',
+    inputTokenLimit: 1048576,
     outputTokenLimit: 8192,
   },
 ];
@@ -51,7 +51,7 @@ describe('ModelSelect Component', () => {
   it('renders disabled state with message when disabled is true', () => {
     render(
       <ModelSelect
-        value="gemini-2.0-flash"
+        value="gemini-3.5-flash"
         onChange={vi.fn()}
         models={mockModels}
         disabled={true}
@@ -67,7 +67,7 @@ describe('ModelSelect Component', () => {
   it('renders loading state when isLoading is true', () => {
     render(
       <ModelSelect
-        value="gemini-2.0-flash"
+        value="gemini-3.5-flash"
         onChange={vi.fn()}
         models={mockModels}
         isLoading={true}
@@ -82,14 +82,14 @@ describe('ModelSelect Component', () => {
   it('renders selected model with displayName, id and badge when enabled', () => {
     render(
       <ModelSelect
-        value="gemini-2.0-flash"
+        value="gemini-3.5-flash"
         onChange={vi.fn()}
         models={mockModels}
       />,
     );
 
-    expect(screen.getByText('Gemini 2.0 Flash')).toBeDefined();
-    expect(screen.getByText('(gemini-2.0-flash)')).toBeDefined();
+    expect(screen.getByText('Gemini 3.5 Flash')).toBeDefined();
+    expect(screen.getByText('(gemini-3.5-flash)')).toBeDefined();
     expect(screen.getByText('Recomendado')).toBeDefined();
   });
 
@@ -97,7 +97,7 @@ describe('ModelSelect Component', () => {
     const handleChange = vi.fn();
     render(
       <ModelSelect
-        value="gemini-2.0-flash"
+        value="gemini-3.5-flash"
         onChange={handleChange}
         models={mockModels}
       />,
@@ -108,22 +108,22 @@ describe('ModelSelect Component', () => {
 
     // Listbox should now be visible
     expect(screen.getByRole('listbox')).toBeDefined();
-    expect(screen.getByText('Gemini 2.5 Flash')).toBeDefined();
-    expect(screen.getByText('Gemini 1.5 Pro')).toBeDefined();
+    expect(screen.getByText('Gemini 3.6 Flash')).toBeDefined();
+    expect(screen.getByText('Gemini 3.7 Flash')).toBeDefined();
 
     // Type in search
     const searchInput = screen.getByPlaceholderText(/Buscar por nome ou id/i);
-    fireEvent.change(searchInput, { target: { value: '2.5' } });
+    fireEvent.change(searchInput, { target: { value: '3.6' } });
 
-    // Only 2.5 should match
-    expect(screen.getByText('Gemini 2.5 Flash')).toBeDefined();
-    expect(screen.queryByText('Gemini 1.5 Pro')).toBeNull();
+    // Only 3.6 should match
+    expect(screen.getByText('Gemini 3.6 Flash')).toBeDefined();
+    expect(screen.queryByText('Gemini 3.7 Flash')).toBeNull();
 
     // Click the option
-    const option = screen.getByRole('option', { name: /Gemini 2.5 Flash/i });
+    const option = screen.getByRole('option', { name: /Gemini 3.6 Flash/i });
     fireEvent.click(option);
 
-    expect(handleChange).toHaveBeenCalledWith('gemini-2.5-flash');
+    expect(handleChange).toHaveBeenCalledWith('gemini-3.6-flash');
     // Dropdown should close
     expect(screen.queryByRole('listbox')).toBeNull();
   });
@@ -131,7 +131,7 @@ describe('ModelSelect Component', () => {
   it('shows empty state message when search query does not match any model', () => {
     render(
       <ModelSelect
-        value="gemini-2.0-flash"
+        value="gemini-3.5-flash"
         onChange={vi.fn()}
         models={mockModels}
       />,
@@ -149,7 +149,7 @@ describe('ModelSelect Component', () => {
   it('closes dropdown and stops propagation when Escape is pressed', () => {
     render(
       <ModelSelect
-        value="gemini-2.0-flash"
+        value="gemini-3.5-flash"
         onChange={vi.fn()}
         models={mockModels}
       />,
@@ -168,7 +168,7 @@ describe('ModelSelect Component', () => {
     const handleChange = vi.fn();
     render(
       <ModelSelect
-        value="gemini-2.0-flash"
+        value="gemini-3.5-flash"
         onChange={handleChange}
         models={mockModels}
       />,
@@ -178,12 +178,12 @@ describe('ModelSelect Component', () => {
     fireEvent.click(trigger);
 
     const searchInput = screen.getByPlaceholderText(/Buscar por nome ou id/i);
-    // Move down to index 1 (gemini-2.5-flash)
+    // Move down to index 1 (gemini-3.6-flash)
     fireEvent.keyDown(searchInput, { key: 'ArrowDown' });
     // Press Enter to select
     fireEvent.keyDown(searchInput, { key: 'Enter' });
 
-    expect(handleChange).toHaveBeenCalledWith('gemini-2.5-flash');
+    expect(handleChange).toHaveBeenCalledWith('gemini-3.6-flash');
     expect(screen.queryByRole('listbox')).toBeNull();
   });
 

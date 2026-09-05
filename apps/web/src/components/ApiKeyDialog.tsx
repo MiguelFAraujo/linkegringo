@@ -51,8 +51,8 @@ export function ApiKeyDialog({
   const [currentKey, setCurrentKey] = useState(apiKey);
   const [currentProvider, setCurrentProvider] = useState(providerId);
   const [currentModel, setCurrentModel] = useState<string>(() => {
-    if (model && model !== 'gemini-2.0-flash') return model;
-    return 'gemini-2.5-flash';
+    if (model && /^gemini-3\.[5-8]-flash/.test(model)) return model;
+    return 'gemini-3.5-flash';
   });
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null);
@@ -95,10 +95,10 @@ export function ApiKeyDialog({
         }));
         setModels(mapped);
         setCurrentModel((prev) => {
-          if (prev && prev !== 'gemini-2.0-flash' && mapped.some((m) => m.id === prev)) {
+          if (prev && /^gemini-3\.[5-8]-flash/.test(prev) && mapped.some((m) => m.id === prev)) {
             return prev;
           }
-          const fallback = mapped[0]?.id || 'gemini-2.5-flash';
+          const fallback = mapped[0]?.id || 'gemini-3.5-flash';
           onSave(trimmed, currentProvider, fallback);
           return fallback;
         });
@@ -124,10 +124,10 @@ export function ApiKeyDialog({
         setModels(mapped);
 
         setCurrentModel((prev) => {
-          if (prev && prev !== 'gemini-2.0-flash' && mapped.some((m) => m.id === prev)) {
+          if (prev && /^gemini-3\.[5-8]-flash/.test(prev) && mapped.some((m) => m.id === prev)) {
             return prev;
           }
-          const fallback = mapped[0]?.id || 'gemini-2.5-flash';
+          const fallback = mapped[0]?.id || 'gemini-3.5-flash';
           onSave(trimmed, currentProvider, fallback);
           return fallback;
         });
@@ -167,7 +167,7 @@ export function ApiKeyDialog({
   React.useEffect(() => {
     setCurrentKey(apiKey);
     setCurrentProvider(providerId);
-    const safeModel = model && model !== 'gemini-2.0-flash' ? model : 'gemini-2.5-flash';
+    const safeModel = model && /^gemini-3\.[5-8]-flash/.test(model) ? model : 'gemini-3.5-flash';
     setCurrentModel(safeModel);
     setTestResult(null);
     setFetchError(null);
@@ -250,7 +250,7 @@ export function ApiKeyDialog({
   const handleRemove = () => {
     setCurrentKey('');
     setModels([]);
-    setCurrentModel('gemini-2.5-flash');
+    setCurrentModel('gemini-3.5-flash');
     onClear();
     setTestResult(null);
   };

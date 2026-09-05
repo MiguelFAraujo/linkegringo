@@ -27,23 +27,16 @@ export interface GeminiModelOption {
 }
 
 export function assignGeminiModelBadge(id: string): string | undefined {
-  if (
-    id.startsWith('gemini-3.6') ||
-    id.startsWith('gemini-3.5') ||
-    id === 'gemini-2.5-flash'
-  ) {
+  if (id === 'gemini-3.6-flash' || id === 'gemini-3.5-flash') {
     return 'Recomendado';
+  }
+  if (id === 'gemini-3.8-flash' || id === 'gemini-3.7-flash') {
+    return 'Alta Performance';
   }
   if (id.includes('preview') || id.includes('experimental') || id.includes('-exp')) {
     return 'Experimental';
   }
-  if (id.startsWith('gemini-1.5') || id.startsWith('gemini-2.5') || id.startsWith('gemini-3')) {
-    return 'Estável';
-  }
-  if (id.startsWith('gemini-2.0')) {
-    return 'Legado';
-  }
-  return undefined;
+  return 'Estável';
 }
 
 export function getModelSortWeight(id: string): number {
@@ -51,30 +44,13 @@ export function getModelSortWeight(id: string): number {
   if (id.startsWith('gemini-3.6-flash')) return 1190;
   if (id === 'gemini-3.5-flash') return 1150;
   if (id.startsWith('gemini-3.5-flash')) return 1140;
-  if (id.startsWith('gemini-3')) return 1100;
-  if (id === 'gemini-2.5-flash') return 1000;
-  if (id.startsWith('gemini-2.5-flash')) return 990;
-  if (id === 'gemini-2.5-pro') return 950;
-  if (id.startsWith('gemini-2.5-pro')) return 940;
-  if (id === 'gemini-1.5-flash') return 800;
-  if (id.startsWith('gemini-1.5-flash-8b')) return 770;
-  if (id.startsWith('gemini-1.5-flash')) return 780;
-  if (id === 'gemini-1.5-pro') return 750;
-  if (id.startsWith('gemini-1.5-pro')) return 740;
-  if (id === 'gemini-2.0-flash') return 200; // Deprecated by Google
-  if (id.startsWith('gemini-2.0')) return 190;
+  if (id === 'gemini-3.7-flash') return 1130;
+  if (id.startsWith('gemini-3.7-flash')) return 1120;
+  if (id === 'gemini-3.8-flash') return 1110;
+  if (id.startsWith('gemini-3.8-flash')) return 1100;
 
-  let weight = 0;
-  if (id.startsWith('gemini-3')) weight += 600;
-  else if (id.startsWith('gemini-2.5')) weight += 500;
-  else if (id.startsWith('gemini-1.5')) weight += 300;
-  else if (id.startsWith('gemini-2.0')) weight += 100;
-  else if (id.startsWith('gemini-1.0')) weight += 50;
-
-  if (id.includes('flash')) weight += 50;
-  if (id.includes('pro')) weight += 30;
-  if (!id.includes('preview') && !id.includes('exp')) weight += 10;
-  return weight;
+  if (/^gemini-3\.[5-8]-flash/.test(id)) return 1000;
+  return 100;
 }
 
 export async function fetchGeminiModels(apiKey: string): Promise<RemoteGeminiModel[]> {
@@ -129,7 +105,7 @@ export async function fetchGeminiModels(apiKey: string): Promise<RemoteGeminiMod
 
     const rawName: string = typeof m.name === 'string' ? m.name : '';
     const cleanId = rawName.replace(/^models\//, '');
-    if (!cleanId.startsWith('gemini-') || seenIds.has(cleanId)) {
+    if (!/^gemini-3\.[5-8]-flash/.test(cleanId) || seenIds.has(cleanId)) {
       return false;
     }
     seenIds.add(cleanId);
@@ -159,26 +135,32 @@ export async function fetchGeminiModels(apiKey: string): Promise<RemoteGeminiMod
   return models;
 }
 
-export const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash';
+export const DEFAULT_GEMINI_MODEL = 'gemini-3.5-flash';
 
 export const AVAILABLE_GEMINI_MODELS: GeminiModelOption[] = [
   {
-    id: 'gemini-2.5-flash',
-    name: 'Gemini 2.5 Flash',
-    badge: 'Recomendado • Alta Velocidade',
-    description: 'Raciocínio avançado, suporte multimodal nativo a PDFs e alta performance.',
+    id: 'gemini-3.5-flash',
+    name: 'Gemini 3.5 Flash',
+    badge: 'Recomendado',
+    description: 'Raciocínio avançado, alta velocidade e suporte multimodal completo.',
   },
   {
-    id: 'gemini-1.5-flash',
-    name: 'Gemini 1.5 Flash',
-    badge: 'Estável',
-    description: 'Modelo clássico de alta velocidade e ampla compatibilidade.',
+    id: 'gemini-3.6-flash',
+    name: 'Gemini 3.6 Flash',
+    badge: 'Mais Recente',
+    description: 'Versão atualizada recomendada pela Google com performance aprimorada.',
   },
   {
-    id: 'gemini-1.5-pro',
-    name: 'Gemini 1.5 Pro',
-    badge: 'Capacidade Estendida',
-    description: 'Janela de contexto ultra ampla para perfis extensos e múltiplos documentos.',
+    id: 'gemini-3.7-flash',
+    name: 'Gemini 3.7 Flash',
+    badge: 'Alta Performance',
+    description: 'Velocidade extrema e raciocínio técnico expandido.',
+  },
+  {
+    id: 'gemini-3.8-flash',
+    name: 'Gemini 3.8 Flash',
+    badge: 'Avançado',
+    description: 'Modelo topo de linha da série 3.x Flash.',
   },
 ];
 
@@ -209,7 +191,10 @@ export function createAiProvider(
     case 'gemini': {
       const apiKey = (config.apiKey as string) || '';
       const rawModel = (config.model as string) || '';
-      const model = rawModel && rawModel !== 'gemini-2.0-flash' ? rawModel : DEFAULT_GEMINI_MODEL;
+      const model =
+        rawModel && /^gemini-3\.[5-8]-flash/.test(rawModel)
+          ? rawModel
+          : DEFAULT_GEMINI_MODEL;
       return new GeminiAiProvider({
         apiKey,
         model,

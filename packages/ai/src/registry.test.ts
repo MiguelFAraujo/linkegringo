@@ -210,11 +210,35 @@ describe('fetchGeminiModels', () => {
             outputTokenLimit: 8192,
           },
           {
-            name: 'models/gemini-1.5-pro',
-            displayName: 'Gemini 1.5 Pro',
-            description: 'Complex reasoning',
+            name: 'models/gemini-3.5-flash',
+            displayName: 'Gemini 3.5 Flash',
+            description: 'Recommended fast model',
             supportedGenerationMethods: ['generateContent'],
-            inputTokenLimit: 2097152,
+            inputTokenLimit: 1048576,
+            outputTokenLimit: 8192,
+          },
+          {
+            name: 'models/gemini-3.6-flash',
+            displayName: 'Gemini 3.6 Flash',
+            description: 'Latest recommended model',
+            supportedGenerationMethods: ['generateContent'],
+            inputTokenLimit: 1048576,
+            outputTokenLimit: 8192,
+          },
+          {
+            name: 'models/gemini-3.7-flash',
+            displayName: 'Gemini 3.7 Flash',
+            description: 'High performance model',
+            supportedGenerationMethods: ['generateContent'],
+            inputTokenLimit: 1048576,
+            outputTokenLimit: 8192,
+          },
+          {
+            name: 'models/gemini-3.8-flash',
+            displayName: 'Gemini 3.8 Flash',
+            description: 'Advanced model',
+            supportedGenerationMethods: ['generateContent'],
+            inputTokenLimit: 1048576,
             outputTokenLimit: 8192,
           },
         ],
@@ -228,29 +252,35 @@ describe('fetchGeminiModels', () => {
 
       const models = await fetchGeminiModels('valid-test-key');
 
-      // Only gemini models with generateContent should remain
+      // Only gemini 3.5-3.8 flash models with generateContent should remain
       expect(models.length).toBe(4);
       expect(models.some((m) => m.id === 'text-embedding-004')).toBe(false);
       expect(models.some((m) => m.id === 'imagen-3.0-generate-002')).toBe(false);
+      expect(models.some((m) => m.id === 'gemini-1.5-flash')).toBe(false);
+      expect(models.some((m) => m.id === 'gemini-2.0-flash')).toBe(false);
+      expect(models.some((m) => m.id === 'gemini-2.5-flash')).toBe(false);
 
-      // Verify IDs have stripped prefix and modern sorting
+      // Verify IDs have stripped prefix and modern sorting (3.6 > 3.5 > 3.7 > 3.8)
       expect(models.map((m) => m.id)).toEqual([
-        'gemini-2.5-flash',
-        'gemini-1.5-flash',
-        'gemini-1.5-pro',
-        'gemini-2.0-flash',
+        'gemini-3.6-flash',
+        'gemini-3.5-flash',
+        'gemini-3.7-flash',
+        'gemini-3.8-flash',
       ]);
 
       // Check badges
-      const flash25 = models.find((m) => m.id === 'gemini-2.5-flash');
-      expect(flash25?.badge).toBe('Recomendado');
+      const flash35 = models.find((m) => m.id === 'gemini-3.5-flash');
+      expect(flash35?.badge).toBe('Recomendado');
 
-      const flash15 = models.find((m) => m.id === 'gemini-1.5-flash');
-      expect(flash15?.badge).toBe('Estável');
+      const flash36 = models.find((m) => m.id === 'gemini-3.6-flash');
+      expect(flash36?.badge).toBe('Recomendado');
 
-      const flash20 = models.find((m) => m.id === 'gemini-2.0-flash');
-      expect(flash20?.badge).toBe('Legado');
-      expect(flash20?.inputTokenLimit).toBe(1048576);
+      const flash37 = models.find((m) => m.id === 'gemini-3.7-flash');
+      expect(flash37?.badge).toBe('Alta Performance');
+
+      const flash38 = models.find((m) => m.id === 'gemini-3.8-flash');
+      expect(flash38?.badge).toBe('Alta Performance');
+      expect(flash38?.inputTokenLimit).toBe(1048576);
     } finally {
       globalThis.fetch = originalFetch;
     }
@@ -287,13 +317,13 @@ describe('fetchGeminiModels', () => {
             json: async () => ({
               models: [
                 {
-                  name: 'models/gemini-2.0-flash',
-                  displayName: 'Gemini 2.0 Flash',
+                  name: 'models/gemini-3.5-flash',
+                  displayName: 'Gemini 3.5 Flash',
                   supportedGenerationMethods: ['generateContent'],
                 },
                 {
-                  name: 'models/gemini-2.5-flash-preview',
-                  displayName: 'Gemini 2.5 Flash Preview',
+                  name: 'models/gemini-3.6-flash',
+                  displayName: 'Gemini 3.6 Flash',
                   supportedGenerationMethods: ['generateContent'],
                 },
               ],
@@ -307,13 +337,13 @@ describe('fetchGeminiModels', () => {
           json: async () => ({
             models: [
               {
-                name: 'models/gemini-2.0-flash', // duplicate to test deduplication
-                displayName: 'Gemini 2.0 Flash Dup',
+                name: 'models/gemini-3.5-flash', // duplicate to test deduplication
+                displayName: 'Gemini 3.5 Flash Dup',
                 supportedGenerationMethods: ['generateContent'],
               },
               {
-                name: 'models/gemini-1.5-flash',
-                displayName: 'Gemini 1.5 Flash',
+                name: 'models/gemini-3.7-flash',
+                displayName: 'Gemini 3.7 Flash',
                 supportedGenerationMethods: ['generateContent'],
               },
             ],
@@ -325,29 +355,25 @@ describe('fetchGeminiModels', () => {
       expect(callCount).toBe(2);
       expect(models.length).toBe(3);
       expect(models.map((m) => m.id)).toEqual([
-        'gemini-2.5-flash-preview',
-        'gemini-1.5-flash',
-        'gemini-2.0-flash',
+        'gemini-3.6-flash',
+        'gemini-3.5-flash',
+        'gemini-3.7-flash',
       ]);
     } finally {
       globalThis.fetch = originalFetch;
     }
   });
 
-  it('prioritizes gemini 3.x and 2.5 flash variants above legacy models in getModelSortWeight', async () => {
+  it('prioritizes gemini 3.6 flash then 3.5 flash in getModelSortWeight', async () => {
     const { getModelSortWeight } = await import('./registry.js');
     const weight36Flash = getModelSortWeight('gemini-3.6-flash');
-    const weight25Flash = getModelSortWeight('gemini-2.5-flash');
-    const weight25FlashPreview = getModelSortWeight('gemini-2.5-flash-preview');
-    const weight15Flash = getModelSortWeight('gemini-1.5-flash');
-    const weight15Pro = getModelSortWeight('gemini-1.5-pro');
-    const weight20Flash = getModelSortWeight('gemini-2.0-flash');
+    const weight35Flash = getModelSortWeight('gemini-3.5-flash');
+    const weight37Flash = getModelSortWeight('gemini-3.7-flash');
+    const weight38Flash = getModelSortWeight('gemini-3.8-flash');
 
-    expect(weight36Flash).toBeGreaterThan(weight25Flash);
-    expect(weight25Flash).toBeGreaterThan(weight25FlashPreview);
-    expect(weight25FlashPreview).toBeGreaterThan(weight15Flash);
-    expect(weight15Flash).toBeGreaterThan(weight15Pro);
-    expect(weight15Pro).toBeGreaterThan(weight20Flash);
+    expect(weight36Flash).toBeGreaterThan(weight35Flash);
+    expect(weight35Flash).toBeGreaterThan(weight37Flash);
+    expect(weight37Flash).toBeGreaterThan(weight38Flash);
   });
 });
 

@@ -18,7 +18,7 @@ describe('ApiKeyDialog Component', () => {
         onOpenChange={vi.fn()}
         apiKey=""
         providerId="gemini"
-        model="gemini-2.5-flash"
+        model="gemini-3.5-flash"
         onSave={vi.fn()}
         onClear={vi.fn()}
       />,
@@ -34,8 +34,8 @@ describe('ApiKeyDialog Component', () => {
       apiKeyHash: 'hash-123',
       models: [
         {
-          id: 'gemini-2.0-flash',
-          displayName: 'Gemini 2.0 Flash Dynamic',
+          id: 'gemini-3.5-flash',
+          displayName: 'Gemini 3.5 Flash Dynamic',
           description: 'Cache hit',
           supportedGenerationMethods: ['generateContent'],
           badge: 'Recomendado',
@@ -49,23 +49,23 @@ describe('ApiKeyDialog Component', () => {
         onOpenChange={vi.fn()}
         apiKey="valid-test-key-cached"
         providerId="gemini"
-        model="gemini-2.5-flash"
+        model="gemini-3.5-flash"
         onSave={vi.fn()}
         onClear={vi.fn()}
       />,
     );
 
-    expect(screen.getByText('Gemini 2.0 Flash Dynamic')).toBeDefined();
+    expect(screen.getByText('Gemini 3.5 Flash Dynamic')).toBeDefined();
   });
 
   it('invokes fetchGeminiModels when clicking reload models button', async () => {
     const fetchSpy = vi.spyOn(ai, 'fetchGeminiModels').mockResolvedValue([
       {
-        id: 'gemini-2.5-flash',
-        displayName: 'Gemini 2.5 Flash Fresh',
+        id: 'gemini-3.6-flash',
+        displayName: 'Gemini 3.6 Flash Fresh',
         description: 'Freshly fetched',
         supportedGenerationMethods: ['generateContent'],
-        badge: 'Experimental',
+        badge: 'Mais Recente',
       },
     ]);
 
@@ -75,7 +75,7 @@ describe('ApiKeyDialog Component', () => {
         onOpenChange={vi.fn()}
         apiKey="test-api-key-12345678"
         providerId="gemini"
-        model="gemini-2.5-flash"
+        model="gemini-3.5-flash"
         onSave={vi.fn()}
         onClear={vi.fn()}
       />,
@@ -84,15 +84,15 @@ describe('ApiKeyDialog Component', () => {
     // Initial auto-fetch on mount
     await waitFor(() => {
       expect(fetchSpy).toHaveBeenCalledWith('test-api-key-12345678');
-      expect(screen.getByText('Gemini 2.5 Flash Fresh')).toBeDefined();
+      expect(screen.getByText('Gemini 3.6 Flash Fresh')).toBeDefined();
     });
 
     // Now test manual reload with new response
     fetchSpy.mockClear();
     fetchSpy.mockResolvedValueOnce([
       {
-        id: 'gemini-2.0-flash',
-        displayName: 'Gemini 2.0 Flash Reloaded',
+        id: 'gemini-3.5-flash',
+        displayName: 'Gemini 3.5 Flash Reloaded',
         description: 'Reloaded model',
         supportedGenerationMethods: ['generateContent'],
         badge: 'Recomendado',
@@ -104,7 +104,7 @@ describe('ApiKeyDialog Component', () => {
 
     await waitFor(() => {
       expect(fetchSpy).toHaveBeenCalledWith('test-api-key-12345678');
-      expect(screen.getByText('Gemini 2.0 Flash Reloaded')).toBeDefined();
+      expect(screen.getByText('Gemini 3.5 Flash Reloaded')).toBeDefined();
     });
   });
 
@@ -118,7 +118,7 @@ describe('ApiKeyDialog Component', () => {
         onOpenChange={onOpenChange}
         apiKey="my-saved-key"
         providerId="gemini"
-        model="gemini-2.5-flash"
+        model="gemini-3.5-flash"
         onSave={onSave}
         onClear={vi.fn()}
       />,
@@ -127,7 +127,7 @@ describe('ApiKeyDialog Component', () => {
     const saveBtn = screen.getByRole('button', { name: /Salvar Configuração/i });
     fireEvent.click(saveBtn);
 
-    expect(onSave).toHaveBeenCalledWith('my-saved-key', 'gemini', 'gemini-2.5-flash');
+    expect(onSave).toHaveBeenCalledWith('my-saved-key', 'gemini', 'gemini-3.5-flash');
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
@@ -140,7 +140,7 @@ describe('ApiKeyDialog Component', () => {
         onOpenChange={vi.fn()}
         apiKey="key-to-remove"
         providerId="gemini"
-        model="gemini-2.5-flash"
+        model="gemini-3.5-flash"
         onSave={vi.fn()}
         onClear={onClear}
       />,
@@ -155,8 +155,8 @@ describe('ApiKeyDialog Component', () => {
   it('triggers model fetch on input blur when valid key is typed', async () => {
     const fetchSpy = vi.spyOn(ai, 'fetchGeminiModels').mockResolvedValue([
       {
-        id: 'gemini-2.0-flash',
-        displayName: 'Gemini 2.0 Flash OnBlur',
+        id: 'gemini-3.5-flash',
+        displayName: 'Gemini 3.5 Flash OnBlur',
         description: 'Test onblur model',
         supportedGenerationMethods: ['generateContent'],
       },
@@ -168,7 +168,7 @@ describe('ApiKeyDialog Component', () => {
         onOpenChange={vi.fn()}
         apiKey=""
         providerId="gemini"
-        model="gemini-2.5-flash"
+        model="gemini-3.5-flash"
         onSave={vi.fn()}
         onClear={vi.fn()}
       />,
@@ -180,15 +180,15 @@ describe('ApiKeyDialog Component', () => {
 
     await waitFor(() => {
       expect(fetchSpy).toHaveBeenCalledWith('AIzaSyTestKey123');
-      expect(screen.getByText('Gemini 2.0 Flash OnBlur')).toBeDefined();
+      expect(screen.getByText('Gemini 3.5 Flash OnBlur')).toBeDefined();
     });
   });
 
   it('triggers model fetch when test connection succeeds', async () => {
     const fetchSpy = vi.spyOn(ai, 'fetchGeminiModels').mockResolvedValue([
       {
-        id: 'gemini-2.0-flash',
-        displayName: 'Gemini 2.0 Flash OnTest',
+        id: 'gemini-3.5-flash',
+        displayName: 'Gemini 3.5 Flash OnTest',
         description: 'Test ontest model',
         supportedGenerationMethods: ['generateContent'],
       },
@@ -206,7 +206,7 @@ describe('ApiKeyDialog Component', () => {
         onOpenChange={vi.fn()}
         apiKey=""
         providerId="gemini"
-        model="gemini-2.5-flash"
+        model="gemini-3.5-flash"
         onSave={vi.fn()}
         onClear={vi.fn()}
       />,
@@ -221,7 +221,7 @@ describe('ApiKeyDialog Component', () => {
     await waitFor(() => {
       expect(screen.getByText(/Conexão estabelecida com sucesso/i)).toBeDefined();
       expect(fetchSpy).toHaveBeenCalledWith('AIzaSyValidKeyPing');
-      expect(screen.getByText('Gemini 2.0 Flash OnTest')).toBeDefined();
+      expect(screen.getByText('Gemini 3.5 Flash OnTest')).toBeDefined();
     });
   });
 
@@ -236,7 +236,7 @@ describe('ApiKeyDialog Component', () => {
         onOpenChange={vi.fn()}
         apiKey=""
         providerId="gemini"
-        model="gemini-2.5-flash"
+        model="gemini-3.5-flash"
         onSave={vi.fn()}
         onClear={vi.fn()}
       />,

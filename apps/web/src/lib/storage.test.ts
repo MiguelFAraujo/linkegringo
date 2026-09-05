@@ -11,8 +11,8 @@ import type { RemoteGeminiModel } from '@linkegringo/ai';
 
 const sampleModels: RemoteGeminiModel[] = [
   {
-    id: 'gemini-2.0-flash',
-    displayName: 'Gemini 2.0 Flash',
+    id: 'gemini-3.5-flash',
+    displayName: 'Gemini 3.5 Flash',
     description: 'Rápido',
     supportedGenerationMethods: ['generateContent'],
     badge: 'Recomendado',
@@ -39,7 +39,7 @@ describe('Storage Helpers - Gemini Models Cache', () => {
     const cached = getCachedGeminiModels('test-key-abc');
     expect(cached).not.toBeNull();
     expect(cached?.models).toHaveLength(1);
-    expect(cached?.models[0].id).toBe('gemini-2.0-flash');
+    expect(cached?.models[0].id).toBe('gemini-3.5-flash');
   });
 
   it('returns null when checking cache with a different apiKey', () => {
@@ -64,10 +64,13 @@ describe('Storage Helpers - Gemini Models Cache', () => {
     expect(getCachedGeminiModels()).toBeNull();
   });
 
-  it('stores and retrieves selected model', () => {
-    expect(getStoredModel()).toBe('gemini-2.5-flash'); // default fallback
+  it('stores and retrieves selected model, falling back to gemini-3.5-flash for invalid models', () => {
+    expect(getStoredModel()).toBe('gemini-3.5-flash'); // default fallback
 
-    setStoredModel('gemini-1.5-pro');
-    expect(getStoredModel()).toBe('gemini-1.5-pro');
+    setStoredModel('gemini-3.6-flash');
+    expect(getStoredModel()).toBe('gemini-3.6-flash');
+
+    setStoredModel('gemini-2.0-flash');
+    expect(getStoredModel()).toBe('gemini-3.5-flash'); // falls back because 2.0 is outside 3.5-3.8 flash
   });
 });

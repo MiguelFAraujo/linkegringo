@@ -358,8 +358,8 @@ export function App() {
     setApiKey('');
     clearStoredApiKey();
     clearCachedGeminiModels();
-    setModel('gemini-2.5-flash');
-    setStoredModel('gemini-2.5-flash');
+    setModel('gemini-3.5-flash');
+    setStoredModel('gemini-3.5-flash');
   };
 
   const hasActiveSession = Boolean(profile && review);

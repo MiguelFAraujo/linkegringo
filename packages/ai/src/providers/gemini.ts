@@ -146,8 +146,8 @@ export function isAuthError(err: any): boolean {
 }
 
 export function getFallbackModels(primaryModel: string): string[] {
-  const defaults = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-3.6-flash'];
-  const list = [primaryModel, ...defaults].filter((m) => m !== 'gemini-2.0-flash');
+  const defaults = ['gemini-3.5-flash', 'gemini-3.6-flash', 'gemini-3.7-flash', 'gemini-3.8-flash'];
+  const list = [primaryModel, ...defaults].filter((m) => /^gemini-3\.[5-8]-flash/.test(m));
   return Array.from(new Set(list));
 }
 
@@ -162,7 +162,10 @@ export class GeminiAiProvider implements AiProvider {
       throw new Error('Chave de API do Gemini não informada.');
     }
     this.ai = new GoogleGenAI({ apiKey: config.apiKey });
-    this.model = config.model && config.model !== 'gemini-2.0-flash' ? config.model : 'gemini-2.5-flash';
+    this.model =
+      config.model && /^gemini-3\.[5-8]-flash/.test(config.model)
+        ? config.model
+        : 'gemini-3.5-flash';
     this.retryDelayMs = typeof config.retryDelayMs === 'number' ? config.retryDelayMs : 1500;
   }
 

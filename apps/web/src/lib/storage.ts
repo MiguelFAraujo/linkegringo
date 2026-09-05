@@ -52,18 +52,18 @@ export function setStoredProviderId(providerId: string): void {
 export function getStoredModel(): string {
   try {
     const val = localStorage.getItem(STORAGE_KEYS.MODEL);
-    if (val && val !== 'gemini-2.0-flash') {
+    if (val && /^gemini-3\.[5-8]-flash/.test(val)) {
       return val;
     }
-    return 'gemini-2.5-flash';
+    return 'gemini-3.5-flash';
   } catch {
-    return 'gemini-2.5-flash';
+    return 'gemini-3.5-flash';
   }
 }
 
 export function setStoredModel(model: string): void {
   try {
-    const cleanModel = model && model !== 'gemini-2.0-flash' ? model : 'gemini-2.5-flash';
+    const cleanModel = model && /^gemini-3\.[5-8]-flash/.test(model) ? model : 'gemini-3.5-flash';
     localStorage.setItem(STORAGE_KEYS.MODEL, cleanModel);
   } catch (err) {
     console.warn('[storage] Failed to save model:', err);
