@@ -29,12 +29,14 @@ export interface AiProvider {
     pdfBase64?: string;
     pdfText?: string;
     cvPdfBase64?: string;
+    targetRole?: string;
     currentDate?: string;
   }): Promise<ParseAndDiagnoseResult>;
 
   generateInterview(input: {
     profile: Profile;
     objective: CareerObjective;
+    review?: ProfileReview;
     currentDate?: string;
   }): Promise<InterviewPlan>;
 

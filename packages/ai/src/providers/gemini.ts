@@ -105,17 +105,41 @@ export function scrubFalseBenchmarks(text: string): string {
   return result.trim().replace(/\s{2,}/g, ' ');
 }
 
+export function scrubEmojis(text: string): string {
+  if (!text) return text;
+  return text
+    .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F000}-\u{1F02F}\u{1F0A0}-\u{1F0FF}\u{1F100}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1F900}-\u{1F9FF}\u{1FA70}-\u{1FAFF}]/gu, '')
+    .trim();
+}
+
 export function sanitizeReviewBenchmarks(review: ProfileReview): ProfileReview {
   const artifactRegex = /artefato.*pdf|quebra.*par[aá]grafo|linha.*corrida|falta de quebra|espa[çc]amento.*resumo/i;
 
+  const cleanScoreExplanations = review.scoreExplanations
+    ? {
+        searchRelevance: scrubEmojis(scrubFalseBenchmarks(review.scoreExplanations.searchRelevance || '')),
+        humanVoice: scrubEmojis(scrubFalseBenchmarks(review.scoreExplanations.humanVoice || '')),
+        credibility: scrubEmojis(scrubFalseBenchmarks(review.scoreExplanations.credibility || '')),
+        positioningClarity: scrubEmojis(scrubFalseBenchmarks(review.scoreExplanations.positioningClarity || '')),
+        evidenceCoverage: scrubEmojis(scrubFalseBenchmarks(review.scoreExplanations.evidenceCoverage || '')),
+      }
+    : undefined;
+
   return {
     ...review,
-    executiveSummary: scrubFalseBenchmarks(review.executiveSummary),
+    executiveSummary: scrubEmojis(scrubFalseBenchmarks(review.executiveSummary)),
+    scoreExplanations: cleanScoreExplanations,
     critique: (review.critique || []).map((c) => {
       const filteredIssues = (c.issues || []).filter((issue) => !artifactRegex.test(issue));
-      const cleanIssues = filteredIssues.map(scrubFalseBenchmarks).filter(Boolean);
-      const cleanStrengths = (c.strengths || []).map(scrubFalseBenchmarks).filter(Boolean);
-      const cleanAssessment = scrubFalseBenchmarks(c.assessment);
+      const cleanIssues = filteredIssues
+        .map(scrubFalseBenchmarks)
+        .map(scrubEmojis)
+        .filter(Boolean);
+      const cleanStrengths = (c.strengths || [])
+        .map(scrubFalseBenchmarks)
+        .map(scrubEmojis)
+        .filter(Boolean);
+      const cleanAssessment = scrubEmojis(scrubFalseBenchmarks(c.assessment));
 
       return {
         ...c,
@@ -345,6 +369,7 @@ export class GeminiAiProvider implements AiProvider {
     pdfBase64?: string;
     pdfText?: string;
     cvPdfBase64?: string;
+    targetRole?: string;
     currentDate?: string;
   }): Promise<ParseAndDiagnoseResult> {
     const parts: any[] = [];
@@ -368,7 +393,7 @@ export class GeminiAiProvider implements AiProvider {
     }
 
     parts.push({
-      text: buildParseAndDiagnosePrompt(input.pdfText, input.currentDate),
+      text: buildParseAndDiagnosePrompt(input.pdfText, input.currentDate, input.targetRole),
     });
 
     const response = await this.executeGenerateContent({
@@ -392,9 +417,10 @@ export class GeminiAiProvider implements AiProvider {
   async generateInterview(input: {
     profile: Profile;
     objective: CareerObjective;
+    review?: ProfileReview;
     currentDate?: string;
   }): Promise<InterviewPlan> {
-    const prompt = buildInterviewPrompt(input.profile, input.objective, input.currentDate);
+    const prompt = buildInterviewPrompt(input.profile, input.objective, input.currentDate, input.review);
     const response = await this.executeGenerateContent({
       contents: prompt,
       config: {

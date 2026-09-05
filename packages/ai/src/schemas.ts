@@ -207,6 +207,24 @@ export const sectionCritiqueResponseSchema: Schema = {
   required: ['section', 'assessment', 'strengths', 'issues', 'severity'],
 };
 
+export const scoreExplanationsResponseSchema: Schema = {
+  type: Type.OBJECT,
+  properties: {
+    searchRelevance: { type: Type.STRING },
+    humanVoice: { type: Type.STRING },
+    credibility: { type: Type.STRING },
+    positioningClarity: { type: Type.STRING },
+    evidenceCoverage: { type: Type.STRING },
+  },
+  required: [
+    'searchRelevance',
+    'humanVoice',
+    'credibility',
+    'positioningClarity',
+    'evidenceCoverage',
+  ],
+};
+
 export const profileReviewResponseSchema: Schema = {
   type: Type.OBJECT,
   properties: {
@@ -214,6 +232,7 @@ export const profileReviewResponseSchema: Schema = {
     language: { type: Type.STRING },
     overallScore: { type: Type.INTEGER },
     scores: profileScoresResponseSchema,
+    scoreExplanations: scoreExplanationsResponseSchema,
     executiveSummary: { type: Type.STRING },
     profileDirection: profileDirectionResponseSchema,
     critique: {
@@ -226,6 +245,7 @@ export const profileReviewResponseSchema: Schema = {
     'language',
     'overallScore',
     'scores',
+    'scoreExplanations',
     'executiveSummary',
     'profileDirection',
     'critique',
@@ -357,6 +377,7 @@ export const rewrittenProfileSchema: Schema = {
     initialScore: { type: Type.INTEGER },
     overallScore: { type: Type.INTEGER },
     scores: profileScoresResponseSchema,
+    scoreExplanations: scoreExplanationsResponseSchema,
     executiveSummary: { type: Type.STRING },
     profileDirection: profileDirectionResponseSchema,
     critique: {

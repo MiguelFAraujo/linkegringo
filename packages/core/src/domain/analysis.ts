@@ -43,6 +43,15 @@ export const profileScoresSchema = z.object({
 });
 export type ProfileScores = z.infer<typeof profileScoresSchema>;
 
+export const scoreExplanationsSchema = z.object({
+  searchRelevance: z.string().default(''),
+  humanVoice: z.string().default(''),
+  credibility: z.string().default(''),
+  positioningClarity: z.string().default(''),
+  evidenceCoverage: z.string().default(''),
+});
+export type ScoreExplanations = z.infer<typeof scoreExplanationsSchema>;
+
 export const profileDirectionSchema = z.object({
   positioning: z.string(),
   primaryRole: z.string(),
@@ -56,6 +65,7 @@ export const profileReviewSchema = z.object({
   language: z.string().default('en'),
   overallScore: scoreNumber,
   scores: profileScoresSchema,
+  scoreExplanations: scoreExplanationsSchema.optional(),
   executiveSummary: z.string(),
   profileDirection: profileDirectionSchema,
   critique: z.array(sectionCritiqueSchema).default([]),
@@ -93,6 +103,7 @@ export const profileAnalysisSchema = z.object({
   initialScore: scoreNumber.optional(),
   overallScore: scoreNumber,
   scores: profileScoresSchema,
+  scoreExplanations: scoreExplanationsSchema.optional(),
   executiveSummary: z.string(),
   profileDirection: profileDirectionSchema,
   critique: z.array(sectionCritiqueSchema).default([]),

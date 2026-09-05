@@ -244,6 +244,85 @@ describe('Prompts & Deterministic Rubric', () => {
     expect(analysis.rewritten.headline).toContain('Senior Full Stack Engineer');
     expect(analysis.rewritten.headline).not.toContain('Senior Backend Engineer');
   });
+
+  it('enforces strict prohibition of emojis in prompts and scrubEmojis scrubber', async () => {
+    const {
+      PARSE_AND_DIAGNOSE_SYSTEM_PROMPT,
+      INTERVIEW_SYSTEM_PROMPT,
+      INTERVIEW_PROGRESS_SYSTEM_PROMPT,
+      REWRITE_PROFILE_SYSTEM_PROMPT,
+    } = await import('./prompts.js');
+    const { scrubEmojis } = await import('./providers/gemini.js');
+
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('STRICT PROHIBITION OF EMOJIS');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('ZERO emojis');
+    expect(INTERVIEW_SYSTEM_PROMPT).toContain('STRICT PROHIBITION OF EMOJIS');
+    expect(INTERVIEW_PROGRESS_SYSTEM_PROMPT).toContain('STRICT PROHIBITION OF EMOJIS');
+    expect(REWRITE_PROFILE_SYSTEM_PROMPT).toContain('STRICT PROHIBITION OF EMOJIS');
+
+    // scrubEmojis utility
+    expect(scrubEmojis('🎉 Perfil no padrão internacional 💡!')).toBe('Perfil no padrão internacional !');
+    expect(scrubEmojis('⚡ High-performance ✨ distributed system 🚀')).toBe('High-performance  distributed system');
+  });
+
+  it('buildParseAndDiagnosePrompt injects targetRole and requires scoreExplanations', async () => {
+    const { buildParseAndDiagnosePrompt } = await import('./prompts.js');
+    const prompt = buildParseAndDiagnosePrompt('Sample PDF text', 'October 2026', 'Staff Platform Engineer');
+
+    expect(prompt).toContain('TARGET ROLE IN THE US:');
+    expect(prompt).toContain('Staff Platform Engineer');
+    expect(prompt).toContain('scoreExplanations');
+    expect(prompt).toContain('SCORE EXPLANATIONS REQUIREMENT');
+  });
+
+  it('buildInterviewPrompt activates Elite Polish Mode when score >= 92', async () => {
+    const { buildInterviewPrompt } = await import('./prompts.js');
+    const { MOCK_PROFILE, MOCK_REVIEW } = await import('./providers/mock.js');
+
+    const regularPrompt = buildInterviewPrompt(MOCK_PROFILE, {
+      targetMarket: 'United States',
+      primaryRole: 'Senior Backend Engineer',
+      seniority: 'senior',
+      workPreference: 'remote',
+      excludedTechnologies: [],
+    }, 'October 2026', { ...MOCK_REVIEW, overallScore: 78 });
+    expect(regularPrompt).not.toContain('ELITE POLISH MODE');
+
+    const polishPrompt = buildInterviewPrompt(MOCK_PROFILE, {
+      targetMarket: 'United States',
+      primaryRole: 'Senior Backend Engineer',
+      seniority: 'senior',
+      workPreference: 'remote',
+      excludedTechnologies: [],
+    }, 'October 2026', { ...MOCK_REVIEW, overallScore: 94 });
+    expect(polishPrompt).toContain('ELITE POLISH MODE (Modo Lapidação)');
+    expect(polishPrompt).toContain('94/100');
+  });
+
+  it('DemoAiProvider calibrates targetRole in parseAndDiagnose and activates Elite Polish questions', async () => {
+    const { createAiProvider } = await import('./registry.js');
+    const { MOCK_PROFILE, MOCK_REVIEW } = await import('./providers/mock.js');
+    const provider = createAiProvider('demo');
+
+    const result = await provider.parseAndDiagnose({ targetRole: 'Lead Cloud Architect' });
+    expect(result.review.profileDirection.primaryRole).toBe('Lead Cloud Architect');
+    expect(result.review.scoreExplanations?.searchRelevance).toBeDefined();
+
+    const polishPlan = await provider.generateInterview({
+      profile: MOCK_PROFILE,
+      objective: {
+        targetMarket: 'United States',
+        primaryRole: 'Lead Cloud Architect',
+        seniority: 'senior',
+        workPreference: 'remote',
+        excludedTechnologies: [],
+      },
+      review: { ...MOCK_REVIEW, overallScore: 95 },
+    });
+
+    expect(polishPlan.questions.some((q) => q.id === 'polish-p99-latency')).toBe(true);
+    expect(polishPlan.questions.some((q) => q.reason.includes('Critério dos recrutadores dos EUA'))).toBe(true);
+  });
 });
 
 describe('fetchGeminiModels', () => {

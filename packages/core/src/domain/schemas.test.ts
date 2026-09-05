@@ -114,6 +114,39 @@ describe('Domain Schemas Robustness', () => {
     expect(parsed.critique[0].issues).toEqual(['Single string issue']);
   });
 
+  it('validates scoreExplanations in profile review when provided', () => {
+    const raw = {
+      targetMarket: 'United States',
+      language: 'en',
+      overallScore: 90,
+      scores: {
+        searchRelevance: 90,
+        humanVoice: 90,
+        credibility: 90,
+        positioningClarity: 90,
+        evidenceCoverage: 90,
+      },
+      scoreExplanations: {
+        searchRelevance: 'Headline clara com palavras-chave relevantes.',
+        humanVoice: 'Tom executivo e conciso.',
+        credibility: 'Experiência sólida comprovada.',
+        positioningClarity: 'Posicionamento sênior alinhado.',
+        evidenceCoverage: 'Métricas quantitativas no framework XYZ.',
+      },
+      executiveSummary: 'Resumo executivo factual.',
+      profileDirection: {
+        positioning: 'Staff Engineer',
+        primaryRole: 'Staff Backend Engineer',
+        rationale: 'Forte background técnico.',
+      },
+      critique: [],
+    };
+
+    const parsed = profileReviewSchema.parse(raw);
+    expect(parsed.scoreExplanations?.searchRelevance).toBe('Headline clara com palavras-chave relevantes.');
+    expect(parsed.scoreExplanations?.evidenceCoverage).toBe('Métricas quantitativas no framework XYZ.');
+  });
+
   it('tolerates fuzzy interview categories and answer types', () => {
     const raw = {
       questions: [

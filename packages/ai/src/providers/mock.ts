@@ -73,6 +73,13 @@ export const MOCK_REVIEW: ProfileReview = {
     positioningClarity: 35,
     evidenceCoverage: 37,
   },
+  scoreExplanations: {
+    searchRelevance: 'Headline atual possui termos genéricos ("Buscando desafios") e falta direcionamento explícito para buscas booleanas nos EUA; faltam 52% para cobrir stack essencial e posicionamento sênior.',
+    humanVoice: 'Tom amigável, porém redigido integralmente em português; faltam 48% em escrita técnica nativa e vocabulário assertivo de engenharia.',
+    credibility: 'Experiência em fintech comprovada, mas faltam 62% em evidências de sistemas distribuídos de alta escala, métricas de produção e liderança técnica.',
+    positioningClarity: 'Perfil oscila sem arquétipo claro; faltam 65% para estabelecer posicionamento focado em engenharia sênior para o mercado americano.',
+    evidenceCoverage: 'Descrições de cargo passivas e sem resultados mensuráveis; faltam 63% para implementação integral do framework XYZ com métricas de impacto.',
+  },
   executiveSummary:
     'Seu perfil atual é praticamente invisível para recrutadores nos EUA. O conteúdo está em português, seu título usa termos genéricos ("Buscando desafios") que reduzem sua credibilidade, e suas descrições focam em tarefas passivas ("Responsável por", "Participei") sem citar volume de transações, latência, redução de custos ou impacto arquitetural.',
   profileDirection: {
@@ -131,20 +138,64 @@ export class DemoAiProvider implements AiProvider {
     return true;
   }
 
-  async parseAndDiagnose(): Promise<ParseAndDiagnoseResult> {
+  async parseAndDiagnose(input?: { targetRole?: string }): Promise<ParseAndDiagnoseResult> {
     // Simulate short network delay for smooth UX feel
     await new Promise((resolve) => setTimeout(resolve, 800));
+
+    const review = {
+      ...MOCK_REVIEW,
+      profileDirection: {
+        ...MOCK_REVIEW.profileDirection,
+        primaryRole: input?.targetRole || MOCK_REVIEW.profileDirection.primaryRole,
+        positioning: input?.targetRole
+          ? `Senior ${input.targetRole}`
+          : MOCK_REVIEW.profileDirection.positioning,
+      },
+    };
+
     return {
       profile: MOCK_PROFILE,
-      review: MOCK_REVIEW,
+      review,
     };
   }
 
   async generateInterview(input: {
     profile: Profile;
     objective: CareerObjective;
+    review?: ProfileReview;
   }): Promise<InterviewPlan> {
     await new Promise((resolve) => setTimeout(resolve, 700));
+
+    const isElitePolishMode = (input.review?.overallScore ?? 0) >= 92;
+    if (isElitePolishMode) {
+      return {
+        questions: [
+          {
+            id: 'polish-p99-latency',
+            category: 'scale',
+            question:
+              'Em cenários de pico de tráfego, qual era a latência p99 tolerada e que estratégia de degradação graciosa foi adotada pelos microsserviços?',
+            reason:
+              'Critério dos recrutadores dos EUA: Avalia profundidade em resiliência operacional e comportamento sob estresse extremo.',
+            relatedExperience: 'Fintech Pagamentos Brasil',
+            answerType: 'long-text',
+            required: false,
+          },
+          {
+            id: 'polish-architectural-tradeoff',
+            category: 'technical-depth',
+            question:
+              'Qual o trade-off arquitetural mais crítico entre consistência eventual e disponibilidade imediata na decomposição do monólito financeiro?',
+            reason:
+              'Critério dos recrutadores dos EUA: Valida capacidade de tomar decisões de arquitetura de alto impacto com embasamento técnico.',
+            relatedExperience: 'Fintech Pagamentos Brasil',
+            answerType: 'long-text',
+            required: false,
+          },
+        ],
+      };
+    }
+
     return {
       questions: [
         {
@@ -153,7 +204,7 @@ export class DemoAiProvider implements AiProvider {
           question:
             'Na Fintech Pagamentos, qual era a escala ou volume aproximado de eventos/transações processadas pelos microsserviços com Kafka?',
           reason:
-            'Recrutadores gringos contratam engenheiros sênior pela capacidade de lidar com volume e concorrência. Saber se eram milhares ou milhões de requisições define sua faixa salarial.',
+            'Critério dos recrutadores dos EUA: Engenheiros sênior são contratados pela capacidade de lidar com volume e concorrência. Saber se eram milhares ou milhões de requisições define sua faixa salarial.',
           relatedExperience: 'Fintech Pagamentos Brasil',
           answerType: 'long-text',
           required: false,
@@ -164,7 +215,7 @@ export class DemoAiProvider implements AiProvider {
           question:
             'Durante a migração do monólito para microsserviços, qual foi a maior decisão técnica ou trade-off de arquitetura que você precisou resolver?',
           reason:
-            'Nos EUA, engenheiro sênior não é quem apenas escreve código, mas quem toma decisões difíceis (ex: consistência eventual vs transações ACID, desacoplamento de banco de dados).',
+            'Critério dos recrutadores dos EUA: Engenheiro sênior não é quem apenas escreve código, mas quem toma decisões difíceis (ex: consistência eventual vs transações ACID, desacoplamento de banco de dados).',
           relatedExperience: 'Fintech Pagamentos Brasil',
           answerType: 'long-text',
           required: false,
@@ -175,7 +226,7 @@ export class DemoAiProvider implements AiProvider {
           question:
             'Você realizou algum trabalho nos bastidores que não está no seu perfil, como criação de pipelines CI/CD, métricas de observabilidade (Prometheus/Datadog) ou redução de latência?',
           reason:
-            'O "trabalho invisível" é o maior diferencial de um engenheiro sênior. Mostrar que você se importa com resiliência em produção gera credibilidade instantânea.',
+            'Critério dos recrutadores dos EUA: O trabalho invisível é o maior diferencial de um engenheiro sênior. Mostrar que você se importa com resiliência em produção gera credibilidade instantânea.',
           relatedExperience: 'Fintech Pagamentos Brasil',
           answerType: 'long-text',
           required: false,
@@ -256,6 +307,13 @@ export class DemoAiProvider implements AiProvider {
         credibility: 96,
         positioningClarity: 97,
         evidenceCoverage: 91,
+      },
+      scoreExplanations: {
+        searchRelevance: 'Headline otimizada com palavras-chave estratégicas e indexação ATS de alto sinal para recrutadores dos EUA.',
+        humanVoice: 'Linguagem técnica natural em inglês americano, com narrativa executiva concisa e precisa.',
+        credibility: 'Trajetória comprovada com arquitetura de sistemas distribuídos e impacto de engenharia evidente.',
+        positioningClarity: 'Arquétipo sênior bem definido e alinhado diretamente com as expectativas de contratação remota.',
+        evidenceCoverage: 'Todas as experiências descritas com o framework XYZ contendo métricas reais de impacto e escala.',
       },
       executiveSummary:
         'Transformação completa! Seu perfil agora está 100% em inglês americano nativo, com uma Headline de alto sinal focada em Sistemas Distribuídos e Backend Sênior. As experiências foram reescritas com o framework XYZ, destacando a arquitetura de microsserviços com Kafka, resiliência e métricas comprovadas.',
