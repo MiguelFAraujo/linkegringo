@@ -68,3 +68,29 @@ describe('Helper Utilities', () => {
     expect(parsed.count).toBe(2);
   });
 });
+
+describe('Prompts & Deterministic Rubric', () => {
+  it('PARSE_AND_DIAGNOSE_SYSTEM_PROMPT includes 5-pillar objective rubric and 88-100 recognition', async () => {
+    const { PARSE_AND_DIAGNOSE_SYSTEM_PROMPT } = await import('./prompts.js');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('Objective Scoring Rubric (5 Pillars - Deterministic Evaluation 0-100)');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('Framework XYZ');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('RECOGNITION OF ALREADY OPTIMIZED PROFILES (88 to 100 points)');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('DO NOT invent fictitious problems');
+  });
+
+  it('REWRITE_PROFILE_SYSTEM_PROMPT prohibits invented product niches and enforces role fidelity and headline formula', async () => {
+    const { REWRITE_PROFILE_SYSTEM_PROMPT } = await import('./prompts.js');
+    expect(REWRITE_PROFILE_SYSTEM_PROMPT).toContain('STRICT PROHIBITION OF INVENTED PRODUCT NICHES');
+    expect(REWRITE_PROFILE_SYSTEM_PROMPT).toContain('CRM Platforms');
+    expect(REWRITE_PROFILE_SYSTEM_PROMPT).toContain('FIDELITY TO CANDIDATE\'S ROLE');
+    expect(REWRITE_PROFILE_SYSTEM_PROMPT).toContain('HIGH-CONVERSION RECRUITER HEADLINE FORMULA');
+    expect(REWRITE_PROFILE_SYSTEM_PROMPT).toContain('Senior Full Stack Engineer');
+  });
+
+  it('INTERVIEW_PROGRESS_SYSTEM_PROMPT enforces maximum 2 interview rounds', async () => {
+    const { INTERVIEW_PROGRESS_SYSTEM_PROMPT } = await import('./prompts.js');
+    expect(INTERVIEW_PROGRESS_SYSTEM_PROMPT).toContain('Maximum 2 interview rounds');
+    expect(INTERVIEW_PROGRESS_SYSTEM_PROMPT).toContain('readyForGeneration: true');
+  });
+});
+

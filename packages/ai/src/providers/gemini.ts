@@ -157,6 +157,7 @@ export class GeminiAiProvider implements AiProvider {
       config: {
         systemInstruction: PARSE_AND_DIAGNOSE_SYSTEM_PROMPT,
         responseMimeType: 'application/json',
+        temperature: 0.1,
       },
     });
 
@@ -178,6 +179,7 @@ export class GeminiAiProvider implements AiProvider {
       config: {
         systemInstruction: INTERVIEW_SYSTEM_PROMPT,
         responseMimeType: 'application/json',
+        temperature: 0.1,
       },
     });
 
@@ -206,6 +208,7 @@ export class GeminiAiProvider implements AiProvider {
       config: {
         systemInstruction: INTERVIEW_PROGRESS_SYSTEM_PROMPT,
         responseMimeType: 'application/json',
+        temperature: 0.1,
       },
     });
 
@@ -232,6 +235,7 @@ export class GeminiAiProvider implements AiProvider {
       config: {
         systemInstruction: REWRITE_PROFILE_SYSTEM_PROMPT,
         responseMimeType: 'application/json',
+        temperature: 0.1,
       },
     });
 
