@@ -24,6 +24,7 @@ import {
 import type { Profile, ProfileAnalysis, ProfileReview } from '@linkegringo/core';
 import { copyToClipboard, fireConfetti } from '@/lib/file-utils';
 import { InterviewGuideCard } from './InterviewGuideCard';
+import { FormattedText } from './ui/formatted-text';
 
 interface ActionHubViewProps {
   originalProfile: Profile;
@@ -180,40 +181,42 @@ export function ActionHubView({
             <h1 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
               Evolução da Nota do seu Perfil
             </h1>
-            <p className="text-xs sm:text-sm text-slate-300 max-w-xl">
-              {analysis.executiveSummary}
-            </p>
+            <FormattedText
+              text={analysis.executiveSummary}
+              as="p"
+              className="text-xs sm:text-sm text-slate-300 max-w-xl"
+            />
           </div>
 
           {/* Big Score Comparison */}
           <div className="flex items-center gap-4 bg-slate-950/80 p-4 sm:p-5 rounded-2xl border border-slate-800 shadow-xl flex-shrink-0">
             {/* Before */}
             <div className="text-center">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 block">
+              <span className="text-xs font-bold uppercase tracking-widest text-slate-500 block">
                 Antes
               </span>
               <span className="text-3xl sm:text-4xl font-black text-rose-400 font-mono">
                 {initialScore}
               </span>
-              <span className="text-[10px] text-slate-500 block">/100</span>
+              <span className="text-xs text-slate-500 block">/100</span>
             </div>
 
             <div className="flex flex-col items-center">
               <TrendingUp className="w-6 h-6 text-emerald-400 animate-bounce" />
-              <span className="text-[10px] font-bold font-mono text-emerald-400 mt-1">
+              <span className="text-xs font-bold font-mono text-emerald-400 mt-1">
                 {newScore - initialScore >= 0 ? `+${newScore - initialScore}` : newScore - initialScore} pts
               </span>
             </div>
 
             {/* After */}
             <div className="text-center">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400 block">
+              <span className="text-xs font-bold uppercase tracking-widest text-emerald-400 block">
                 Depois
               </span>
               <span className="text-4xl sm:text-5xl font-black text-emerald-400 font-mono">
                 {newScore}
               </span>
-              <span className="text-[10px] text-emerald-500/80 block">/100</span>
+              <span className="text-xs text-emerald-500/80 block">/100</span>
             </div>
           </div>
         </div>
@@ -288,9 +291,11 @@ export function ActionHubView({
                         <h4 className="text-xs sm:text-sm font-bold text-white flex items-center gap-2">
                           {c.name}
                         </h4>
-                        <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed">
-                          {c.description}
-                        </p>
+                        <FormattedText
+                          text={c.description}
+                          as="p"
+                          className="text-xs text-slate-400 mt-0.5 leading-relaxed"
+                        />
                       </div>
                     </div>
 
@@ -316,7 +321,7 @@ export function ActionHubView({
                   </div>
 
                   {/* Comparative Progress Bars */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 text-[11px]">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 text-xs">
                     <div className="space-y-1">
                       <div className="flex justify-between text-slate-400">
                         <span className="text-rose-400 font-medium">Antes (Original)</span>
@@ -396,7 +401,7 @@ export function ActionHubView({
                 >
                   {item.label}
                 </p>
-                <p className="text-[11px] text-slate-400 mt-0.5">{item.detail}</p>
+                <FormattedText text={item.detail} as="p" className="text-xs text-slate-400 mt-0.5" />
               </div>
             </div>
           ))}
@@ -465,21 +470,23 @@ export function ActionHubView({
               {/* Before vs After */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                 <div className="p-4 rounded-xl border border-rose-500/20 bg-rose-950/10 space-y-1.5">
-                  <span className="font-bold uppercase tracking-wider text-rose-400 text-[10px]">
+                  <span className="font-bold uppercase tracking-wider text-rose-400 text-xs">
                     Antes (LinkedIn Original)
                   </span>
-                  <p className="text-slate-400 italic">
+                  <p className="text-slate-400 italic text-xs sm:text-sm">
                     {originalProfile.headline || '(Vazio ou sem título estratégico)'}
                   </p>
                 </div>
 
                 <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-950/20 space-y-1.5">
-                  <span className="font-bold uppercase tracking-wider text-emerald-400 text-[10px]">
+                  <span className="font-bold uppercase tracking-wider text-emerald-400 text-xs">
                     Depois (Versão dos EUA)
                   </span>
-                  <p className="text-white font-medium text-sm leading-relaxed">
-                    {analysis.rewritten.headline}
-                  </p>
+                  <FormattedText
+                    text={analysis.rewritten.headline}
+                    as="p"
+                    className="text-white font-medium text-xs sm:text-sm leading-relaxed"
+                  />
                 </div>
               </div>
             </Card>
@@ -510,21 +517,23 @@ export function ActionHubView({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                 <div className="p-4 rounded-xl border border-rose-500/20 bg-rose-950/10 space-y-2">
-                  <span className="font-bold uppercase tracking-wider text-rose-400 text-[10px]">
+                  <span className="font-bold uppercase tracking-wider text-rose-400 text-xs">
                     Antes (LinkedIn Original)
                   </span>
-                  <p className="text-slate-400 whitespace-pre-line leading-relaxed italic max-h-80 overflow-y-auto">
+                  <p className="text-slate-400 whitespace-pre-line leading-relaxed italic text-xs sm:text-sm max-h-80 overflow-y-auto">
                     {originalProfile.summary || '(Resumo curto ou sem dados de escala)'}
                   </p>
                 </div>
 
                 <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-950/20 space-y-2">
-                  <span className="font-bold uppercase tracking-wider text-emerald-400 text-[10px]">
+                  <span className="font-bold uppercase tracking-wider text-emerald-400 text-xs">
                     Depois (Versão dos EUA)
                   </span>
-                  <p className="text-slate-100 whitespace-pre-line leading-relaxed text-xs sm:text-sm font-medium max-h-80 overflow-y-auto">
-                    {analysis.rewritten.summary}
-                  </p>
+                  <FormattedText
+                    text={analysis.rewritten.summary}
+                    as="p"
+                    className="text-slate-100 whitespace-pre-line leading-relaxed text-xs sm:text-sm font-medium max-h-80 overflow-y-auto"
+                  />
                 </div>
               </div>
             </Card>
@@ -574,23 +583,23 @@ export function ActionHubView({
                     {/* Side-by-side Before vs After for Experience */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs pt-1 border-t border-slate-800/80">
                       <div className="p-3.5 rounded-xl border border-rose-500/20 bg-rose-950/10 space-y-1.5">
-                        <span className="font-bold uppercase tracking-wider text-rose-400 text-[10px]">
+                        <span className="font-bold uppercase tracking-wider text-rose-400 text-xs">
                           Antes (LinkedIn Original)
                         </span>
-                        <p className="text-slate-400 whitespace-pre-line italic leading-relaxed">
+                        <p className="text-slate-400 whitespace-pre-line italic leading-relaxed text-xs sm:text-sm">
                           {originalExp?.description || originalExp?.title || '(Descrição passiva ou não informada)'}
                         </p>
                       </div>
 
                       <div className="p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-950/20 space-y-1.5">
-                        <span className="font-bold uppercase tracking-wider text-emerald-400 text-[10px]">
+                        <span className="font-bold uppercase tracking-wider text-emerald-400 text-xs">
                           Depois (Versão dos EUA • Framework XYZ)
                         </span>
-                        <ul className="space-y-1.5 text-slate-100 leading-relaxed">
+                        <ul className="space-y-1.5 text-slate-100 leading-relaxed text-xs sm:text-sm">
                           {exp.bullets.map((bullet, bIdx) => (
                             <li key={bIdx} className="flex items-start gap-2">
                               <span className="text-emerald-400 font-bold">•</span>
-                              <span>{bullet}</span>
+                              <FormattedText text={bullet} as="span" />
                             </li>
                           ))}
                         </ul>
@@ -634,7 +643,7 @@ export function ActionHubView({
               {/* Side-by-side Before vs After for Skills */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs pt-1">
                 <div className="p-4 rounded-xl border border-rose-500/20 bg-rose-950/10 space-y-2">
-                  <span className="font-bold uppercase tracking-wider text-rose-400 text-[10px]">
+                  <span className="font-bold uppercase tracking-wider text-rose-400 text-xs">
                     Antes (Skills Originais do Perfil)
                   </span>
                   <div className="flex flex-wrap gap-1.5 pt-1">
@@ -649,13 +658,13 @@ export function ActionHubView({
                         </Badge>
                       ))
                     ) : (
-                      <p className="text-slate-400 italic">(Nenhuma skill listada originalmente)</p>
+                      <p className="text-slate-400 italic text-xs sm:text-sm">(Nenhuma skill listada originalmente)</p>
                     )}
                   </div>
                 </div>
 
                 <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-950/20 space-y-2">
-                  <span className="font-bold uppercase tracking-wider text-emerald-400 text-[10px]">
+                  <span className="font-bold uppercase tracking-wider text-emerald-400 text-xs">
                     Depois (Top Skills Priorizadas para Recrutadores dos EUA)
                   </span>
                   <div className="flex flex-wrap gap-1.5 pt-1">
@@ -665,7 +674,7 @@ export function ActionHubView({
                         variant="outline"
                         className="text-xs py-1.5 px-3 bg-slate-950 border-emerald-500/40 text-slate-200 font-medium"
                       >
-                        <span className="text-emerald-400 font-mono mr-1.5 text-[10px]">#{sIdx + 1}</span>
+                        <span className="text-emerald-400 font-mono mr-1.5 text-xs font-semibold">#{sIdx + 1}</span>
                         {skill}
                       </Badge>
                     ))}

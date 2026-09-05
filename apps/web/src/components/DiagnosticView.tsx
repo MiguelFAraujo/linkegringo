@@ -15,6 +15,7 @@ import {
   Award,
 } from 'lucide-react';
 import type { Profile, ProfileReview } from '@linkegringo/core';
+import { FormattedText } from './ui/formatted-text';
 
 interface DiagnosticViewProps {
   profile: Profile;
@@ -23,10 +24,10 @@ interface DiagnosticViewProps {
 }
 
 export function DiagnosticView({ profile, review, onProceedToObjective }: DiagnosticViewProps) {
-  const isApprovedGringoLevel = review.overallScore >= 88;
+  const isApprovedGringoLevel = review.overallScore >= 92;
 
   const getScoreColor = (score: number) => {
-    if (score >= 88) return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/40 shadow-emerald-950/40';
+    if (score >= 92) return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/40 shadow-emerald-950/40';
     if (score >= 70) return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30';
     if (score >= 55) return 'text-teal-400 bg-teal-500/10 border-teal-500/30';
     if (score >= 40) return 'text-amber-400 bg-amber-500/10 border-amber-500/30';
@@ -34,7 +35,7 @@ export function DiagnosticView({ profile, review, onProceedToObjective }: Diagno
   };
 
   const getScoreLabel = (score: number) => {
-    if (score >= 88) return 'Perfil Nível Gringo Aprovado (Padrão EUA)';
+    if (score >= 92) return 'Perfil Nível Gringo Aprovado (Padrão EUA)';
     if (score >= 70) return 'Perfil Pronto para o Mercado Americano';
     if (score >= 55) return 'Perfil Razoável, mas com Gargalos Críticos';
     if (score >= 40) return 'Invisível ou com Baixo Sinal de Senioridade';
@@ -51,7 +52,7 @@ export function DiagnosticView({ profile, review, onProceedToObjective }: Diagno
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-300">
-      {/* 88+ Approved Gringo Level Celebratory Banner */}
+      {/* 92+ Approved Gringo Level Celebratory Banner */}
       {isApprovedGringoLevel && (
         <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-emerald-950/70 via-emerald-900/40 to-slate-900 border border-emerald-500/40 text-emerald-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl">
           <div className="flex items-start gap-3.5">
@@ -98,7 +99,7 @@ export function DiagnosticView({ profile, review, onProceedToObjective }: Diagno
                 <UserCheck className="w-3 h-3 mr-1" /> Perfil Extraído
               </Badge>
               {isApprovedGringoLevel && (
-                <Badge variant="success" className="text-[11px] py-0.5 px-2 bg-emerald-500/20 text-emerald-300 border-emerald-500/40">
+                <Badge variant="success" className="text-xs font-semibold py-0.5 px-2 bg-emerald-500/20 text-emerald-300 border-emerald-500/40">
                   Aprovado
                 </Badge>
               )}
@@ -215,17 +216,23 @@ export function DiagnosticView({ profile, review, onProceedToObjective }: Diagno
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
               Diagnóstico dos Gargalos Principais
             </h4>
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed bg-slate-950/60 p-3.5 rounded-xl border border-slate-800/80">
-              {review.executiveSummary}
-            </p>
+            <FormattedText
+              text={review.executiveSummary}
+              as="p"
+              className="text-xs sm:text-sm text-slate-300 leading-relaxed bg-slate-950/60 p-3.5 rounded-xl border border-slate-800/80"
+            />
           </div>
 
           {/* Direction Rationale */}
           {review.profileDirection && (
-            <div className="p-3 rounded-xl bg-emerald-950/20 border border-emerald-500/20 text-xs">
+            <div className="p-3 rounded-xl bg-emerald-950/20 border border-emerald-500/20 text-xs sm:text-sm">
               <span className="font-bold text-emerald-400">Posicionamento Recomendado: </span>
               <span className="text-slate-200">{review.profileDirection.positioning}</span>
-              <p className="text-slate-400 mt-1">{review.profileDirection.rationale}</p>
+              <FormattedText
+                text={review.profileDirection.rationale}
+                as="p"
+                className="text-slate-400 mt-1"
+              />
             </div>
           )}
         </Card>
@@ -244,7 +251,7 @@ export function DiagnosticView({ profile, review, onProceedToObjective }: Diagno
           {review.critique.map((item, idx) => (
             <Card key={idx} className="p-4 border-slate-800 bg-slate-900/50 space-y-3">
               <div className="flex items-center justify-between">
-                <h4 className="font-bold text-sm text-white">{item.section}</h4>
+                <h4 className="font-bold text-sm sm:text-base text-white">{item.section}</h4>
                 <Badge
                   variant={
                     item.severity === 'high'
@@ -253,23 +260,27 @@ export function DiagnosticView({ profile, review, onProceedToObjective }: Diagno
                       ? 'warning'
                       : 'outline'
                   }
-                  className="text-[10px] uppercase font-mono"
+                  className="text-xs uppercase font-mono font-semibold"
                 >
                   {item.severity === 'high' ? 'Grave' : item.severity === 'medium' ? 'Moderado' : 'Leve'}
                 </Badge>
               </div>
 
-              <p className="text-xs text-slate-300 leading-relaxed">{item.assessment}</p>
+              <FormattedText
+                text={item.assessment}
+                as="p"
+                className="text-xs sm:text-sm text-slate-300 leading-relaxed"
+              />
 
               {item.issues.length > 0 && (
                 <div className="space-y-1">
-                  <span className="text-[11px] font-semibold text-rose-400 uppercase tracking-wider block">
+                  <span className="text-xs font-semibold text-rose-400 uppercase tracking-wider block">
                     Pontos Fracos:
                   </span>
                   {item.issues.map((issue, i) => (
-                    <div key={i} className="flex items-start gap-1.5 text-xs text-slate-400">
+                    <div key={i} className="flex items-start gap-1.5 text-xs sm:text-sm text-slate-400">
                       <XCircle className="w-3.5 h-3.5 text-rose-400 flex-shrink-0 mt-0.5" />
-                      <span>{issue}</span>
+                      <FormattedText text={issue} as="span" />
                     </div>
                   ))}
                 </div>
@@ -277,13 +288,13 @@ export function DiagnosticView({ profile, review, onProceedToObjective }: Diagno
 
               {item.strengths.length > 0 && (
                 <div className="space-y-1 pt-1">
-                  <span className="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider block">
+                  <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider block">
                     Pontos Fortes:
                   </span>
                   {item.strengths.map((str, i) => (
-                    <div key={i} className="flex items-start gap-1.5 text-xs text-slate-400">
+                    <div key={i} className="flex items-start gap-1.5 text-xs sm:text-sm text-slate-400">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 mt-0.5" />
-                      <span>{str}</span>
+                      <FormattedText text={str} as="span" />
                     </div>
                   ))}
                 </div>
