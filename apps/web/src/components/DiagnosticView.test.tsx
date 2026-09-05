@@ -163,4 +163,33 @@ describe('DiagnosticView Component', () => {
     expect(screen.getAllByText('Red Flags Identificadas:').length).toBe(3);
     expect(screen.queryByText('Pontos Fracos:')).toBeNull();
   });
+
+  it('safely handles undefined issues and strengths, rendering "Sem Red Flags" badge even if raw severity is high', () => {
+    const handleProceed = vi.fn();
+    const edgeCaseReview = {
+      ...MOCK_REVIEW,
+      critique: [
+        {
+          section: 'Headline',
+          assessment: 'Headline técnica direta.',
+          strengths: undefined,
+          issues: undefined,
+          severity: 'high' as const,
+        },
+      ],
+    };
+
+    render(
+      <DiagnosticView
+        profile={MOCK_PROFILE}
+        review={edgeCaseReview as any}
+        onProceedToObjective={handleProceed}
+      />,
+    );
+
+    expect(screen.getByText('Sem Red Flags')).toBeDefined();
+    expect(screen.queryByText('Grave')).toBeNull();
+    expect(screen.queryByText('Red Flags Identificadas:')).toBeNull();
+  });
 });
+
