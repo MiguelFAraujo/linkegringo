@@ -1,6 +1,10 @@
+import type { RemoteGeminiModel } from '@linkegringo/ai';
+
 const STORAGE_KEYS = {
   API_KEY: 'linkegringo_gemini_api_key',
   PROVIDER_ID: 'linkegringo_provider_id',
+  MODEL: 'linkegringo_gemini_model',
+  CACHED_MODELS: 'linkegringo_cached_gemini_models',
   SESSION: 'linkegringo_active_session',
   ONBOARDING_SEEN: 'linkegringo_onboarding_seen',
 };
@@ -44,6 +48,75 @@ export function setStoredProviderId(providerId: string): void {
     console.warn('[storage] Failed to save provider id:', err);
   }
 }
+
+export function getStoredModel(): string {
+  try {
+    return localStorage.getItem(STORAGE_KEYS.MODEL) || 'gemini-2.0-flash';
+  } catch {
+    return 'gemini-2.0-flash';
+  }
+}
+
+export function setStoredModel(model: string): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.MODEL, model);
+  } catch (err) {
+    console.warn('[storage] Failed to save model:', err);
+  }
+}
+
+export interface CachedGeminiModelsData {
+  apiKeyHash: string;
+  models: RemoteGeminiModel[];
+  cachedAt?: number;
+}
+
+export function hashApiKey(key: string): string {
+  const trimmed = key.trim();
+  let hash = 0;
+  for (let i = 0; i < trimmed.length; i++) {
+    hash = ((hash << 5) - hash) + trimmed.charCodeAt(i);
+    hash |= 0;
+  }
+  return `h_${Math.abs(hash).toString(36)}_${trimmed.length}`;
+}
+
+export function getCachedGeminiModels(apiKey?: string): CachedGeminiModelsData | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.CACHED_MODELS);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as CachedGeminiModelsData;
+    if (!parsed || !Array.isArray(parsed.models)) return null;
+    if (apiKey && parsed.apiKeyHash !== hashApiKey(apiKey)) {
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+export function setCachedGeminiModels(apiKey: string, models: RemoteGeminiModel[]): void {
+  try {
+    const payload: CachedGeminiModelsData = {
+      apiKeyHash: hashApiKey(apiKey),
+      models,
+      cachedAt: Date.now(),
+    };
+    localStorage.setItem(STORAGE_KEYS.CACHED_MODELS, JSON.stringify(payload));
+  } catch (err) {
+    console.warn('[storage] Failed to save cached gemini models:', err);
+  }
+}
+
+export function clearCachedGeminiModels(): void {
+  try {
+    localStorage.removeItem(STORAGE_KEYS.CACHED_MODELS);
+  } catch (err) {
+    console.warn('[storage] Failed to clear cached gemini models:', err);
+  }
+}
+
 
 export function getStoredSession<T>(): T | null {
   try {

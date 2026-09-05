@@ -14,6 +14,8 @@ import {
   clearStoredApiKey,
   getStoredProviderId,
   setStoredProviderId,
+  getStoredModel,
+  setStoredModel,
   getStoredSession,
   saveStoredSession,
   clearStoredSession,
@@ -48,6 +50,7 @@ interface SessionState {
 export function App() {
   const [apiKey, setApiKey] = useState<string>(getStoredApiKey());
   const [providerId, setProviderId] = useState<string>(getStoredProviderId());
+  const [model, setModel] = useState<string>(getStoredModel());
 
   const [step, setStep] = useState<FlowStep>('upload');
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -116,7 +119,7 @@ export function App() {
   }, [step, profile, review, objective, interviewPlan, interviewAnswers, interviewRound, facts, analysis]);
 
   const getActiveProvider = () => {
-    return createAiProvider(providerId, { apiKey });
+    return createAiProvider(providerId, { apiKey, model });
   };
 
   // Step 1 ➔ Step 2: Upload and Diagnose
@@ -338,12 +341,16 @@ export function App() {
     }
   };
 
-  // Save API Key & Provider from Dialog
-  const handleSaveApiKey = (newKey: string, newProviderId: string) => {
+  // Save API Key, Provider & Model from Dialog
+  const handleSaveApiKey = (newKey: string, newProviderId: string, newModel?: string) => {
     setApiKey(newKey);
     setStoredApiKey(newKey);
     setProviderId(newProviderId);
     setStoredProviderId(newProviderId);
+    if (newModel) {
+      setModel(newModel);
+      setStoredModel(newModel);
+    }
   };
 
   const handleClearApiKey = () => {
@@ -451,6 +458,7 @@ export function App() {
         onOpenChange={setApiKeyDialogOpen}
         apiKey={apiKey}
         providerId={providerId}
+        model={model}
         onSave={handleSaveApiKey}
         onClear={handleClearApiKey}
       />
