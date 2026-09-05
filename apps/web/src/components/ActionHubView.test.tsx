@@ -59,7 +59,7 @@ describe('ActionHubView Component', () => {
 
     expect(screen.getByText('42')).toBeDefined();
     expect(screen.getByText('94')).toBeDefined();
-    expect(screen.getByText('+52 pts')).toBeDefined();
+    expect(screen.getByText('+52 pontos')).toBeDefined();
 
     // Verify CandidateAvatar rendering
     const avatarImg = screen.getByRole('img');
