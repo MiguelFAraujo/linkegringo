@@ -13,6 +13,7 @@ import {
   Sparkles,
   HelpCircle,
   Briefcase,
+  FastForward,
 } from 'lucide-react';
 import type { InterviewAnswer, InterviewPlan } from '@linkegringo/core';
 
@@ -21,6 +22,7 @@ interface InterviewViewProps {
   onSubmitAnswers: (answers: InterviewAnswer[]) => Promise<void>;
   isLoading: boolean;
   roundNumber?: number;
+  onSkipToFacts?: () => void;
 }
 
 export function InterviewView({
@@ -28,6 +30,7 @@ export function InterviewView({
   onSubmitAnswers,
   isLoading,
   roundNumber = 1,
+  onSkipToFacts,
 }: InterviewViewProps) {
   const questions = plan.questions;
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -111,15 +114,22 @@ export function InterviewView({
     <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in duration-300">
       {/* Top Header & Progress */}
       <div className="space-y-2">
-        <div className="flex items-center justify-between text-xs text-slate-400">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs text-slate-400">
           <span className="font-semibold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5" />
-            Entrevista de Coaching Técnico • Rodada {roundNumber}
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            {roundNumber >= 2
+              ? `Rodada ${roundNumber}: Aprofundamento de Arquitetura & Escala`
+              : `Entrevista de Coaching Técnico • Rodada ${roundNumber}`}
           </span>
           <span className="font-mono">
             Pergunta {currentIndex + 1} de {totalQuestions}
           </span>
         </div>
+        {roundNumber >= 2 && (
+          <div className="p-3 rounded-xl bg-emerald-950/25 border border-emerald-500/20 text-xs text-emerald-300/90 leading-relaxed">
+            💡 <strong>Aprofundamento Técnico:</strong> A IA identificou pontos adicionais de métricas e arquitetura para fazer seu perfil se destacar nos EUA.
+          </div>
+        )}
         <Progress value={progressPercent} />
       </div>
 
@@ -196,7 +206,7 @@ export function InterviewView({
 
           {/* Navigation & Actions */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-800">
-            <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
               <Button
                 type="button"
                 variant="ghost"
@@ -219,6 +229,20 @@ export function InterviewView({
               >
                 <SkipForward className="w-3.5 h-3.5" /> Pular pergunta
               </Button>
+
+              {onSkipToFacts && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={onSkipToFacts}
+                  disabled={isLoading}
+                  className="text-slate-400 hover:text-amber-300 text-xs gap-1"
+                  title="Finalizar entrevista antecipadamente e avançar direto para os fatos"
+                >
+                  <FastForward className="w-3.5 h-3.5" /> Finalizar entrevista antecipadamente
+                </Button>
+              )}
             </div>
 
             <div className="w-full sm:w-auto">
@@ -259,6 +283,24 @@ export function InterviewView({
           </div>
         </CardContent>
       </Card>
+
+      {/* Skip round 2 prompt if applicable */}
+      {roundNumber >= 2 && onSkipToFacts && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 rounded-xl bg-slate-900/50 border border-slate-800 text-xs text-slate-400">
+          <span>Prefere não responder a perguntas adicionais nesta rodada?</span>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onSkipToFacts}
+            disabled={isLoading}
+            className="text-xs gap-1.5 border-slate-700 text-slate-300 hover:text-white"
+          >
+            <FastForward className="w-3.5 h-3.5 text-amber-400" />
+            <span>Avançar direto para validação de fatos</span>
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

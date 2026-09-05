@@ -40,6 +40,7 @@ interface SessionState {
   objective?: CareerObjective;
   interviewPlan?: InterviewPlan;
   interviewAnswers?: InterviewAnswer[];
+  interviewRound?: number;
   facts?: ConfirmedFact[];
   analysis?: ProfileAnalysis;
 }
@@ -54,6 +55,7 @@ export function App() {
   const [objective, setObjective] = useState<CareerObjective | null>(null);
   const [interviewPlan, setInterviewPlan] = useState<InterviewPlan | null>(null);
   const [interviewAnswers, setInterviewAnswers] = useState<InterviewAnswer[]>([]);
+  const [interviewRound, setInterviewRound] = useState<number>(1);
   const [facts, setFacts] = useState<ConfirmedFact[]>([]);
   const [analysis, setAnalysis] = useState<ProfileAnalysis | null>(null);
 
@@ -83,6 +85,7 @@ export function App() {
       if (saved.objective) setObjective(saved.objective);
       if (saved.interviewPlan) setInterviewPlan(saved.interviewPlan);
       if (saved.interviewAnswers) setInterviewAnswers(saved.interviewAnswers);
+      if (saved.interviewRound) setInterviewRound(saved.interviewRound);
       if (saved.facts) setFacts(saved.facts);
       if (saved.analysis) setAnalysis(saved.analysis);
     } else {
@@ -104,12 +107,13 @@ export function App() {
         objective: objective || undefined,
         interviewPlan: interviewPlan || undefined,
         interviewAnswers,
+        interviewRound,
         facts,
         analysis: analysis || undefined,
       };
       saveStoredSession(stateToSave);
     }
-  }, [step, profile, review, objective, interviewPlan, interviewAnswers, facts, analysis]);
+  }, [step, profile, review, objective, interviewPlan, interviewAnswers, interviewRound, facts, analysis]);
 
   const getActiveProvider = () => {
     return createAiProvider(providerId, { apiKey });
@@ -185,6 +189,7 @@ export function App() {
       });
 
       setInterviewPlan(plan);
+      setInterviewRound(1);
       setStep('interview');
     } catch (err: any) {
       console.error('Erro ao gerar entrevista:', err);
@@ -194,12 +199,12 @@ export function App() {
     }
   };
 
-  // Step 4 ➔ Step 5: Submit Interview Answers to Facts
+  // Step 4 ➔ Step 5: Submit Interview Answers to Facts or Next Round
   const handleSubmitAnswers = async (answers: InterviewAnswer[]) => {
     if (!profile || !objective || !interviewPlan) return;
     setIsLoading(true);
     setErrorMessage(null);
-    setInterviewAnswers(answers);
+    setInterviewAnswers((prev) => [...prev, ...answers]);
 
     try {
       const provider = getActiveProvider();
@@ -211,14 +216,34 @@ export function App() {
         previousFacts: facts,
       });
 
-      setFacts(progress.facts);
-      setStep('facts');
+      // Merge newly extracted facts with existing facts
+      const mergedFacts = [...facts];
+      for (const newFact of progress.facts) {
+        if (!mergedFacts.some((f) => f.id === newFact.id || f.statement === newFact.statement)) {
+          mergedFacts.push(newFact);
+        }
+      }
+      setFacts(mergedFacts);
+
+      // Multi-round progression: if AI determines candidate needs deeper technical evidence
+      if (progress.readyForGeneration === false && progress.questions && progress.questions.length > 0) {
+        setInterviewPlan({ questions: progress.questions });
+        setInterviewRound((prev) => prev + 1);
+        setStep('interview');
+      } else {
+        setStep('facts');
+      }
     } catch (err: any) {
       console.error('Erro ao avaliar entrevista:', err);
       setErrorMessage(err?.message || 'Falha ao processar as respostas da entrevista.');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // User action: skip remaining questions and proceed directly to facts confirmation
+  const handleSkipToFacts = () => {
+    setStep('facts');
   };
 
   // Step 5 ➔ Step 6: Confirm Facts and Generate Action Hub Profile
@@ -256,6 +281,7 @@ export function App() {
     setObjective(null);
     setInterviewPlan(null);
     setInterviewAnswers([]);
+    setInterviewRound(1);
     setFacts([]);
     setAnalysis(null);
     setErrorMessage(null);
@@ -347,7 +373,9 @@ export function App() {
           <InterviewView
             plan={interviewPlan}
             onSubmitAnswers={handleSubmitAnswers}
+            onSkipToFacts={handleSkipToFacts}
             isLoading={isLoading}
+            roundNumber={interviewRound}
           />
         )}
 
