@@ -327,6 +327,7 @@ Your goals:
 1. Decide if we have collected enough substance for a stellar, credible US-market profile (readyForGeneration: true).
    - If candidate answers contain quantified metrics, architectural trade-offs, and scale details, set readyForGeneration: true and questions: [].
    - If answers are sparse or lack architectural depth and scale, and this is the first evaluation round, set readyForGeneration: false and generate 2 to 3 focused follow-up questions targeting the missing scale, trade-offs, or invisible work.
+   - If the candidate answered "Não se aplica ao meu contexto" or marked a question as skipped, respect their technical context and NEVER generate follow-up questions asking about that same topic or technology.
    - Hard constraint: Maximum 2 interview rounds. If round >= 2, ALWAYS set readyForGeneration: true to prevent endless loops.
 2. Extract atomic, confirmable technical facts from the profile and the candidate's answers.
    - Each fact must be a single verifiable achievement or technical capability in Portuguese (e.g. "Arquiteto pipelines em Apache Kafka processando 50M de eventos/dia").

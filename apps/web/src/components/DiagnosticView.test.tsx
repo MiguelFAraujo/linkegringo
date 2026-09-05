@@ -191,5 +191,83 @@ describe('DiagnosticView Component', () => {
     expect(screen.queryByText('Grave')).toBeNull();
     expect(screen.queryByText('Red Flags Identificadas:')).toBeNull();
   });
+
+  it('renders CandidateAvatar and displays score explanations with delta to 100%', () => {
+    const handleProceed = vi.fn();
+    const reviewWithExplanations = {
+      ...MOCK_REVIEW,
+      scores: {
+        searchRelevance: 70,
+        humanVoice: 80,
+        credibility: 90,
+        positioningClarity: 60,
+        evidenceCoverage: 100,
+      },
+      scoreExplanations: {
+        searchRelevance: 'Boa densidade de palavras-chave, mas faltam termos de Cloud.',
+        humanVoice: 'Tom técnico sóbrio sem jargões de infoproduto.',
+        credibility: 'Experiência comprovada em empresas relevantes.',
+        positioningClarity: 'Título ainda misturado com frontend.',
+        evidenceCoverage: 'Cobertura exemplar de métricas e volumetria.',
+      },
+    };
+
+    render(
+      <DiagnosticView
+        profile={MOCK_PROFILE}
+        review={reviewWithExplanations}
+        onProceedToInterview={handleProceed}
+      />,
+    );
+
+    // Verify CandidateAvatar rendered with Lucas Silveira's avatar
+    const img = screen.getByRole('img');
+    expect(img.getAttribute('src')).toBe('https://unavatar.io/linkedin/lucas-silveira');
+
+    // Verify score explanations
+    expect(screen.getByText('Boa densidade de palavras-chave, mas faltam termos de Cloud.')).toBeDefined();
+    expect(screen.getByText('Cobertura exemplar de métricas e volumetria.')).toBeDefined();
+
+    // Verify delta to 100%
+    expect(screen.getByText('(Faltam 30% para 100%)')).toBeDefined(); // 100 - 70
+    expect(screen.getByText('(Faltam 20% para 100%)')).toBeDefined(); // 100 - 80
+    expect(screen.getByText('(Faltam 10% para 100%)')).toBeDefined(); // 100 - 90
+    expect(screen.getByText('(Faltam 40% para 100%)')).toBeDefined(); // 100 - 60
+    expect(screen.getByText('(100% atingido)')).toBeDefined(); // 100
+  });
+
+  it('allows 1-click alternative role selection and passes chosen role to onProceedToInterview', () => {
+    const handleProceed = vi.fn();
+    const reviewWithAlternatives = {
+      ...MOCK_REVIEW,
+      profileDirection: {
+        positioning: 'Senior Backend Engineer',
+        primaryRole: 'Senior Backend Engineer',
+        alternativeRoles: ['Staff Engineer', 'Cloud Architect'],
+        rationale: 'Forte background em sistemas distribuídos.',
+      },
+    };
+
+    render(
+      <DiagnosticView
+        profile={MOCK_PROFILE}
+        review={reviewWithAlternatives}
+        onProceedToInterview={handleProceed}
+      />,
+    );
+
+    // Initial role is Senior Backend Engineer
+    expect(screen.getAllByText('Senior Backend Engineer').length).toBeGreaterThanOrEqual(1);
+
+    // Click alternative role "Staff Engineer"
+    const staffBtn = screen.getByRole('button', { name: 'Staff Engineer' });
+    fireEvent.click(staffBtn);
+
+    // Proceed button should now carry the chosen role "Staff Engineer"
+    const proceedBtn = screen.getByText('Avançar para a entrevista');
+    fireEvent.click(proceedBtn);
+
+    expect(handleProceed).toHaveBeenCalledWith('Staff Engineer');
+  });
 });
 

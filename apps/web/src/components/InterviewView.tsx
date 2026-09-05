@@ -233,6 +233,13 @@ export function InterviewView({
               </button>
             </div>
 
+            {currentAnswer.value === 'Não se aplica ao meu contexto' && (
+              <div className="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 text-slate-300 text-xs flex items-center gap-2 animate-in fade-in">
+                <MinusCircle className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                <span>Esta pergunta foi marcada como <strong>não aplicável</strong> ao seu contexto e será ignorada na extração.</span>
+              </div>
+            )}
+
             {currentQ.answerType === 'single-choice' && currentQ.options ? (
               <div className="space-y-2">
                 {currentQ.options.map((opt) => (

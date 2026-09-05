@@ -260,9 +260,22 @@ describe('Prompts & Deterministic Rubric', () => {
     expect(INTERVIEW_PROGRESS_SYSTEM_PROMPT).toContain('STRICT PROHIBITION OF EMOJIS');
     expect(REWRITE_PROFILE_SYSTEM_PROMPT).toContain('STRICT PROHIBITION OF EMOJIS');
 
-    // scrubEmojis utility
-    expect(scrubEmojis('🎉 Perfil no padrão internacional 💡!')).toBe('Perfil no padrão internacional !');
-    expect(scrubEmojis('⚡ High-performance ✨ distributed system 🚀')).toBe('High-performance  distributed system');
+    // scrubEmojis utility: ensures zero emojis, collapses double spaces, and preserves correct punctuation spacing
+    expect(scrubEmojis('🎉 Perfil no padrão internacional 💡!')).toBe('Perfil no padrão internacional!');
+    expect(scrubEmojis('⚡ High-performance ✨ distributed system 🚀')).toBe('High-performance distributed system');
+    expect(scrubEmojis('⚙️ Resiliência em produção 🛡️')).toBe('Resiliência em produção');
+
+    // deepScrubEmojis recursively scrubs across nested objects and arrays
+    const { deepScrubEmojis } = await import('./providers/gemini.js');
+    const nestedData = {
+      headline: 'Senior Backend Engineer 🚀',
+      bullets: ['Reduced p99 latency ⚡', 'Architected Kafka pipeline ✨'],
+      meta: { note: 'Approved 🎉' },
+    };
+    const cleaned = deepScrubEmojis(nestedData);
+    expect(cleaned.headline).toBe('Senior Backend Engineer');
+    expect(cleaned.bullets).toEqual(['Reduced p99 latency', 'Architected Kafka pipeline']);
+    expect(cleaned.meta.note).toBe('Approved');
   });
 
   it('buildParseAndDiagnosePrompt injects targetRole and requires scoreExplanations', async () => {

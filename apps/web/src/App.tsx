@@ -438,6 +438,7 @@ export function App() {
           <DiagnosticView
             profile={profile}
             review={review}
+            targetRole={objective?.primaryRole}
             onProceedToInterview={handleProceedToInterview}
             onProceedToObjective={handleProceedToInterview}
           />

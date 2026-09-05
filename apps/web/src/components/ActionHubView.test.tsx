@@ -47,7 +47,7 @@ describe('ActionHubView Component', () => {
     },
   };
 
-  it('renders score evolution (42 to 94)', () => {
+  it('renders score evolution (42 to 94) and candidate avatar', () => {
     render(
       <ActionHubView
         originalProfile={MOCK_PROFILE}
@@ -60,6 +60,10 @@ describe('ActionHubView Component', () => {
     expect(screen.getByText('42')).toBeDefined();
     expect(screen.getByText('94')).toBeDefined();
     expect(screen.getByText('+52 pts')).toBeDefined();
+
+    // Verify CandidateAvatar rendering
+    const avatarImg = screen.getByRole('img');
+    expect(avatarImg.getAttribute('src')).toBe('https://unavatar.io/linkedin/lucas-silveira');
   });
 
   it('renders the 5-minute interactive LinkedIn checklist with working checkboxes', () => {

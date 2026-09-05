@@ -21,6 +21,7 @@ import { CandidateAvatar } from './ui/candidate-avatar';
 interface DiagnosticViewProps {
   profile: Profile;
   review: ProfileReview;
+  targetRole?: string;
   onProceedToInterview?: (chosenRole?: string) => void;
   onProceedToObjective?: () => void;
 }
@@ -28,13 +29,14 @@ interface DiagnosticViewProps {
 export function DiagnosticView({
   profile,
   review,
+  targetRole,
   onProceedToInterview,
   onProceedToObjective,
 }: DiagnosticViewProps) {
   const isApprovedUSLevel = review.overallScore >= 92;
 
   const [selectedRole, setSelectedRole] = useState(
-    review.profileDirection?.primaryRole || 'Senior Software Engineer',
+    targetRole || review.profileDirection?.primaryRole || 'Senior Software Engineer',
   );
 
   const handleProceed = () => {
@@ -98,7 +100,7 @@ export function DiagnosticView({
 
   const alternativeRoles = review.profileDirection?.alternativeRoles || [];
   const allRoleOptions = Array.from(
-    new Set([review.profileDirection?.primaryRole, ...alternativeRoles].filter(Boolean) as string[]),
+    new Set([selectedRole, review.profileDirection?.primaryRole, ...alternativeRoles].filter(Boolean) as string[]),
   );
 
   return (
@@ -263,7 +265,18 @@ export function DiagnosticView({
               <div key={c.key} className="space-y-1.5 p-3 rounded-xl bg-slate-950/40 border border-slate-800/80">
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-slate-200 font-medium">{c.label}</span>
-                  <span className="text-slate-300 font-mono font-bold">{c.value}%</span>
+                  <div className="flex items-center gap-2">
+                    {c.value < 100 ? (
+                      <span className="text-slate-400 text-[11px] font-mono">
+                        (Faltam {100 - c.value}% para 100%)
+                      </span>
+                    ) : (
+                      <span className="text-emerald-400 text-[11px] font-mono font-medium">
+                        (100% atingido)
+                      </span>
+                    )}
+                    <span className="text-slate-300 font-mono font-bold">{c.value}%</span>
+                  </div>
                 </div>
                 <Progress
                   value={c.value}

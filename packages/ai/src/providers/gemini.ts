@@ -108,9 +108,29 @@ export function scrubFalseBenchmarks(text: string): string {
 export function scrubEmojis(text: string): string {
   if (!text) return text;
   return text
-    .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F000}-\u{1F02F}\u{1F0A0}-\u{1F0FF}\u{1F100}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1F900}-\u{1F9FF}\u{1FA70}-\u{1FAFF}]/gu, '')
+    .replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu, '')
+    .replace(/\s+([.,;:!?])/g, '$1')
+    .replace(/\s{2,}/g, ' ')
     .trim();
 }
+
+export function deepScrubEmojis<T>(val: T): T {
+  if (typeof val === 'string') {
+    return scrubEmojis(val) as unknown as T;
+  }
+  if (Array.isArray(val)) {
+    return val.map(deepScrubEmojis) as unknown as T;
+  }
+  if (val !== null && typeof val === 'object') {
+    const res: Record<string, any> = {};
+    for (const [k, v] of Object.entries(val)) {
+      res[k] = deepScrubEmojis(v);
+    }
+    return res as unknown as T;
+  }
+  return val;
+}
+
 
 export function sanitizeReviewBenchmarks(review: ProfileReview): ProfileReview {
   const artifactRegex = /artefato.*pdf|quebra.*par[aá]grafo|linha.*corrida|falta de quebra|espa[çc]amento.*resumo/i;
@@ -407,8 +427,9 @@ export class GeminiAiProvider implements AiProvider {
     });
 
     const rawJson = extractJsonFromResponse<{ profile: unknown; review: unknown }>(response.text || '{}');
-    const profile = profileSchema.parse(rawJson.profile);
-    const rawReview = profileReviewSchema.parse(rawJson.review);
+    const scrubbedJson = deepScrubEmojis(rawJson);
+    const profile = profileSchema.parse(scrubbedJson.profile);
+    const rawReview = profileReviewSchema.parse(scrubbedJson.review);
     const review = sanitizeReviewBenchmarks(rawReview);
 
     return { profile, review };
@@ -432,7 +453,8 @@ export class GeminiAiProvider implements AiProvider {
     });
 
     const rawJson = extractJsonFromResponse<unknown>(response.text || '{}');
-    return interviewPlanSchema.parse(rawJson);
+    const scrubbedJson = deepScrubEmojis(rawJson);
+    return interviewPlanSchema.parse(scrubbedJson);
   }
 
   async evaluateProgress(input: {
@@ -465,7 +487,8 @@ export class GeminiAiProvider implements AiProvider {
     });
 
     const rawJson = extractJsonFromResponse<unknown>(response.text || '{}');
-    return interviewProgressSchema.parse(rawJson);
+    const scrubbedJson = deepScrubEmojis(rawJson);
+    return interviewProgressSchema.parse(scrubbedJson);
   }
 
   async generateRewrittenProfile(input: {
@@ -497,6 +520,8 @@ export class GeminiAiProvider implements AiProvider {
 
     // Strictly sanitize all em-dashes and en-dashes across all rewritten content, critique, and summaries
     rawJson = deepSanitizeDashes(rawJson);
+    // Strictly scrub any emoji artifacts across all rewritten content
+    rawJson = deepScrubEmojis(rawJson);
 
     return profileAnalysisSchema.parse(rawJson);
   }

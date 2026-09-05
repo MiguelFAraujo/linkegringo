@@ -164,5 +164,60 @@ describe('InterviewView Component', () => {
     fireEvent.click(recoverBtn);
     expect(handleSkipToFacts).toHaveBeenCalledTimes(1);
   });
+
+  it('renders Elite Polish Mode banner and header when overallScore >= 92', () => {
+    render(
+      <InterviewView
+        plan={samplePlan}
+        onSubmitAnswers={vi.fn()}
+        isLoading={false}
+        overallScore={94}
+      />,
+    );
+
+    expect(screen.getByText(/Modo Lapidação \(Elite Polish Mode\)/i)).toBeDefined();
+    expect(screen.getByText(/Modo Lapidação Ativo:/i)).toBeDefined();
+    expect(screen.getByText(/Seu perfil já cumpre os requisitos de excelência dos EUA/i)).toBeDefined();
+  });
+
+  it('marks question with "Não se aplica ao meu contexto" and submits skipped answer', async () => {
+    const handleSubmitAnswers = vi.fn();
+    render(
+      <InterviewView
+        plan={samplePlan}
+        onSubmitAnswers={handleSubmitAnswers}
+        isLoading={false}
+        roundNumber={1}
+      />,
+    );
+
+    // Click "Não se aplica ao meu contexto" on question 1
+    const notApplicableBtn = screen.getByText('Não se aplica ao meu contexto');
+    fireEvent.click(notApplicableBtn);
+
+    // Automatically advances to question 2
+    expect(screen.getByText('Pergunta 2 de 2')).toBeDefined();
+    expect(screen.getByText('Qual o maior trade-off de arquitetura na migração?')).toBeDefined();
+
+    // On question 2, answer normally and click finish
+    const textarea = screen.getByPlaceholderText(/Ex: Na migração, sustentamos ~2M req\/dia/i);
+    fireEvent.change(textarea, { target: { value: 'Optamos por consistência eventual com saga pattern' } });
+
+    const finishBtn = screen.getByText('Revisar dados confirmados');
+    fireEvent.click(finishBtn);
+
+    expect(handleSubmitAnswers).toHaveBeenCalledWith([
+      {
+        questionId: 'q1',
+        value: 'Não se aplica ao meu contexto',
+        skipped: true,
+      },
+      {
+        questionId: 'q2',
+        value: 'Optamos por consistência eventual com saga pattern',
+        skipped: false,
+      },
+    ]);
+  });
 });
 

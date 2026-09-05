@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface CandidateAvatarProps {
   publicId?: string;
@@ -14,6 +14,33 @@ const sizeClasses: Record<'sm' | 'md' | 'lg' | 'xl', { container: string; text: 
   xl: { container: 'h-16 w-16 rounded-2xl', text: 'text-xl font-bold' },
 };
 
+const INVALID_PLACEHOLDERS = new Set(['user', 'unknown', 'candidato', 'profile', 'null', 'undefined']);
+
+/**
+ * Extracts and cleans a LinkedIn username/slug from a raw publicId or full URL.
+ * Returns null if the value is missing, empty, or a LinkeGringo fallback sentinel.
+ */
+export function extractLinkedInSlug(raw?: string): string | null {
+  if (!raw || typeof raw !== 'string') return null;
+  let slug = raw.trim();
+  if (!slug) return null;
+
+  // Strip query parameters and URL fragments
+  slug = slug.replace(/[?#].*$/, '');
+
+  // Strip full URL protocols and localized LinkedIn domains (e.g., https://br.linkedin.com/in/)
+  slug = slug.replace(/^(?:https?:\/\/)?(?:[a-z]{2,3}\.)?linkedin\.com\/in\//i, '');
+  slug = slug.replace(/^\/?in\//i, '');
+  slug = slug.replace(/^@/, '');
+  slug = slug.replace(/\/+$/, '').trim();
+
+  if (!slug || INVALID_PLACEHOLDERS.has(slug.toLowerCase())) {
+    return null;
+  }
+
+  return slug;
+}
+
 export function CandidateAvatar({
   publicId,
   name,
@@ -22,10 +49,12 @@ export function CandidateAvatar({
 }: CandidateAvatarProps) {
   const [imgError, setImgError] = useState(false);
 
-  const cleanSlug = publicId
-    ?.trim()
-    .replace(/^https?:\/\/(?:www\.)?linkedin\.com\/in\//i, '')
-    .replace(/\/+$/, '');
+  const cleanSlug = extractLinkedInSlug(publicId);
+
+  // Reset image error state if publicId changes (e.g., switching profile or loading demo)
+  useEffect(() => {
+    setImgError(false);
+  }, [cleanSlug]);
 
   const avatarUrl = cleanSlug ? `https://unavatar.io/linkedin/${encodeURIComponent(cleanSlug)}` : null;
 
