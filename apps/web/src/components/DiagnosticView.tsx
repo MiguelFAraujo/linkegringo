@@ -252,18 +252,28 @@ export function DiagnosticView({ profile, review, onProceedToObjective }: Diagno
             <Card key={idx} className="p-4 border-slate-800 bg-slate-900/50 space-y-3">
               <div className="flex items-center justify-between">
                 <h4 className="font-bold text-sm sm:text-base text-white">{item.section}</h4>
-                <Badge
-                  variant={
-                    item.severity === 'high'
-                      ? 'destructive'
-                      : item.severity === 'medium'
-                      ? 'warning'
-                      : 'outline'
-                  }
-                  className="text-xs uppercase font-mono font-semibold"
-                >
-                  {item.severity === 'high' ? 'Grave' : item.severity === 'medium' ? 'Moderado' : 'Leve'}
-                </Badge>
+                {item.issues.length === 0 ? (
+                  <Badge
+                    variant="success"
+                    className="text-xs uppercase font-mono font-semibold text-emerald-400 bg-emerald-500/10 border-emerald-500/30 flex items-center gap-1"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                    Sem Red Flags
+                  </Badge>
+                ) : (
+                  <Badge
+                    variant={
+                      item.severity === 'high'
+                        ? 'destructive'
+                        : item.severity === 'medium'
+                        ? 'warning'
+                        : 'outline'
+                    }
+                    className="text-xs uppercase font-mono font-semibold"
+                  >
+                    {item.severity === 'high' ? 'Grave' : item.severity === 'medium' ? 'Moderado' : 'Leve'}
+                  </Badge>
+                )}
               </div>
 
               <FormattedText
@@ -275,7 +285,7 @@ export function DiagnosticView({ profile, review, onProceedToObjective }: Diagno
               {item.issues.length > 0 && (
                 <div className="space-y-1">
                   <span className="text-xs font-semibold text-rose-400 uppercase tracking-wider block">
-                    Pontos Fracos:
+                    Red Flags Identificadas:
                   </span>
                   {item.issues.map((issue, i) => (
                     <div key={i} className="flex items-start gap-1.5 text-xs sm:text-sm text-slate-400">

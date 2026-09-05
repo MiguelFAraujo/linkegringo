@@ -90,4 +90,77 @@ describe('DiagnosticView Component', () => {
     fireEvent.click(proceedBtn);
     expect(handleProceed).toHaveBeenCalledTimes(1);
   });
+
+  it('renders "Sem Red Flags" badge when critique section has zero issues', () => {
+    const handleProceed = vi.fn();
+    const cleanReview = {
+      ...MOCK_REVIEW,
+      critique: [
+        {
+          section: 'Headline',
+          assessment: 'Headline precisa e alinhada ao cargo sênior.',
+          strengths: ['Stack core bem definida', 'Senioridade explícita'],
+          issues: [],
+          severity: 'low' as const,
+        },
+      ],
+    };
+
+    render(
+      <DiagnosticView
+        profile={MOCK_PROFILE}
+        review={cleanReview}
+        onProceedToObjective={handleProceed}
+      />,
+    );
+
+    expect(screen.getByText('Sem Red Flags')).toBeDefined();
+    expect(screen.queryByText('Leve')).toBeNull();
+    expect(screen.queryByText('Red Flags Identificadas:')).toBeNull();
+    expect(screen.getByText('Pontos Fortes:')).toBeDefined();
+  });
+
+  it('renders real severity badges ("Grave", "Moderado", "Leve") and "Red Flags Identificadas:" when issues exist', () => {
+    const handleProceed = vi.fn();
+    const reviewWithMixedIssues = {
+      ...MOCK_REVIEW,
+      critique: [
+        {
+          section: 'Headline',
+          assessment: 'Título com buzzwords.',
+          strengths: [],
+          issues: ['Contém "Passionate" e "Ninja"'],
+          severity: 'high' as const,
+        },
+        {
+          section: 'About / Summary',
+          assessment: 'Resumo com pouca densidade.',
+          strengths: [],
+          issues: ['Falta hook técnico'],
+          severity: 'medium' as const,
+        },
+        {
+          section: 'Experiences',
+          assessment: 'Pequenos ajustes de métricas.',
+          strengths: [],
+          issues: ['Falta adicionar latência p99 em 1 bullet'],
+          severity: 'low' as const,
+        },
+      ],
+    };
+
+    render(
+      <DiagnosticView
+        profile={MOCK_PROFILE}
+        review={reviewWithMixedIssues}
+        onProceedToObjective={handleProceed}
+      />,
+    );
+
+    expect(screen.getByText('Grave')).toBeDefined();
+    expect(screen.getByText('Moderado')).toBeDefined();
+    expect(screen.getByText('Leve')).toBeDefined();
+    expect(screen.getAllByText('Red Flags Identificadas:').length).toBe(3);
+    expect(screen.queryByText('Pontos Fracos:')).toBeNull();
+  });
 });
