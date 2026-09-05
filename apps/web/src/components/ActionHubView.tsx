@@ -106,7 +106,7 @@ export function ActionHubView({
     lines.push(`\n## Summary\n${analysis.rewritten.summary}`);
     lines.push('\n## Experience');
     for (const exp of analysis.rewritten.experiences) {
-      lines.push(`\n### ${exp.title} — ${exp.companyName}`);
+      lines.push(`\n### ${exp.title} | ${exp.companyName}`);
       for (const bullet of exp.bullets) {
         lines.push(`- ${bullet}`);
       }
@@ -384,12 +384,19 @@ export function ActionHubView({
           <TabsContent value="experiences" className="space-y-4">
             <div className="space-y-4">
               {analysis.rewritten.experiences.map((exp, idx) => {
-                const expText = `${exp.title} — ${exp.companyName}\n${exp.bullets
+                const expText = `${exp.title} | ${exp.companyName}\n${exp.bullets
                   .map((b) => `• ${b}`)
                   .join('\n')}`;
 
+                const originalExp =
+                  originalProfile.experiences.find(
+                    (e) =>
+                      e.companyName.toLowerCase().trim() === exp.companyName.toLowerCase().trim() ||
+                      e.title.toLowerCase().trim() === exp.title.toLowerCase().trim(),
+                  ) || originalProfile.experiences[idx];
+
                 return (
-                  <Card key={idx} className="p-5 border-slate-800 bg-slate-900/60 space-y-3">
+                  <Card key={idx} className="p-5 border-slate-800 bg-slate-900/60 space-y-4">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                       <div>
                         <h4 className="font-bold text-white text-base">{exp.title}</h4>
@@ -400,7 +407,7 @@ export function ActionHubView({
                         size="sm"
                         variant="secondary"
                         onClick={() => handleCopy(expText, `exp-${idx}`)}
-                        className="text-xs gap-1.5"
+                        className="text-xs gap-1.5 font-medium"
                       >
                         {copiedKey === `exp-${idx}` ? (
                           <>
@@ -414,14 +421,31 @@ export function ActionHubView({
                       </Button>
                     </div>
 
-                    <ul className="space-y-2 pt-2 border-t border-slate-800/80 text-xs sm:text-sm text-slate-200">
-                      {exp.bullets.map((bullet, bIdx) => (
-                        <li key={bIdx} className="flex items-start gap-2 leading-relaxed">
-                          <span className="text-emerald-400 font-bold">•</span>
-                          <span>{bullet}</span>
-                        </li>
-                      ))}
-                    </ul>
+                    {/* Side-by-side Before vs After for Experience */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs pt-1 border-t border-slate-800/80">
+                      <div className="p-3.5 rounded-xl border border-rose-500/20 bg-rose-950/10 space-y-1.5">
+                        <span className="font-bold uppercase tracking-wider text-rose-400 text-[10px]">
+                          Antes (LinkedIn Original)
+                        </span>
+                        <p className="text-slate-400 whitespace-pre-line italic leading-relaxed">
+                          {originalExp?.description || originalExp?.title || '(Descrição passiva ou não informada)'}
+                        </p>
+                      </div>
+
+                      <div className="p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-950/20 space-y-1.5">
+                        <span className="font-bold uppercase tracking-wider text-emerald-400 text-[10px]">
+                          Depois (Versão dos EUA • Framework XYZ)
+                        </span>
+                        <ul className="space-y-1.5 text-slate-100 leading-relaxed">
+                          {exp.bullets.map((bullet, bIdx) => (
+                            <li key={bIdx} className="flex items-start gap-2">
+                              <span className="text-emerald-400 font-bold">•</span>
+                              <span>{bullet}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
                   </Card>
                 );
               })}
@@ -457,17 +481,46 @@ export function ActionHubView({
                 </Button>
               </div>
 
-              <div className="flex flex-wrap gap-2 pt-2">
-                {analysis.rewritten.skills.map((skill, sIdx) => (
-                  <Badge
-                    key={sIdx}
-                    variant="outline"
-                    className="text-xs py-1.5 px-3 bg-slate-950 border-slate-700 text-slate-200 font-medium"
-                  >
-                    <span className="text-slate-500 font-mono mr-1.5 text-[10px]">#{sIdx + 1}</span>
-                    {skill}
-                  </Badge>
-                ))}
+              {/* Side-by-side Before vs After for Skills */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs pt-1">
+                <div className="p-4 rounded-xl border border-rose-500/20 bg-rose-950/10 space-y-2">
+                  <span className="font-bold uppercase tracking-wider text-rose-400 text-[10px]">
+                    Antes (Skills Originais do Perfil)
+                  </span>
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {originalProfile.skills && originalProfile.skills.length > 0 ? (
+                      originalProfile.skills.map((s, sIdx) => (
+                        <Badge
+                          key={sIdx}
+                          variant="outline"
+                          className="text-xs py-1 px-2.5 bg-slate-950 border-rose-900/40 text-slate-400 font-normal"
+                        >
+                          {s.name}
+                        </Badge>
+                      ))
+                    ) : (
+                      <p className="text-slate-400 italic">(Nenhuma skill listada originalmente)</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-950/20 space-y-2">
+                  <span className="font-bold uppercase tracking-wider text-emerald-400 text-[10px]">
+                    Depois (Top Skills Priorizadas para Recrutadores dos EUA)
+                  </span>
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {analysis.rewritten.skills.map((skill, sIdx) => (
+                      <Badge
+                        key={sIdx}
+                        variant="outline"
+                        className="text-xs py-1.5 px-3 bg-slate-950 border-emerald-500/40 text-slate-200 font-medium"
+                      >
+                        <span className="text-emerald-400 font-mono mr-1.5 text-[10px]">#{sIdx + 1}</span>
+                        {skill}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
               </div>
             </Card>
           </TabsContent>

@@ -1,6 +1,22 @@
 import { z } from 'zod';
 
-export const interviewCategorySchema = z.enum([
+export const interviewCategorySchema = z.preprocess((val) => {
+  if (typeof val === 'string') {
+    const lower = val.toLowerCase().trim();
+    if (lower.includes('tech') || lower.includes('arch') || lower.includes('deep')) return 'technical-depth';
+    if (lower.includes('scale') || lower.includes('volume') || lower.includes('concurr')) return 'scale';
+    if (lower.includes('impact') || lower.includes('result') || lower.includes('metric')) return 'impact';
+    if (lower.includes('lead') || lower.includes('mentor')) return 'leadership';
+    if (lower.includes('responsib') || lower.includes('invisib')) return 'responsibility';
+    if (lower.includes('pref') || lower.includes('stack')) return 'preference';
+    if (lower.includes('diff') || lower.includes('unique')) return 'differentiation';
+    if (lower.includes('credib') || lower.includes('evid')) return 'credibility';
+    if (lower.includes('market') || lower.includes('align')) return 'market';
+    if (lower.includes('direct') || lower.includes('goal')) return 'direction';
+    return lower;
+  }
+  return val;
+}, z.enum([
   'direction',
   'responsibility',
   'technical-depth',
@@ -11,7 +27,7 @@ export const interviewCategorySchema = z.enum([
   'market',
   'credibility',
   'differentiation',
-]);
+]).catch('technical-depth'));
 export type InterviewCategory = z.infer<typeof interviewCategorySchema>;
 
 export const careerObjectiveSchema = z.object({
@@ -23,13 +39,25 @@ export const careerObjectiveSchema = z.object({
 });
 export type CareerObjective = z.infer<typeof careerObjectiveSchema>;
 
+export const interviewAnswerTypeSchema = z.preprocess((val) => {
+  if (typeof val === 'string') {
+    const lower = val.toLowerCase().trim();
+    if (lower === 'text') return 'long-text';
+    if (lower.includes('choice') || lower.includes('select')) return 'single-choice';
+    if (lower.includes('yes') || lower.includes('bool')) return 'yes-no';
+    if (lower.includes('short')) return 'short-text';
+    if (lower.includes('long')) return 'long-text';
+  }
+  return val;
+}, z.enum(['short-text', 'long-text', 'single-choice', 'yes-no']).catch('long-text'));
+
 export const interviewQuestionSchema = z.object({
   id: z.string().min(1),
   category: interviewCategorySchema,
   question: z.string().min(1),
   reason: z.string().min(1),
   relatedExperience: z.string().optional(),
-  answerType: z.enum(['short-text', 'long-text', 'single-choice', 'yes-no']),
+  answerType: interviewAnswerTypeSchema,
   options: z.array(z.string()).optional(),
   required: z.boolean().default(false),
 });
@@ -42,11 +70,28 @@ export const interviewAnswerSchema = z.object({
 });
 export type InterviewAnswer = z.infer<typeof interviewAnswerSchema>;
 
+export const confirmedFactSourceSchema = z.preprocess((val) => {
+  if (typeof val === 'string') {
+    const lower = val.toLowerCase().trim();
+    if (
+      lower.includes('link') ||
+      lower.includes('pdf') ||
+      lower.includes('resume') ||
+      lower.includes('cv') ||
+      lower.includes('profile')
+    ) {
+      return 'linkedin-profile';
+    }
+    return 'interview';
+  }
+  return val;
+}, z.enum(['linkedin-profile', 'interview']).catch('interview'));
+
 export const confirmedFactSchema = z.object({
   id: z.string().min(1),
   statement: z.string().min(1),
-  source: z.enum(['linkedin-profile', 'interview']),
-  sourceReference: z.string().min(1),
+  source: confirmedFactSourceSchema,
+  sourceReference: z.string().default('Experiência'),
   confirmed: z.boolean().default(false),
 });
 export type ConfirmedFact = z.infer<typeof confirmedFactSchema>;

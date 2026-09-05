@@ -1,23 +1,45 @@
 import { z } from 'zod';
 
-export const critiqueSeveritySchema = z.enum(['high', 'medium', 'low']);
+export const critiqueSeveritySchema = z.preprocess((val) => {
+  if (typeof val === 'string') {
+    const lower = val.toLowerCase().trim();
+    if (lower === 'critical' || lower === 'grave') return 'high';
+    if (lower === 'moderate' || lower === 'moderado') return 'medium';
+    if (lower === 'minor' || lower === 'leve') return 'low';
+    return lower;
+  }
+  return val;
+}, z.enum(['high', 'medium', 'low']).catch('medium'));
 export type CritiqueSeverity = z.infer<typeof critiqueSeveritySchema>;
 
 export const sectionCritiqueSchema = z.object({
   section: z.string(),
   assessment: z.string(),
-  strengths: z.array(z.string()).default([]),
-  issues: z.array(z.string()).default([]),
+  strengths: z.preprocess((val) => {
+    if (typeof val === 'string') return [val];
+    if (Array.isArray(val)) return val.map(String);
+    return [];
+  }, z.array(z.string()).default([])),
+  issues: z.preprocess((val) => {
+    if (typeof val === 'string') return [val];
+    if (Array.isArray(val)) return val.map(String);
+    return [];
+  }, z.array(z.string()).default([])),
   severity: critiqueSeveritySchema,
 });
 export type SectionCritique = z.infer<typeof sectionCritiqueSchema>;
 
+const scoreNumber = z.coerce
+  .number()
+  .transform((n) => Math.round(n))
+  .pipe(z.number().min(0).max(100));
+
 export const profileScoresSchema = z.object({
-  searchRelevance: z.number().int().min(0).max(100),
-  humanVoice: z.number().int().min(0).max(100),
-  credibility: z.number().int().min(0).max(100),
-  positioningClarity: z.number().int().min(0).max(100),
-  evidenceCoverage: z.number().int().min(0).max(100),
+  searchRelevance: scoreNumber,
+  humanVoice: scoreNumber,
+  credibility: scoreNumber,
+  positioningClarity: scoreNumber,
+  evidenceCoverage: scoreNumber,
 });
 export type ProfileScores = z.infer<typeof profileScoresSchema>;
 
@@ -32,7 +54,7 @@ export type ProfileDirection = z.infer<typeof profileDirectionSchema>;
 export const profileReviewSchema = z.object({
   targetMarket: z.string().default('United States'),
   language: z.string().default('en'),
-  overallScore: z.number().int().min(0).max(100),
+  overallScore: scoreNumber,
   scores: profileScoresSchema,
   executiveSummary: z.string(),
   profileDirection: profileDirectionSchema,
@@ -43,7 +65,11 @@ export type ProfileReview = z.infer<typeof profileReviewSchema>;
 export const rewrittenExperienceSchema = z.object({
   title: z.string(),
   companyName: z.string(),
-  bullets: z.array(z.string()).default([]),
+  bullets: z.preprocess((val) => {
+    if (typeof val === 'string') return [val];
+    if (Array.isArray(val)) return val.map(String);
+    return [];
+  }, z.array(z.string()).default([])),
 });
 export type RewrittenExperience = z.infer<typeof rewrittenExperienceSchema>;
 
@@ -51,15 +77,21 @@ export const rewrittenProfileSchema = z.object({
   headline: z.string(),
   summary: z.string(),
   experiences: z.array(rewrittenExperienceSchema).default([]),
-  skills: z.array(z.string()).default([]),
+  skills: z.preprocess((val) => {
+    if (typeof val === 'string') return val.split(/,\s*/);
+    if (Array.isArray(val)) {
+      return val.map((v) => (typeof v === 'object' && v && 'name' in v ? String((v as any).name) : String(v)));
+    }
+    return [];
+  }, z.array(z.string()).default([])),
 });
 export type RewrittenProfile = z.infer<typeof rewrittenProfileSchema>;
 
 export const profileAnalysisSchema = z.object({
   targetMarket: z.string().default('United States'),
   language: z.string().default('en'),
-  initialScore: z.number().int().min(0).max(100).optional(),
-  overallScore: z.number().int().min(0).max(100),
+  initialScore: scoreNumber.optional(),
+  overallScore: scoreNumber,
   scores: profileScoresSchema,
   executiveSummary: z.string(),
   profileDirection: profileDirectionSchema,

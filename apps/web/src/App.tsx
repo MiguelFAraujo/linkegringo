@@ -67,8 +67,17 @@ export function App() {
   // Restore session on mount
   useEffect(() => {
     const saved = getStoredSession<SessionState>();
-    if (saved && saved.step && saved.profile && saved.review) {
-      setStep(saved.step);
+    if (saved && saved.profile && saved.review) {
+      let safeStep: FlowStep = saved.step || 'diagnostic';
+      if (safeStep === 'action-hub' && !saved.analysis) {
+        safeStep = saved.facts && saved.facts.length > 0 ? 'facts' : 'diagnostic';
+      } else if (safeStep === 'facts' && (!saved.facts || saved.facts.length === 0)) {
+        safeStep = saved.interviewPlan ? 'interview' : 'objective';
+      } else if (safeStep === 'interview' && !saved.interviewPlan) {
+        safeStep = 'objective';
+      }
+
+      setStep(safeStep);
       setProfile(saved.profile);
       setReview(saved.review);
       if (saved.objective) setObjective(saved.objective);

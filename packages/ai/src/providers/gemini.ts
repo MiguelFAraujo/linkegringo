@@ -31,24 +31,44 @@ import {
 
 export function cleanBase64(data: string): string {
   const commaIdx = data.indexOf(',');
-  if (commaIdx !== -1 && data.slice(0, commaIdx).includes('base64')) {
-    return data.slice(commaIdx + 1);
+  const raw =
+    commaIdx !== -1 && data.slice(0, commaIdx).includes('base64')
+      ? data.slice(commaIdx + 1)
+      : data;
+  return raw.replace(/\s+/g, '').trim();
+}
+
+export function sanitizeDashes(text: string): string {
+  return text.replace(/[\u2013\u2014]/g, '-');
+}
+
+export function deepSanitizeDashes<T>(val: T): T {
+  if (typeof val === 'string') {
+    return sanitizeDashes(val) as unknown as T;
   }
-  return data.trim();
+  if (Array.isArray(val)) {
+    return val.map(deepSanitizeDashes) as unknown as T;
+  }
+  if (val !== null && typeof val === 'object') {
+    const res: Record<string, any> = {};
+    for (const [k, v] of Object.entries(val)) {
+      res[k] = deepSanitizeDashes(v);
+    }
+    return res as unknown as T;
+  }
+  return val;
 }
 
 export function extractJsonFromResponse<T = unknown>(text: string): T {
   let cleaned = text.trim();
-  if (cleaned.startsWith('```json')) {
-    cleaned = cleaned.slice(7);
-  } else if (cleaned.startsWith('```')) {
-    cleaned = cleaned.slice(3);
-  }
-  if (cleaned.endsWith('```')) {
-    cleaned = cleaned.slice(0, -3);
-  }
-  cleaned = cleaned.trim();
 
+  // 1. If wrapped in markdown code fence (```json ... ``` or ``` ... ```), extract that block first
+  const fencedMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+  if (fencedMatch && fencedMatch[1]) {
+    cleaned = fencedMatch[1].trim();
+  }
+
+  // 2. Find outermost JSON boundary
   const firstBrace = cleaned.indexOf('{');
   const firstBracket = cleaned.indexOf('[');
   let startIdx = 0;
@@ -66,11 +86,13 @@ export function extractJsonFromResponse<T = unknown>(text: string): T {
     }
   }
 
-  return JSON.parse(cleaned) as T;
-}
+  // 3. Remove trailing commas before } or ] which LLMs often generate
+  cleaned = cleaned.replace(/,(\s*[}\]])/g, '$1');
 
-export function sanitizeDashes(text: string): string {
-  return text.replace(/[\u2013\u2014]/g, '-');
+  // 4. Clean invisible non-printable control characters except standard whitespace
+  cleaned = cleaned.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '');
+
+  return JSON.parse(cleaned) as T;
 }
 
 export class GeminiAiProvider implements AiProvider {
@@ -215,18 +237,9 @@ export class GeminiAiProvider implements AiProvider {
 
     const rawJson = extractJsonFromResponse<any>(response.text || '{}');
 
-    // Sanitize em-dash / en-dash if present
-    if (rawJson?.rewritten?.headline) {
-      rawJson.rewritten.headline = sanitizeDashes(rawJson.rewritten.headline);
-    }
-    if (rawJson?.rewritten?.summary) {
-      rawJson.rewritten.summary = sanitizeDashes(rawJson.rewritten.summary);
-    }
-    if (Array.isArray(rawJson?.rewritten?.experiences)) {
-      rawJson.rewritten.experiences = rawJson.rewritten.experiences.map((exp: any) => ({
-        ...exp,
-        bullets: Array.isArray(exp.bullets) ? exp.bullets.map((b: string) => sanitizeDashes(b)) : [],
-      }));
+    // Strictly sanitize all em-dashes and en-dashes across rewritten content
+    if (rawJson?.rewritten) {
+      rawJson.rewritten = deepSanitizeDashes(rawJson.rewritten);
     }
 
     return profileAnalysisSchema.parse(rawJson);
