@@ -186,6 +186,79 @@ describe('Prompts & Deterministic Rubric', () => {
     expect(sanitized.critique[1].severity).toBe('low');
   });
 
+  it('PARSE_AND_DIAGNOSE_SYSTEM_PROMPT enforces strict 100% rule, self-taught credibility, and PDF Top Skills awareness', async () => {
+    const { PARSE_AND_DIAGNOSE_SYSTEM_PROMPT, buildParseAndDiagnosePrompt } = await import('./prompts.js');
+    
+    // PDF Top Skills limitation
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('NOTE ON LINKEDIN PDF SKILLS LIMITATION');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('Save to PDF');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('expandir a lista de competências formais do LinkedIn');
+
+    // Strict 100% rule & zero phantom deductions
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('ZERO PHANTOM DEDUCTIONS & STRICT 100% FOR FLAWLESS PILLARS');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('NOT 94, 95, or 96');
+
+    // Self-taught senior engineers merit
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('SENIOR ENGINEERS WITHOUT FORMAL DEGREES (SELF-TAUGHT)');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('basta documentar formações acadêmicas ou cursos formais');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('self-taught');
+
+    // Prompt builder includes the context
+    const builtPrompt = buildParseAndDiagnosePrompt();
+    expect(builtPrompt).toContain('CONTEXT ON THE DATA SOURCE & LINKEDIN FORMATTING (INCLUDING SKILLS EXPORT)');
+    expect(builtPrompt).toContain('ZERO PHANTOM DEDUCTIONS');
+  });
+
+  it('sanitizeReviewBenchmarks normalizes flawless scores >= 94 to 100 and removes academic & skills expansion demands', async () => {
+    const { sanitizeReviewBenchmarks } = await import('./providers/gemini.js');
+
+    const reviewWithFlawlessExplanations = {
+      targetMarket: 'United States',
+      language: 'en',
+      overallScore: 95,
+      scores: {
+        searchRelevance: 95,
+        humanVoice: 96,
+        credibility: 95,
+        positioningClarity: 96,
+        evidenceCoverage: 100,
+      },
+      scoreExplanations: {
+        searchRelevance:
+          'O perfil indexa perfeitamente os termos técnicos centrais (Node.js, NestJS, TypeScript, PostgreSQL, React, Docker, AWS). Para atingir 100%, pode expandir a lista de competências formais do LinkedIn para cobrir todas as tecnologias operacionais citadas no texto.',
+        humanVoice:
+          'A comunicação é natural em inglês americano idiomático, com tom técnico direto, autoria clara e sem clichês corporativos. O texto transmite autoridade técnica imediata em engenharia de software.',
+        credibility:
+          'Trajetória profissional sólida com evolução clara de Frontend para Senior Full Stack, detalhando decisões de arquitetura e mitigação de gargalos reais em produção. Para atingir 100%, basta documentar formações acadêmicas ou cursos formais na seção correspondente.',
+        positioningClarity:
+          'Posicionamento nítido como Senior Full Stack Engineer com profundidade em backend Node.js/NestJS e capacidade autônoma de entrega em React. O escopo técnico e a senioridade estão perfeitamente alinhados entre headline, resumo e histórico.',
+        evidenceCoverage: 'Métricas quantificadas de latência e throughput em todas as posições.',
+      },
+      executiveSummary: 'Perfil sênior com tração técnica internacional.',
+      profileDirection: {
+        positioning: 'Senior Full Stack Engineer',
+        primaryRole: 'Senior Full Stack Engineer',
+        alternativeRoles: ['Senior Backend Engineer'],
+        rationale: 'Forte background em sistemas distribuídos.',
+      },
+      critique: [],
+    };
+
+    const result = sanitizeReviewBenchmarks(reviewWithFlawlessExplanations);
+
+    // Scores >= 94 without deficiencies should be normalized to 100
+    expect(result.scores.searchRelevance).toBe(100);
+    expect(result.scores.humanVoice).toBe(100);
+    expect(result.scores.credibility).toBe(100);
+    expect(result.scores.positioningClarity).toBe(100);
+    expect(result.scores.evidenceCoverage).toBe(100);
+    expect(result.overallScore).toBe(100);
+
+    // Explanations should not contain academic or PDF skills expansion demands
+    expect(result.scoreExplanations?.credibility).not.toContain('basta documentar formações acadêmicas');
+    expect(result.scoreExplanations?.searchRelevance).not.toContain('expandir a lista de competências formais');
+  });
+
   it('REWRITE_PROFILE_SYSTEM_PROMPT prohibits invented product niches and enforces role fidelity and headline formula', async () => {
     const { REWRITE_PROFILE_SYSTEM_PROMPT } = await import('./prompts.js');
     expect(REWRITE_PROFILE_SYSTEM_PROMPT).toContain('STRICT PROHIBITION OF INVENTED PRODUCT NICHES');

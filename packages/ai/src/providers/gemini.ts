@@ -133,20 +133,74 @@ export function deepScrubEmojis<T>(val: T): T {
 
 
 export function sanitizeReviewBenchmarks(review: ProfileReview): ProfileReview {
-  const artifactRegex = /artefato.*pdf|quebra.*par[aá]grafo|linha.*corrida|falta de quebra|espa[çc]amento.*resumo/i;
+  const artifactRegex =
+    /artefato.*pdf|quebra.*par[aá]grafo|linha.*corrida|falta de quebra|espa[çc]amento.*resumo|poucas compet[êe]ncias|poucas skills|apenas \d+ skills|expandir.*compet[êe]ncias formais|basta documentar forma[çc][õo]es acad[êe]micas|cursos formais na se[çc][ãa]o/i;
+
+  const academicDemandRegex =
+    /\.?\s*Para atingir 100%,?\s*(?:basta|pode)\s*documentar\s*forma[çc][õo]es\s*acad[êe]micas.*$/i;
+  const skillsExpansionRegex =
+    /\.?\s*Para atingir 100%,?\s*(?:basta|pode)\s*expandir\s*a\s*lista\s*de\s*compet[êe]ncias\s*formais.*$/i;
+
+  const sanitizeExplanationText = (text: string) => {
+    let clean = scrubEmojis(scrubFalseBenchmarks(text || ''));
+    clean = clean.replace(academicDemandRegex, '. Cumpre integralmente os requisitos de credibilidade técnica.');
+    clean = clean.replace(skillsExpansionRegex, '. Termos técnicos centrais devidamente indexados no perfil.');
+    return clean.replace(/\s{2,}/g, ' ').trim();
+  };
 
   const cleanScoreExplanations = review.scoreExplanations
     ? {
-        searchRelevance: scrubEmojis(scrubFalseBenchmarks(review.scoreExplanations.searchRelevance || '')),
-        humanVoice: scrubEmojis(scrubFalseBenchmarks(review.scoreExplanations.humanVoice || '')),
-        credibility: scrubEmojis(scrubFalseBenchmarks(review.scoreExplanations.credibility || '')),
-        positioningClarity: scrubEmojis(scrubFalseBenchmarks(review.scoreExplanations.positioningClarity || '')),
-        evidenceCoverage: scrubEmojis(scrubFalseBenchmarks(review.scoreExplanations.evidenceCoverage || '')),
+        searchRelevance: sanitizeExplanationText(review.scoreExplanations.searchRelevance || ''),
+        humanVoice: sanitizeExplanationText(review.scoreExplanations.humanVoice || ''),
+        credibility: sanitizeExplanationText(review.scoreExplanations.credibility || ''),
+        positioningClarity: sanitizeExplanationText(review.scoreExplanations.positioningClarity || ''),
+        evidenceCoverage: sanitizeExplanationText(review.scoreExplanations.evidenceCoverage || ''),
       }
     : undefined;
 
+  const normalizedScores = { ...review.scores };
+  if (cleanScoreExplanations) {
+    const pillars = [
+      'searchRelevance',
+      'humanVoice',
+      'credibility',
+      'positioningClarity',
+      'evidenceCoverage',
+    ] as const;
+
+    for (const p of pillars) {
+      const score = normalizedScores[p];
+      const explanation = cleanScoreExplanations[p] || '';
+
+      const isPositiveAuthority =
+        /(?:perfeitamente|natural|idiom[aá]tico|n[ií]tido|s[oó]lida|autoridade|sem clich[êe]s|100%|alinhad[ao]|excel[êe]ncia|imediata|cumpre integralmente|indexa perfeitamente)/i.test(
+          explanation,
+        );
+      const hasDeficiencyNotice =
+        /(?:falta[m\s]|aus[êe]ncia|gap|insuficiente|gen[eé]rico|fraco|precisa|deve\s|melhorar|corrigir|reduz)/i.test(
+          explanation,
+        );
+
+      if (score >= 94 && (isPositiveAuthority || !hasDeficiencyNotice)) {
+        normalizedScores[p] = 100;
+      }
+    }
+  }
+
+  const avgScores = Math.round(
+    (normalizedScores.searchRelevance +
+      normalizedScores.humanVoice +
+      normalizedScores.credibility +
+      normalizedScores.positioningClarity +
+      normalizedScores.evidenceCoverage) /
+      5,
+  );
+  const normalizedOverall = Math.max(review.overallScore, avgScores);
+
   return {
     ...review,
+    overallScore: normalizedOverall,
+    scores: normalizedScores,
     executiveSummary: scrubEmojis(scrubFalseBenchmarks(review.executiveSummary)),
     scoreExplanations: cleanScoreExplanations,
     critique: (review.critique || []).map((c) => {

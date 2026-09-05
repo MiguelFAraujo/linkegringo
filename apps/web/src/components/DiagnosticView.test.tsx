@@ -269,5 +269,36 @@ describe('DiagnosticView Component', () => {
 
     expect(handleProceed).toHaveBeenCalledWith('Staff Engineer');
   });
+
+  it('renders "Padrão de excelência atingido" for criteria scores >= 95% but < 100%', () => {
+    const reviewWithExcellence = {
+      ...MOCK_REVIEW,
+      scores: {
+        searchRelevance: 96,
+        humanVoice: 98,
+        credibility: 95,
+        positioningClarity: 100,
+        evidenceCoverage: 70,
+      },
+    };
+
+    render(
+      <DiagnosticView
+        profile={MOCK_PROFILE}
+        review={reviewWithExcellence}
+        onProceedToInterview={vi.fn()}
+      />,
+    );
+
+    // Criteria with 95-98% should render "Padrão de excelência atingido"
+    const excellenceBadges = screen.getAllByText('Padrão de excelência atingido');
+    expect(excellenceBadges.length).toBe(3); // searchRelevance (96), humanVoice (98), credibility (95)
+
+    // 100% should render "Padrão internacional atingido"
+    expect(screen.getByText('Padrão internacional atingido')).toBeDefined(); // positioningClarity (100)
+
+    // 70% should render "Faltam 30% para o padrão internacional"
+    expect(screen.getByText('Faltam 30% para o padrão internacional')).toBeDefined();
+  });
 });
 

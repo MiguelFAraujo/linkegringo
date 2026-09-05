@@ -301,9 +301,11 @@ export function DiagnosticView({
                   <span className="text-slate-200 font-medium">{c.label}</span>
                   <div className="flex items-center gap-2">
                     <span className="text-slate-400 text-xs">
-                      {c.value < 100
-                        ? `Faltam ${100 - c.value}% para o padrão internacional`
-                        : 'Padrão internacional atingido'}
+                      {c.value >= 95
+                        ? c.value === 100
+                          ? 'Padrão internacional atingido'
+                          : 'Padrão de excelência atingido'
+                        : `Faltam ${100 - c.value}% para o padrão internacional`}
                     </span>
                     <span className="text-slate-200 font-semibold">{c.value}%</span>
                   </div>
