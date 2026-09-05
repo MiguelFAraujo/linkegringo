@@ -45,7 +45,7 @@ describe('App Component', () => {
     fireEvent.click(proceedBtn);
 
     await waitFor(() => {
-      expect(screen.getByText(/Entrevista de Aprofundamento • Rodada 1/i)).toBeDefined();
+      expect(screen.getByText(/Entrevista técnica — pergunta/i)).toBeDefined();
     });
 
     // Skip interview early via "Finalizar entrevista antecipadamente"

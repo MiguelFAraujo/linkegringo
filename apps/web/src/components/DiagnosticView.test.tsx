@@ -228,12 +228,12 @@ describe('DiagnosticView Component', () => {
     expect(screen.getByText('Boa densidade de palavras-chave, mas faltam termos de Cloud.')).toBeDefined();
     expect(screen.getByText('Cobertura exemplar de métricas e volumetria.')).toBeDefined();
 
-    // Verify delta to 100%
-    expect(screen.getByText('(Faltam 30% para 100%)')).toBeDefined(); // 100 - 70
-    expect(screen.getByText('(Faltam 20% para 100%)')).toBeDefined(); // 100 - 80
-    expect(screen.getByText('(Faltam 10% para 100%)')).toBeDefined(); // 100 - 90
-    expect(screen.getByText('(Faltam 40% para 100%)')).toBeDefined(); // 100 - 60
-    expect(screen.getByText('(100% atingido)')).toBeDefined(); // 100
+    // Verify delta to international standard
+    expect(screen.getByText('Faltam 30% para o padrão internacional')).toBeDefined(); // 100 - 70
+    expect(screen.getByText('Faltam 20% para o padrão internacional')).toBeDefined(); // 100 - 80
+    expect(screen.getByText('Faltam 10% para o padrão internacional')).toBeDefined(); // 100 - 90
+    expect(screen.getByText('Faltam 40% para o padrão internacional')).toBeDefined(); // 100 - 60
+    expect(screen.getByText('Padrão internacional atingido')).toBeDefined(); // 100
   });
 
   it('allows 1-click alternative role selection and passes chosen role to onProceedToInterview', () => {

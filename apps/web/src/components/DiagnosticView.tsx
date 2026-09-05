@@ -1,18 +1,16 @@
 import React, { useState } from 'react';
-import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
 import {
-  ArrowRight,
   CheckCircle2,
   XCircle,
   BarChart3,
-  Compass,
   UserCheck,
-  Sparkles,
   ShieldCheck,
   Check,
+  Sparkles,
+  Compass,
 } from 'lucide-react';
 import type { Profile, ProfileReview } from '@linkegringo/core';
 import { FormattedText } from './ui/formatted-text';
@@ -45,14 +43,6 @@ export function DiagnosticView({
     } else if (onProceedToObjective) {
       onProceedToObjective();
     }
-  };
-
-  const getScoreColor = (score: number) => {
-    if (score >= 92) return 'text-emerald-400 border-emerald-500/50 bg-emerald-950/20';
-    if (score >= 70) return 'text-emerald-400 border-emerald-500/30 bg-emerald-950/10';
-    if (score >= 55) return 'text-blue-400 border-blue-500/30 bg-blue-950/10';
-    if (score >= 40) return 'text-amber-400 border-amber-500/30 bg-amber-950/10';
-    return 'text-rose-400 border-rose-500/30 bg-rose-950/10';
   };
 
   const getScoreLabel = (score: number) => {
@@ -105,23 +95,20 @@ export function DiagnosticView({
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-300">
-      {/* 92+ Approved Banner (Zero Emojis, Studio Engineering Look) */}
+      {/* 92+ Approved Dossier Banner */}
       {isApprovedUSLevel && (
-        <div className="p-4 sm:p-5 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl">
+        <div className="p-5 rounded-2xl bg-emerald-950/20 border border-emerald-500/30 text-emerald-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-start gap-3.5">
-            <div className="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-400 flex-shrink-0 mt-0.5">
+            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 flex-shrink-0 mt-0.5 border border-emerald-500/20">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div className="space-y-1">
               <div className="flex flex-wrap items-center gap-2">
-                <Badge
-                  variant="success"
-                  className="text-xs font-semibold py-0.5 px-2.5 bg-emerald-500/20 text-emerald-300 border-emerald-500/40 flex items-center gap-1.5"
-                >
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                   Perfil Aprovado para Vagas nos EUA
-                </Badge>
-                <span className="text-xs font-mono font-semibold text-emerald-400">
+                </span>
+                <span className="text-xs font-medium text-emerald-400">
                   Nota {review.overallScore}/100
                 </span>
               </div>
@@ -133,45 +120,44 @@ export function DiagnosticView({
           <Button
             variant="default"
             onClick={handleProceed}
-            className="w-full sm:w-auto font-bold gap-2 text-xs flex-shrink-0 bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-950/60"
+            className="w-full sm:w-auto font-semibold text-xs flex-shrink-0 bg-emerald-600 hover:bg-emerald-500 text-white border border-emerald-500/40"
           >
             <span>Lapidar Detalhes & Avançar</span>
-            <ArrowRight className="w-4 h-4" />
           </Button>
         </div>
       )}
 
-      {/* Integrated Executive Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-2xl border border-slate-800 bg-slate-900/70 shadow-lg">
+      {/* Candidate Executive Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 sm:p-6 rounded-2xl border border-[#1E293B] bg-[#0F1623]/80">
         <div className="flex items-center gap-4">
           <CandidateAvatar
             publicId={profile.publicId}
             name={candidateFullName}
             size="lg"
-            className="ring-2 ring-slate-800"
+            className="ring-1 ring-[#1E293B]"
           />
           <div className="space-y-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-lg font-bold text-white tracking-tight">
+              <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight">
                 {candidateFullName}
-              </h2>
-              <Badge variant="outline" className="text-xs text-blue-400 border-blue-500/30 flex items-center gap-1">
+              </h1>
+              <Badge variant="outline" className="text-xs text-blue-400 border-blue-500/30 font-normal flex items-center gap-1">
                 <UserCheck className="w-3 h-3" /> Perfil Extraído
               </Badge>
               {isApprovedUSLevel && (
                 <Badge
                   variant="success"
-                  className="text-xs font-semibold py-0.5 px-2 bg-emerald-500/20 text-emerald-300 border-emerald-500/40 flex items-center gap-1"
+                  className="text-xs font-medium py-0.5 px-2 bg-emerald-500/15 text-emerald-300 border-emerald-500/30 flex items-center gap-1"
                 >
-                  <CheckCircle2 className="w-3 h-3" /> Aprovado
+                  <CheckCircle2 className="w-3 h-3" /> Perfil Aprovado para Vagas nos EUA
                 </Badge>
               )}
             </div>
-            <p className="text-xs text-slate-400 line-clamp-1">
+            <p className="text-xs sm:text-sm text-slate-400 line-clamp-1">
               {profile.headline || 'Sem título cadastrado'}
             </p>
-            <div className="flex items-center gap-2 text-xs text-slate-500">
-              <span>Cargo Alvo: <strong className="text-slate-300">{selectedRole}</strong></span>
+            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400 pt-0.5">
+              <span>Cargo-alvo: <strong className="text-slate-200">{selectedRole}</strong></span>
               {profile.location && <span>• {profile.location}</span>}
             </div>
           </div>
@@ -180,106 +166,99 @@ export function DiagnosticView({
         <Button
           variant="default"
           onClick={handleProceed}
-          className="w-full sm:w-auto font-semibold gap-2 shadow-lg bg-blue-600 hover:bg-blue-500 text-white"
+          className="w-full sm:w-auto font-medium text-xs sm:text-sm bg-blue-600 hover:bg-blue-500 text-white shadow-sm"
         >
           <span>{isApprovedUSLevel ? 'Lapidar Perfil' : 'Otimizar Perfil'}</span>
-          <ArrowRight className="w-4 h-4" />
         </Button>
       </div>
 
-      {/* Main Score & Technical Breakdown Grid */}
+      {/* Main Executive Dossier Grid */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-        {/* Score Card */}
-        <Card className="md:col-span-5 flex flex-col justify-between p-6 bg-slate-900/80 border-slate-800">
-          <div className="space-y-4 text-center">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800/80 text-slate-300 text-xs font-medium border border-slate-700/60">
+        {/* Left: Authoritative Score & Executive Summary */}
+        <div className="md:col-span-5 flex flex-col justify-between p-6 rounded-2xl bg-[#0F1623]/80 border border-[#1E293B] space-y-5">
+          <div className="space-y-4">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#090D14] text-slate-300 text-xs font-medium border border-[#1E293B]">
               <BarChart3 className="w-3.5 h-3.5 text-blue-400" />
-              Diagnóstico do Perfil
+              <span>Diagnóstico do Perfil</span>
             </div>
 
-            <div className="relative py-2">
-              <div
-                className={`w-36 h-36 mx-auto rounded-full flex flex-col items-center justify-center border-4 shadow-xl ${getScoreColor(
-                  review.overallScore,
-                )}`}
-              >
-                <span className="text-5xl font-black tracking-tight font-mono">{review.overallScore}</span>
-                <span className="text-xs uppercase font-bold tracking-widest text-slate-400">
-                  de 100
-                </span>
+            {/* Authoritative Score Block (Sober Slate, Zero Cliché Circular Gauge) */}
+            <div className="p-5 rounded-xl bg-[#090D14]/70 border border-[#1E293B] space-y-2">
+              <div className="flex items-baseline gap-2">
+                <span className="text-5xl font-bold tracking-tight text-white">{review.overallScore}</span>
+                <span className="text-slate-500 text-base font-medium">/ 100</span>
               </div>
-            </div>
-
-            <div className="space-y-1">
-              {isApprovedUSLevel && (
-                <div className="mb-2">
-                  <Badge
-                    variant="success"
-                    className="text-xs font-semibold py-0.5 px-2 bg-emerald-500/20 text-emerald-300 border-emerald-500/40 flex items-center gap-1 mx-auto w-fit"
-                  >
-                    <CheckCircle2 className="w-3 h-3" /> Perfil Aprovado para Vagas nos EUA
-                  </Badge>
-                </div>
-              )}
-              <h3 className="font-bold text-base text-white">{getScoreLabel(review.overallScore)}</h3>
-              <p className="text-xs text-slate-400 mt-1">
+              <div className="font-semibold text-sm sm:text-base text-slate-200">
+                {getScoreLabel(review.overallScore)}
+              </div>
+              <p className="text-xs text-slate-400 leading-relaxed">
                 Avaliado com base no padrão de contratação de empresas de tecnologia dos EUA.
               </p>
             </div>
+
+            {/* Next Steps Takeaway Note */}
+            <div className="p-3.5 rounded-xl bg-[#090D14]/50 border border-[#1E293B] text-left flex items-start gap-2.5">
+              {isApprovedUSLevel ? (
+                <>
+                  <Sparkles className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-emerald-200/90 leading-relaxed">
+                    <strong>Excelente base:</strong> Seu perfil cumpre os requisitos essenciais. Na entrevista, faremos perguntas de lapidação para maximizar precisão e converter em propostas de alto nível.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <Compass className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    <strong>Próxima etapa:</strong> A entrevista técnica de aprofundamento extrairá métricas e arquitetura para elevar sua nota ao padrão internacional.
+                  </p>
+                </>
+              )}
+            </div>
           </div>
 
-          <div className="mt-6 pt-4 border-t border-slate-800/80">
-            {isApprovedUSLevel ? (
-              <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-left flex items-start gap-2.5">
-                <Sparkles className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
-                <p className="text-xs text-emerald-200/90 leading-relaxed">
-                  <strong>Excelente base:</strong> Seu perfil cumpre os requisitos essenciais. Na entrevista, faremos perguntas de lapidação para maximizar precisão e converter em propostas de alto nível.
-                </p>
-              </div>
-            ) : (
-              <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-left flex items-start gap-2.5">
-                <Compass className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
-                <p className="text-xs text-blue-200/90 leading-relaxed">
-                  <strong>Próxima etapa:</strong> A entrevista técnica de aprofundamento extrairá métricas e arquitetura para elevar sua nota ao padrão internacional.
-                </p>
-              </div>
-            )}
+          {/* Executive Summary */}
+          <div className="pt-4 border-t border-[#1E293B] space-y-2">
+            <span className="text-xs font-medium text-slate-400 block">
+              Diagnóstico geral
+            </span>
+            <FormattedText
+              text={review.executiveSummary}
+              as="p"
+              className="text-xs sm:text-sm text-slate-300 leading-relaxed bg-[#090D14]/50 p-3.5 rounded-xl border border-[#1E293B]"
+            />
           </div>
-        </Card>
+        </div>
 
-        {/* Criteria Breakdown with Detailed Score Explanations */}
-        <Card className="md:col-span-7 p-6 space-y-5 bg-slate-900/80 border-slate-800">
+        {/* Right: 5 Technical Criteria & Dynamic Role Switcher */}
+        <div className="md:col-span-7 p-6 rounded-2xl bg-[#0F1623]/80 border border-[#1E293B] space-y-5">
           <div>
-            <h3 className="font-bold text-base text-white flex items-center gap-2">
+            <h2 className="font-bold text-base text-white flex items-center gap-2">
               <Compass className="w-4 h-4 text-blue-400" />
               Critérios de Avaliação Técnica
-            </h3>
+            </h2>
             <p className="text-xs text-slate-400 mt-0.5">
-              Avaliação pilar por pilar e o delta necessário para atingir 100%.
+              Avaliação pilar por pilar e o delta necessário para atingir o padrão internacional.
             </p>
           </div>
 
-          {/* Criteria bars with detailed explanations */}
-          <div className="space-y-4">
+          {/* Clean Criteria Bars */}
+          <div className="space-y-3.5">
             {criteria.map((c) => (
-              <div key={c.key} className="space-y-1.5 p-3 rounded-xl bg-slate-950/40 border border-slate-800/80">
-                <div className="flex justify-between items-center text-xs">
+              <div key={c.key} className="space-y-1.5 p-3.5 rounded-xl bg-[#090D14]/60 border border-[#1E293B]">
+                <div className="flex justify-between items-baseline text-xs">
                   <span className="text-slate-200 font-medium">{c.label}</span>
                   <div className="flex items-center gap-2">
-                    {c.value < 100 ? (
-                      <span className="text-slate-400 text-[11px] font-mono">
-                        (Faltam {100 - c.value}% para 100%)
-                      </span>
-                    ) : (
-                      <span className="text-emerald-400 text-[11px] font-mono font-medium">
-                        (100% atingido)
-                      </span>
-                    )}
-                    <span className="text-slate-300 font-mono font-bold">{c.value}%</span>
+                    <span className="text-slate-400 text-xs">
+                      {c.value < 100
+                        ? `Faltam ${100 - c.value}% para o padrão internacional`
+                        : 'Padrão internacional atingido'}
+                    </span>
+                    <span className="text-slate-200 font-semibold">{c.value}%</span>
                   </div>
                 </div>
                 <Progress
                   value={c.value}
+                  className="h-2 bg-slate-800/80"
                   indicatorClassName={
                     c.value >= 75
                       ? 'bg-emerald-500'
@@ -289,7 +268,7 @@ export function DiagnosticView({
                   }
                 />
                 {c.explanation ? (
-                  <p className="text-[11px] text-slate-400 leading-relaxed pt-1">
+                  <p className="text-xs text-slate-400 leading-relaxed pt-0.5">
                     {c.explanation}
                   </p>
                 ) : null}
@@ -297,26 +276,14 @@ export function DiagnosticView({
             ))}
           </div>
 
-          {/* Executive Summary */}
-          <div className="pt-3 border-t border-slate-800 space-y-2">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-              Diagnóstico Geral
-            </h4>
-            <FormattedText
-              text={review.executiveSummary}
-              as="p"
-              className="text-xs sm:text-sm text-slate-300 leading-relaxed bg-slate-950/60 p-3.5 rounded-xl border border-slate-800/80"
-            />
-          </div>
-
-          {/* Interactive Positioning Card with 1-Click Role Switcher */}
+          {/* Recommended Positioning & Tactical Role Switcher */}
           {review.profileDirection && (
-            <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-2.5">
+            <div className="p-4 rounded-xl bg-[#090D14]/70 border border-[#1E293B] space-y-2.5">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                <span className="text-xs font-semibold text-blue-400 uppercase tracking-wider">
+                <span className="text-xs font-semibold text-blue-400">
                   Posicionamento Recomendado
                 </span>
-                <span className="text-[11px] text-slate-400">
+                <span className="text-xs text-slate-400">
                   Cargo ativo: <strong className="text-white">{selectedRole}</strong>
                 </span>
               </div>
@@ -330,11 +297,11 @@ export function DiagnosticView({
               />
 
               {allRoleOptions.length > 1 && (
-                <div className="pt-2 border-t border-slate-800/80 space-y-1.5">
-                  <span className="text-[11px] text-slate-400 block font-medium">
-                    Alternativas de cargo (clique para alternar):
+                <div className="pt-2.5 border-t border-[#1E293B] space-y-1.5">
+                  <span className="text-xs text-slate-400 block font-medium">
+                    Alternativas de cargo (clique para calibrar o diagnóstico):
                   </span>
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="flex flex-wrap gap-2">
                     {allRoleOptions.map((role) => {
                       const isSelected = selectedRole === role;
                       return (
@@ -342,13 +309,13 @@ export function DiagnosticView({
                           key={role}
                           type="button"
                           onClick={() => setSelectedRole(role)}
-                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs transition-colors border cursor-pointer ${
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors border cursor-pointer ${
                             isSelected
-                              ? 'bg-blue-600 text-white border-blue-500 font-medium shadow-sm'
-                              : 'bg-slate-900 text-slate-300 hover:text-white border-slate-800 hover:border-slate-700'
+                              ? 'bg-blue-600/20 text-blue-300 border-blue-500/50 font-medium shadow-sm'
+                              : 'bg-[#090D14] text-slate-400 hover:text-slate-200 border-[#1E293B] hover:border-slate-700 font-normal'
                           }`}
                         >
-                          {isSelected && <Check className="w-3 h-3 text-white" />}
+                          {isSelected && <Check className="w-3 h-3 text-blue-400" />}
                           <span>{role}</span>
                         </button>
                       );
@@ -358,18 +325,18 @@ export function DiagnosticView({
               )}
             </div>
           )}
-        </Card>
+        </div>
       </div>
 
-      {/* Section by Section Critique (Editorial Format) */}
+      {/* Section by Section Critique (Fluid Editorial Format) */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+          <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
             <span>Detalhamento por Seção do Perfil</span>
-            <Badge variant="outline" className="text-xs font-normal text-slate-400">
+            <Badge variant="outline" className="text-xs font-normal text-slate-400 border-[#1E293B]">
               {review.critique.length} seções analisadas
             </Badge>
-          </h3>
+          </h2>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -379,30 +346,26 @@ export function DiagnosticView({
             const hasNoRedFlags = issues.length === 0;
 
             return (
-              <Card key={idx} className="p-4 border-slate-800 bg-slate-900/50 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-bold text-sm sm:text-base text-white">{item.section}</h4>
+              <div key={idx} className="p-5 rounded-2xl border border-[#1E293B] bg-[#0F1623]/80 space-y-3.5">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="font-semibold text-sm sm:text-base text-white">{item.section}</h3>
                   {hasNoRedFlags ? (
-                    <Badge
-                      variant="success"
-                      className="text-xs font-medium text-emerald-400 bg-emerald-500/10 border-emerald-500/30 flex items-center gap-1"
-                    >
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/30">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                       Sem Red Flags
-                    </Badge>
+                    </span>
                   ) : (
-                    <Badge
-                      variant={
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium border ${
                         item.severity === 'high'
-                          ? 'destructive'
+                          ? 'border-rose-500/40 bg-rose-950/20 text-rose-300'
                           : item.severity === 'medium'
-                          ? 'warning'
-                          : 'outline'
-                      }
-                      className="text-xs font-mono font-semibold"
+                          ? 'border-amber-500/40 bg-amber-950/20 text-amber-300'
+                          : 'border-slate-700 bg-slate-800/40 text-slate-300'
+                      }`}
                     >
                       {item.severity === 'high' ? 'Grave' : item.severity === 'medium' ? 'Moderado' : 'Leve'}
-                    </Badge>
+                    </span>
                   )}
                 </div>
 
@@ -413,12 +376,12 @@ export function DiagnosticView({
                 />
 
                 {issues.length > 0 && (
-                  <div className="space-y-1">
-                    <span className="text-xs font-semibold text-rose-400 uppercase tracking-wider block">
+                  <div className="space-y-1.5 pt-1">
+                    <span className="text-xs font-medium text-rose-400 block">
                       Red Flags Identificadas:
                     </span>
                     {issues.map((issue, i) => (
-                      <div key={i} className="flex items-start gap-1.5 text-xs sm:text-sm text-slate-400">
+                      <div key={i} className="flex items-start gap-2 text-xs sm:text-sm text-slate-300">
                         <XCircle className="w-3.5 h-3.5 text-rose-400 flex-shrink-0 mt-0.5" />
                         <FormattedText text={issue} as="span" />
                       </div>
@@ -427,31 +390,31 @@ export function DiagnosticView({
                 )}
 
                 {strengths.length > 0 && (
-                  <div className="space-y-1 pt-1">
-                    <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider block">
+                  <div className="space-y-1.5 pt-1">
+                    <span className="text-xs font-medium text-emerald-400 block">
                       Pontos Fortes:
                     </span>
                     {strengths.map((str, i) => (
-                      <div key={i} className="flex items-start gap-1.5 text-xs sm:text-sm text-slate-400">
+                      <div key={i} className="flex items-start gap-2 text-xs sm:text-sm text-slate-300">
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 mt-0.5" />
                         <FormattedText text={str} as="span" />
                       </div>
                     ))}
                   </div>
                 )}
-              </Card>
+              </div>
             );
           })}
         </div>
       </div>
 
-      {/* Bottom Floating CTA */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-xl">
-        <div className="space-y-0.5">
-          <h4 className="font-bold text-white text-sm sm:text-base">
+      {/* Bottom Dossier Action Footer (Zero Arrows) */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 sm:p-6 rounded-2xl bg-[#0F1623]/90 border border-[#1E293B]">
+        <div className="space-y-1">
+          <h2 className="font-semibold text-white text-sm sm:text-base">
             Próxima etapa: Entrevista de aprofundamento
-          </h4>
-          <p className="text-xs text-slate-400">
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-400">
             {isApprovedUSLevel
               ? 'Refinar nuances arquiteturais e métricas de produção para maximizar a conversão de entrevistas.'
               : `Aprofundar suas conquistas técnicas para o cargo de ${selectedRole} e eliminar as lacunas identificadas.`}
@@ -462,10 +425,9 @@ export function DiagnosticView({
           variant="default"
           size="lg"
           onClick={handleProceed}
-          className="w-full sm:w-auto gap-2 font-bold shadow-lg bg-blue-600 hover:bg-blue-500 text-white flex-shrink-0"
+          className="w-full sm:w-auto font-semibold bg-blue-600 hover:bg-blue-500 text-white flex-shrink-0 px-6 h-11 rounded-xl shadow-sm"
         >
           <span>{isApprovedUSLevel ? 'Lapidar detalhes na entrevista' : 'Avançar para a entrevista'}</span>
-          <ArrowRight className="w-4 h-4" />
         </Button>
       </div>
     </div>

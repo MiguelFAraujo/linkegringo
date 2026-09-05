@@ -36,10 +36,9 @@ describe('InterviewView Component', () => {
       />,
     );
 
-    expect(screen.getByText(/Entrevista de Aprofundamento • Rodada 1/i)).toBeDefined();
+    expect(screen.getByText(/Entrevista técnica — pergunta 1 de 2/i)).toBeDefined();
     expect(screen.getByText(/Qual o volume de transações com Kafka\?/i)).toBeDefined();
     expect(screen.getByText(/Critério dos recrutadores dos EUA/i)).toBeDefined();
-    expect(screen.getByText(/Pergunta 1 de 2/i)).toBeDefined();
   });
 
   it('renders round 2 with deeper architectural deepening label and banner', () => {
@@ -175,7 +174,7 @@ describe('InterviewView Component', () => {
       />,
     );
 
-    expect(screen.getByText(/Modo Lapidação \(Elite Polish Mode\)/i)).toBeDefined();
+    expect(screen.getByText(/Entrevista técnica \(Modo Lapidação\) — pergunta 1 de 2/i)).toBeDefined();
     expect(screen.getByText(/Modo Lapidação Ativo:/i)).toBeDefined();
     expect(screen.getByText(/Seu perfil já cumpre os requisitos de excelência dos EUA/i)).toBeDefined();
   });
@@ -196,14 +195,14 @@ describe('InterviewView Component', () => {
     fireEvent.click(notApplicableBtn);
 
     // Automatically advances to question 2
-    expect(screen.getByText('Pergunta 2 de 2')).toBeDefined();
+    expect(screen.getByText(/pergunta 2 de 2/i)).toBeDefined();
     expect(screen.getByText('Qual o maior trade-off de arquitetura na migração?')).toBeDefined();
 
     // On question 2, answer normally and click finish
     const textarea = screen.getByPlaceholderText(/Ex: Na migração, sustentamos ~2M req\/dia/i);
     fireEvent.change(textarea, { target: { value: 'Optamos por consistência eventual com saga pattern' } });
 
-    const finishBtn = screen.getByText('Revisar dados confirmados');
+    const finishBtn = screen.getByText('Finalizar e revisar fatos');
     fireEvent.click(finishBtn);
 
     expect(handleSubmitAnswers).toHaveBeenCalledWith([
