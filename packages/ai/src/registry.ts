@@ -42,15 +42,21 @@ export function assignGeminiModelBadge(id: string): string | undefined {
 export function getModelSortWeight(id: string): number {
   if (id === 'gemini-2.0-flash') return 1000;
   if (id === 'gemini-2.5-flash') return 900;
+  if (id.startsWith('gemini-2.5-flash')) return 890;
   if (id === 'gemini-2.5-pro') return 850;
-  if (id === 'gemini-2.0-flash-lite' || id.startsWith('gemini-2.0-flash')) return 800;
+  if (id.startsWith('gemini-2.5-pro')) return 840;
+  if (id === 'gemini-2.0-flash-lite') return 820;
+  if (id.startsWith('gemini-2.0-flash')) return 800;
   if (id.startsWith('gemini-2.0-pro')) return 750;
   if (id === 'gemini-1.5-flash') return 700;
-  if (id === 'gemini-1.5-flash-8b') return 650;
+  if (id.startsWith('gemini-1.5-flash-8b')) return 650;
+  if (id.startsWith('gemini-1.5-flash')) return 680;
   if (id === 'gemini-1.5-pro') return 600;
+  if (id.startsWith('gemini-1.5-pro')) return 590;
 
   let weight = 0;
-  if (id.startsWith('gemini-2.5')) weight += 500;
+  if (id.startsWith('gemini-3')) weight += 600;
+  else if (id.startsWith('gemini-2.5')) weight += 500;
   else if (id.startsWith('gemini-2.0')) weight += 400;
   else if (id.startsWith('gemini-1.5')) weight += 300;
   else if (id.startsWith('gemini-1.0')) weight += 100;
@@ -67,26 +73,43 @@ export async function fetchGeminiModels(apiKey: string): Promise<RemoteGeminiMod
     throw new Error('Chave de API do Gemini não informada.');
   }
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(trimmedKey)}`;
-  const response = await fetch(url);
+  const allRawModels: any[] = [];
+  let pageToken: string | undefined = undefined;
+  let pageCount = 0;
+  const maxPages = 5;
 
-  if (!response.ok) {
-    let detail = '';
-    try {
-      const errJson = await response.json();
-      detail = errJson?.error?.message || errJson?.error?.status || '';
-    } catch {
-      detail = await response.text().catch(() => '');
+  do {
+    pageCount++;
+    const pageParam = pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : '';
+    const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(trimmedKey)}&pageSize=100${pageParam}`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      let detail = '';
+      try {
+        const errJson = await response.json();
+        detail = errJson?.error?.message || errJson?.error?.status || '';
+      } catch {
+        detail = await response.text().catch(() => '');
+      }
+      throw new Error(
+        `Falha ao buscar modelos do Google Gemini (${response.status}): ${detail || response.statusText}`,
+      );
     }
-    throw new Error(
-      `Falha ao buscar modelos do Google Gemini (${response.status}): ${detail || response.statusText}`,
-    );
-  }
 
-  const data = (await response.json()) as { models?: any[] };
-  const rawList = Array.isArray(data?.models) ? data.models : [];
+    const data = (await response.json()) as { models?: any[]; nextPageToken?: string };
+    if (Array.isArray(data?.models)) {
+      allRawModels.push(...data.models);
+    }
 
-  const filtered = rawList.filter((m) => {
+    pageToken =
+      data?.nextPageToken && typeof data.nextPageToken === 'string'
+        ? data.nextPageToken
+        : undefined;
+  } while (pageToken && pageCount < maxPages);
+
+  const seenIds = new Set<string>();
+  const filtered = allRawModels.filter((m) => {
     const methods: string[] = Array.isArray(m.supportedGenerationMethods)
       ? m.supportedGenerationMethods
       : [];
@@ -96,7 +119,11 @@ export async function fetchGeminiModels(apiKey: string): Promise<RemoteGeminiMod
 
     const rawName: string = typeof m.name === 'string' ? m.name : '';
     const cleanId = rawName.replace(/^models\//, '');
-    return cleanId.startsWith('gemini-');
+    if (!cleanId.startsWith('gemini-') || seenIds.has(cleanId)) {
+      return false;
+    }
+    seenIds.add(cleanId);
+    return true;
   });
 
   const models: RemoteGeminiModel[] = filtered.map((m) => {

@@ -247,7 +247,8 @@ export class GeminiAiProvider implements AiProvider {
 
   async testConnection(): Promise<boolean> {
     try {
-      const response = await this.executeGenerateContent({
+      const response = await this.ai.models.generateContent({
+        model: this.model,
         contents: 'Ping. Responda apenas "OK".',
       });
       return Boolean(response.text && response.text.length > 0);

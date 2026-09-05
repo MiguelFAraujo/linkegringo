@@ -272,5 +272,80 @@ describe('fetchGeminiModels', () => {
       globalThis.fetch = originalFetch;
     }
   });
+
+  it('handles paginated responses and deduplicates models', async () => {
+    const { fetchGeminiModels } = await import('./registry.js');
+    const originalFetch = globalThis.fetch;
+    try {
+      let callCount = 0;
+      globalThis.fetch = vi.fn().mockImplementation(async () => {
+        callCount++;
+        if (callCount === 1) {
+          return {
+            ok: true,
+            status: 200,
+            json: async () => ({
+              models: [
+                {
+                  name: 'models/gemini-2.0-flash',
+                  displayName: 'Gemini 2.0 Flash',
+                  supportedGenerationMethods: ['generateContent'],
+                },
+                {
+                  name: 'models/gemini-2.5-flash-preview',
+                  displayName: 'Gemini 2.5 Flash Preview',
+                  supportedGenerationMethods: ['generateContent'],
+                },
+              ],
+              nextPageToken: 'token-page-2',
+            }),
+          };
+        }
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            models: [
+              {
+                name: 'models/gemini-2.0-flash', // duplicate to test deduplication
+                displayName: 'Gemini 2.0 Flash Dup',
+                supportedGenerationMethods: ['generateContent'],
+              },
+              {
+                name: 'models/gemini-1.5-flash',
+                displayName: 'Gemini 1.5 Flash',
+                supportedGenerationMethods: ['generateContent'],
+              },
+            ],
+          }),
+        };
+      });
+
+      const models = await fetchGeminiModels('valid-key');
+      expect(callCount).toBe(2);
+      expect(models.length).toBe(3);
+      expect(models.map((m) => m.id)).toEqual([
+        'gemini-2.0-flash',
+        'gemini-2.5-flash-preview',
+        'gemini-1.5-flash',
+      ]);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it('prioritizes gemini 2.5 flash variants above 1.5 models in getModelSortWeight', async () => {
+    const { getModelSortWeight } = await import('./registry.js');
+    const weight20Flash = getModelSortWeight('gemini-2.0-flash');
+    const weight25Flash = getModelSortWeight('gemini-2.5-flash');
+    const weight25FlashPreview = getModelSortWeight('gemini-2.5-flash-preview');
+    const weight15Flash = getModelSortWeight('gemini-1.5-flash');
+    const weight15Pro = getModelSortWeight('gemini-1.5-pro');
+
+    expect(weight20Flash).toBeGreaterThan(weight25Flash);
+    expect(weight25Flash).toBeGreaterThan(weight25FlashPreview);
+    expect(weight25FlashPreview).toBeGreaterThan(weight15Flash);
+    expect(weight15Flash).toBeGreaterThan(weight15Pro);
+  });
 });
 
