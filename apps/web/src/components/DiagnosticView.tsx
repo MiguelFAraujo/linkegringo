@@ -94,7 +94,7 @@ export function DiagnosticView({
   );
 
   return (
-    <div className="max-w-6xl mx-auto w-full space-y-6 animate-in fade-in duration-300">
+    <div className="max-w-[1440px] mx-auto w-full space-y-6 animate-in fade-in duration-300">
       {/* 92+ Approved Dossier Banner */}
       {isApprovedUSLevel && (
         <div className="p-5 rounded-2xl bg-emerald-950/20 border border-emerald-500/30 text-emerald-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

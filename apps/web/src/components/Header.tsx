@@ -40,7 +40,7 @@ export function Header({
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-[#1E293B] bg-[#090D14]/90 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 h-16 flex items-center justify-between gap-4">
         {/* Brand */}
         <div className="flex flex-col sm:flex-row sm:items-baseline sm:gap-3">
           <span className="font-semibold text-lg tracking-tight text-white">

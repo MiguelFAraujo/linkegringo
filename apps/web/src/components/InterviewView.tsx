@@ -139,7 +139,7 @@ export function InterviewView({
   const isLastQuestion = currentIndex === totalQuestions - 1;
 
   return (
-    <div className="max-w-6xl mx-auto w-full space-y-6 animate-in fade-in duration-300">
+    <div className="max-w-[1440px] mx-auto w-full space-y-6 animate-in fade-in duration-300">
       {/* 2-Column Desktop Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Sidebar Column (lg:col-span-4): Context & Progress Panel */}

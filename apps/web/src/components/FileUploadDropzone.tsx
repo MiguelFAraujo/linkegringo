@@ -141,7 +141,7 @@ export function FileUploadDropzone({
   };
 
   return (
-    <div className="max-w-6xl mx-auto w-full animate-in fade-in duration-300">
+    <div className="max-w-[1440px] mx-auto w-full animate-in fade-in duration-300">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
         {/* Coluna Esquerda (lg:col-span-5): Hero editorial + Pilares de confiança */}
         <div className="lg:col-span-5 space-y-8">
