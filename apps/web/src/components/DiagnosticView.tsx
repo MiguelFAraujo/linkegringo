@@ -11,6 +11,8 @@ import {
   BarChart3,
   Compass,
   UserCheck,
+  Sparkles,
+  Award,
 } from 'lucide-react';
 import type { Profile, ProfileReview } from '@linkegringo/core';
 
@@ -21,17 +23,21 @@ interface DiagnosticViewProps {
 }
 
 export function DiagnosticView({ profile, review, onProceedToObjective }: DiagnosticViewProps) {
+  const isApprovedGringoLevel = review.overallScore >= 88;
+
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30';
-    if (score >= 60) return 'text-teal-400 bg-teal-500/10 border-teal-500/30';
-    if (score >= 45) return 'text-amber-400 bg-amber-500/10 border-amber-500/30';
+    if (score >= 88) return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/40 shadow-emerald-950/40';
+    if (score >= 70) return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30';
+    if (score >= 55) return 'text-teal-400 bg-teal-500/10 border-teal-500/30';
+    if (score >= 40) return 'text-amber-400 bg-amber-500/10 border-amber-500/30';
     return 'text-rose-400 bg-rose-500/10 border-rose-500/30';
   };
 
   const getScoreLabel = (score: number) => {
-    if (score >= 80) return 'Perfil Pronto para o Mercado Americano';
-    if (score >= 60) return 'Perfil Razoável, mas com Gargalos Críticos';
-    if (score >= 45) return 'Invisível ou com Baixo Sinal de Senioridade';
+    if (score >= 88) return 'Perfil Nível Gringo Aprovado (Padrão EUA)';
+    if (score >= 70) return 'Perfil Pronto para o Mercado Americano';
+    if (score >= 55) return 'Perfil Razoável, mas com Gargalos Críticos';
+    if (score >= 40) return 'Invisível ou com Baixo Sinal de Senioridade';
     return 'Gravemente Desalinhado com Recrutadores dos EUA';
   };
 
@@ -45,6 +51,38 @@ export function DiagnosticView({ profile, review, onProceedToObjective }: Diagno
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-300">
+      {/* 88+ Approved Gringo Level Celebratory Banner */}
+      {isApprovedGringoLevel && (
+        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-emerald-950/70 via-emerald-900/40 to-slate-900 border border-emerald-500/40 text-emerald-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl">
+          <div className="flex items-start gap-3.5">
+            <div className="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-400 flex-shrink-0">
+              <Award className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="success" className="text-xs font-bold py-0.5 px-2.5 bg-emerald-500 text-slate-950 border-emerald-400">
+                  🎉 Perfil Nível Gringo Aprovado
+                </Badge>
+                <span className="text-xs font-mono font-semibold text-emerald-300">
+                  Nota {review.overallScore}/100
+                </span>
+              </div>
+              <p className="text-xs sm:text-sm text-slate-200 leading-relaxed">
+                Seu perfil já cumpre os padrões de contratação dos EUA! Você já possui forte tração técnica e métricas comprovadas. A etapa a seguir servirá para lapidar detalhes finos e maximizar ainda mais seu alinhamento com recrutadores internacionais.
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="default"
+            onClick={onProceedToObjective}
+            className="w-full sm:w-auto font-bold gap-2 text-xs flex-shrink-0 shadow-lg shadow-emerald-950/60"
+          >
+            <span>Lapidar Detalhes</span>
+            <ArrowRight className="w-4 h-4" />
+          </Button>
+        </div>
+      )}
+
       {/* Candidate Banner */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl border border-slate-800 bg-slate-900/60">
         <div className="flex items-center gap-3.5">
@@ -59,6 +97,11 @@ export function DiagnosticView({ profile, review, onProceedToObjective }: Diagno
               <Badge variant="outline" className="text-xs text-emerald-400 border-emerald-500/30">
                 <UserCheck className="w-3 h-3 mr-1" /> Perfil Extraído
               </Badge>
+              {isApprovedGringoLevel && (
+                <Badge variant="success" className="text-[11px] py-0.5 px-2 bg-emerald-500/20 text-emerald-300 border-emerald-500/40">
+                  Aprovado
+                </Badge>
+              )}
             </div>
             <p className="text-xs text-slate-400 mt-0.5 line-clamp-1">
               {profile.headline || 'Sem título definido'}
@@ -71,7 +114,7 @@ export function DiagnosticView({ profile, review, onProceedToObjective }: Diagno
           onClick={onProceedToObjective}
           className="w-full sm:w-auto font-semibold gap-2 shadow-lg shadow-emerald-950/40"
         >
-          <span>Otimizar Perfil</span>
+          <span>{isApprovedGringoLevel ? 'Lapidar Perfil' : 'Otimizar Perfil'}</span>
           <ArrowRight className="w-4 h-4" />
         </Button>
       </div>
@@ -99,7 +142,14 @@ export function DiagnosticView({ profile, review, onProceedToObjective }: Diagno
               </div>
             </div>
 
-            <div>
+            <div className="space-y-1">
+              {isApprovedGringoLevel && (
+                <div className="mb-2">
+                  <Badge variant="success" className="text-xs font-bold py-0.5 px-2 bg-emerald-500/20 text-emerald-300 border-emerald-500/40">
+                    🎉 Perfil Nível Gringo Aprovado
+                  </Badge>
+                </div>
+              )}
               <h3 className="font-bold text-base text-white">{getScoreLabel(review.overallScore)}</h3>
               <p className="text-xs text-slate-400 mt-1">
                 Avaliado com base no padrão de contratação de empresas de tecnologia dos EUA.
@@ -108,12 +158,21 @@ export function DiagnosticView({ profile, review, onProceedToObjective }: Diagno
           </div>
 
           <div className="mt-6 pt-4 border-t border-slate-800/80">
-            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-left flex items-start gap-2.5">
-              <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-amber-200/90 leading-relaxed">
-                <strong>Oportunidade:</strong> Na etapa seguinte, vamos extrair métricas e arquitetura para elevar sua nota para mais de 90/100.
-              </p>
-            </div>
+            {isApprovedGringoLevel ? (
+              <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-left flex items-start gap-2.5">
+                <Sparkles className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-emerald-200/90 leading-relaxed">
+                  <strong>Excelente base:</strong> Seu perfil cumpre os padrões dos EUA! Nas próximas etapas vamos fazer apenas ajustes finos de impacto e palavras-chave.
+                </p>
+              </div>
+            ) : (
+              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-left flex items-start gap-2.5">
+                <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-amber-200/90 leading-relaxed">
+                  <strong>Oportunidade:</strong> Na etapa seguinte, vamos extrair métricas e arquitetura para elevar sua nota para mais de 90/100.
+                </p>
+              </div>
+            )}
           </div>
         </Card>
 
@@ -235,13 +294,15 @@ export function DiagnosticView({ profile, review, onProceedToObjective }: Diagno
       </div>
 
       {/* Bottom Floating CTA */}
-      <div className="flex items-center justify-between p-4 rounded-2xl bg-emerald-950/30 border border-emerald-500/30">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl bg-emerald-950/30 border border-emerald-500/30">
         <div>
           <h4 className="font-bold text-white text-sm sm:text-base">
-            Pronto para virar o jogo?
+            {isApprovedGringoLevel ? 'Seu perfil já está no patamar gringo!' : 'Pronto para virar o jogo?'}
           </h4>
           <p className="text-xs text-slate-400">
-            Defina seu cargo-alvo e inicie a entrevista rápida de coaching para transformar esses gargalos em diferenciais.
+            {isApprovedGringoLevel
+              ? 'Deseja lapidar o posicionamento de palavras-chave e alinhar sua headline para conversão máxima?'
+              : 'Defina seu cargo-alvo e inicie a entrevista rápida de coaching para transformar esses gargalos em diferenciais.'}
           </p>
         </div>
 
@@ -249,9 +310,9 @@ export function DiagnosticView({ profile, review, onProceedToObjective }: Diagno
           variant="default"
           size="lg"
           onClick={onProceedToObjective}
-          className="gap-2 font-bold shadow-lg shadow-emerald-950/50 flex-shrink-0"
+          className="w-full sm:w-auto gap-2 font-bold shadow-lg shadow-emerald-950/50 flex-shrink-0"
         >
-          <span>Definir Objetivo & Avançar</span>
+          <span>{isApprovedGringoLevel ? 'Lapidar Detalhes & Avançar' : 'Definir Objetivo & Avançar'}</span>
           <ArrowRight className="w-4 h-4" />
         </Button>
       </div>
