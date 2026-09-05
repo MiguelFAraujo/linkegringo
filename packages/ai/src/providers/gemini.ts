@@ -65,6 +65,70 @@ export function deepSanitizeDashes<T>(val: T): T {
   return val;
 }
 
+export const FALSE_BENCHMARK_PATTERNS: Array<{ pattern: RegExp; replacement: string }> = [
+  {
+    pattern: /(?:é\s+)?um dos melhores resumos (?:já )?avaliados[,\s.]*/gi,
+    replacement: 'Resumo técnico com estrutura clara. ',
+  },
+  {
+    pattern: /(?:é\s+)?um dos melhores perfis (?:já )?(?:vistos|avaliados)[,\s.]*/gi,
+    replacement: 'Perfil com forte alinhamento técnico. ',
+  },
+  {
+    pattern: /top\s+\d+[%％]\s*(?:dos candidatos|da base)?[,\s.]*/gi,
+    replacement: 'Alinhado aos padrões internacionais. ',
+  },
+  {
+    pattern: /melhor que a m[eé]dia[,\s.]*/gi,
+    replacement: 'Cumpre os requisitos técnicos. ',
+  },
+  {
+    pattern: /melhor do que a maioria[,\s.]*/gi,
+    replacement: 'Cumpre os requisitos técnicos. ',
+  },
+  {
+    pattern: /resumo exemplar entre os candidatos analisados[,\s.]*/gi,
+    replacement: 'Resumo objetivo com bom direcionamento técnico. ',
+  },
+  {
+    pattern: /entre os melhores da base[,\s.]*/gi,
+    replacement: 'Cumpre os requisitos técnicos. ',
+  },
+];
+
+export function scrubFalseBenchmarks(text: string): string {
+  if (!text) return text;
+  let result = text;
+  for (const { pattern, replacement } of FALSE_BENCHMARK_PATTERNS) {
+    result = result.replace(pattern, replacement);
+  }
+  return result.trim().replace(/\s{2,}/g, ' ');
+}
+
+export function sanitizeReviewBenchmarks(review: ProfileReview): ProfileReview {
+  const artifactRegex = /artefato.*pdf|quebra.*par[aá]grafo|linha.*corrida|falta de quebra|espa[çc]amento.*resumo/i;
+
+  return {
+    ...review,
+    executiveSummary: scrubFalseBenchmarks(review.executiveSummary),
+    critique: (review.critique || []).map((c) => {
+      const filteredIssues = (c.issues || []).filter((issue) => !artifactRegex.test(issue));
+      const cleanIssues = filteredIssues.map(scrubFalseBenchmarks).filter(Boolean);
+      const cleanStrengths = (c.strengths || []).map(scrubFalseBenchmarks).filter(Boolean);
+      const cleanAssessment = scrubFalseBenchmarks(c.assessment);
+
+      return {
+        ...c,
+        assessment: cleanAssessment,
+        strengths: cleanStrengths,
+        issues: cleanIssues,
+        severity: cleanIssues.length === 0 ? ('low' as const) : c.severity,
+      };
+    }),
+  };
+}
+
+
 export function extractJsonFromResponse<T = unknown>(text: string): T {
   let cleaned = text.trim();
 
@@ -320,16 +384,7 @@ export class GeminiAiProvider implements AiProvider {
     const rawJson = extractJsonFromResponse<{ profile: unknown; review: unknown }>(response.text || '{}');
     const profile = profileSchema.parse(rawJson.profile);
     const rawReview = profileReviewSchema.parse(rawJson.review);
-
-    // Safety filter: strip any rogue issue mentioning PDF line breaks or paragraph artifacts
-    const artifactRegex = /artefato.*pdf|quebra.*par[aá]grafo|linha.*corrida|falta de quebra|espa[çc]amento.*resumo/i;
-    const review = {
-      ...rawReview,
-      critique: rawReview.critique.map((c) => ({
-        ...c,
-        issues: c.issues.filter((issue) => !artifactRegex.test(issue)),
-      })),
-    };
+    const review = sanitizeReviewBenchmarks(rawReview);
 
     return { profile, review };
   }

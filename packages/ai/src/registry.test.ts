@@ -126,6 +126,66 @@ describe('Prompts & Deterministic Rubric', () => {
     expect(prompt).toContain('US Tech Recruiter Red Flags catalog');
   });
 
+  it('scrubFalseBenchmarks and sanitizeReviewBenchmarks eliminate fabricated cohort claims and enforce severity "low" for clean sections', async () => {
+    const { scrubFalseBenchmarks, sanitizeReviewBenchmarks } = await import('./providers/gemini.js');
+    
+    // Test individual string scrubbing
+    expect(scrubFalseBenchmarks('Este é um dos melhores resumos avaliados, com ótima stack.')).not.toContain('um dos melhores resumos avaliados');
+    expect(scrubFalseBenchmarks('Candidato no top 5% da base de dados.')).not.toContain('top 5%');
+    expect(scrubFalseBenchmarks('Perfil muito melhor que a média dos candidatos.')).not.toContain('melhor que a média');
+    expect(scrubFalseBenchmarks('Este é um dos melhores perfis já vistos.')).not.toContain('melhores perfis já vistos');
+    expect(scrubFalseBenchmarks('Resumo exemplar entre os candidatos analisados.')).not.toContain('resumo exemplar entre os candidatos analisados');
+
+    // Test full review sanitization
+    const fakeReview = {
+      targetMarket: 'United States',
+      language: 'pt',
+      overallScore: 92,
+      scores: {
+        searchRelevance: 95,
+        humanVoice: 95,
+        credibility: 90,
+        positioningClarity: 90,
+        evidenceCoverage: 90,
+      },
+      executiveSummary: 'Perfil exemplar no top 1% dos candidatos avaliados.',
+      profileDirection: {
+        positioning: 'Staff Distributed Systems Engineer',
+        primaryRole: 'Staff Backend Engineer',
+        alternativeRoles: ['Principal Engineer'],
+        rationale: 'Forte background em sistemas de alta escala.',
+      },
+      critique: [
+        {
+          section: 'Headline',
+          assessment: 'Um dos melhores resumos avaliados na área de backend.',
+          strengths: ['Entre os melhores da base em clareza'],
+          // Rogue issue that should be stripped by PDF artifact filter, leaving empty issues
+          issues: ['Falta quebra de parágrafo no resumo por artefato do PDF'],
+          severity: 'high' as const,
+        },
+        {
+          section: 'Experiences',
+          assessment: 'Experiências sólidas com métricas XYZ.',
+          strengths: ['Resultados quantificados em latência e RPS'],
+          issues: [],
+          severity: 'medium' as const, // Should be normalized to 'low' because issues is []
+        },
+      ],
+    };
+
+    const sanitized = sanitizeReviewBenchmarks(fakeReview);
+    expect(sanitized.executiveSummary).not.toContain('top 1%');
+    expect(sanitized.critique[0].assessment).not.toContain('um dos melhores resumos avaliados');
+    expect(sanitized.critique[0].strengths[0]).not.toContain('entre os melhores da base');
+    // PDF artifact was stripped, resulting in 0 issues
+    expect(sanitized.critique[0].issues).toEqual([]);
+    // When issues is empty, severity must be normalized to 'low'
+    expect(sanitized.critique[0].severity).toBe('low');
+    // Second section had empty issues, so severity should be normalized to 'low'
+    expect(sanitized.critique[1].severity).toBe('low');
+  });
+
   it('REWRITE_PROFILE_SYSTEM_PROMPT prohibits invented product niches and enforces role fidelity and headline formula', async () => {
     const { REWRITE_PROFILE_SYSTEM_PROMPT } = await import('./prompts.js');
     expect(REWRITE_PROFILE_SYSTEM_PROMPT).toContain('STRICT PROHIBITION OF INVENTED PRODUCT NICHES');
