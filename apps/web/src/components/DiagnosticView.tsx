@@ -94,7 +94,7 @@ export function DiagnosticView({
   );
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-300">
+    <div className="max-w-6xl mx-auto w-full space-y-6 animate-in fade-in duration-300">
       {/* 92+ Approved Dossier Banner */}
       {isApprovedUSLevel && (
         <div className="p-5 rounded-2xl bg-emerald-950/20 border border-emerald-500/30 text-emerald-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -120,7 +120,7 @@ export function DiagnosticView({
           <Button
             variant="default"
             onClick={handleProceed}
-            className="w-full sm:w-auto font-semibold text-xs flex-shrink-0 bg-emerald-600 hover:bg-emerald-500 text-white border border-emerald-500/40"
+            className="w-full sm:w-auto font-semibold text-xs flex-shrink-0 bg-emerald-600 hover:bg-emerald-500 text-white border border-emerald-500/40 cursor-pointer"
           >
             <span>Lapidar Detalhes & Avançar</span>
           </Button>
@@ -166,117 +166,55 @@ export function DiagnosticView({
         <Button
           variant="default"
           onClick={handleProceed}
-          className="w-full sm:w-auto font-medium text-xs sm:text-sm bg-blue-600 hover:bg-blue-500 text-white shadow-sm"
+          className="w-full sm:w-auto font-medium text-xs sm:text-sm bg-blue-600 hover:bg-blue-500 text-white shadow-sm cursor-pointer"
         >
           <span>{isApprovedUSLevel ? 'Lapidar Perfil' : 'Otimizar Perfil'}</span>
         </Button>
       </div>
 
-      {/* Main Executive Dossier Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-        {/* Left: Authoritative Score & Executive Summary */}
-        <div className="md:col-span-5 flex flex-col justify-between p-6 rounded-2xl bg-[#0F1623]/80 border border-[#1E293B] space-y-5">
-          <div className="space-y-4">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#090D14] text-slate-300 text-xs font-medium border border-[#1E293B]">
-              <BarChart3 className="w-3.5 h-3.5 text-blue-400" />
-              <span>Diagnóstico do Perfil</span>
-            </div>
-
-            {/* Authoritative Score Block (Sober Slate, Zero Cliché Circular Gauge) */}
-            <div className="p-5 rounded-xl bg-[#090D14]/70 border border-[#1E293B] space-y-2">
-              <div className="flex items-baseline gap-2">
-                <span className="text-5xl font-bold tracking-tight text-white">{review.overallScore}</span>
-                <span className="text-slate-500 text-base font-medium">/ 100</span>
-              </div>
-              <div className="font-semibold text-sm sm:text-base text-slate-200">
-                {getScoreLabel(review.overallScore)}
-              </div>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Avaliado com base no padrão de contratação de empresas de tecnologia dos EUA.
-              </p>
-            </div>
-
-            {/* Next Steps Takeaway Note */}
-            <div className="p-3.5 rounded-xl bg-[#090D14]/50 border border-[#1E293B] text-left flex items-start gap-2.5">
-              {isApprovedUSLevel ? (
-                <>
-                  <Sparkles className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
-                  <p className="text-xs text-emerald-200/90 leading-relaxed">
-                    <strong>Excelente base:</strong> Seu perfil cumpre os requisitos essenciais. Na entrevista, faremos perguntas de lapidação para maximizar precisão e converter em propostas de alto nível.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <Compass className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
-                  <p className="text-xs text-slate-300 leading-relaxed">
-                    <strong>Próxima etapa:</strong> A entrevista técnica de aprofundamento extrairá métricas e arquitetura para elevar sua nota ao padrão internacional.
-                  </p>
-                </>
-              )}
-            </div>
+      {/* Main Executive Dossier Grid (12 Columns) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Left Column (lg:col-span-5): Score, Parecer, Cargos Alternativos & Resumo Geral */}
+        <div className="lg:col-span-5 flex flex-col p-6 rounded-2xl bg-[#0F1623]/80 border border-[#1E293B] space-y-5">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#090D14] text-slate-300 text-xs font-medium border border-[#1E293B] self-start">
+            <BarChart3 className="w-3.5 h-3.5 text-blue-400" />
+            <span>Diagnóstico do Perfil</span>
           </div>
 
-          {/* Executive Summary */}
-          <div className="pt-4 border-t border-[#1E293B] space-y-2">
-            <span className="text-xs font-medium text-slate-400 block">
-              Diagnóstico geral
-            </span>
-            <FormattedText
-              text={review.executiveSummary}
-              as="p"
-              className="text-xs sm:text-sm text-slate-300 leading-relaxed bg-[#090D14]/50 p-3.5 rounded-xl border border-[#1E293B]"
-            />
-          </div>
-        </div>
-
-        {/* Right: 5 Technical Criteria & Dynamic Role Switcher */}
-        <div className="md:col-span-7 p-6 rounded-2xl bg-[#0F1623]/80 border border-[#1E293B] space-y-5">
-          <div>
-            <h2 className="font-bold text-base text-white flex items-center gap-2">
-              <Compass className="w-4 h-4 text-blue-400" />
-              Critérios de Avaliação Técnica
-            </h2>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Avaliação pilar por pilar e o delta necessário para atingir o padrão internacional.
+          {/* Authoritative Score Block */}
+          <div className="p-5 rounded-xl bg-[#090D14]/70 border border-[#1E293B] space-y-2">
+            <div className="flex items-baseline gap-2">
+              <span className="text-5xl font-bold tracking-tight text-white">{review.overallScore}</span>
+              <span className="text-slate-500 text-base font-medium">/ 100</span>
+            </div>
+            <div className="font-semibold text-sm sm:text-base text-slate-200">
+              {getScoreLabel(review.overallScore)}
+            </div>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Avaliado com base no padrão de contratação de empresas de tecnologia dos EUA.
             </p>
           </div>
 
-          {/* Clean Criteria Bars */}
-          <div className="space-y-3.5">
-            {criteria.map((c) => (
-              <div key={c.key} className="space-y-1.5 p-3.5 rounded-xl bg-[#090D14]/60 border border-[#1E293B]">
-                <div className="flex justify-between items-baseline text-xs">
-                  <span className="text-slate-200 font-medium">{c.label}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-slate-400 text-xs">
-                      {c.value < 100
-                        ? `Faltam ${100 - c.value}% para o padrão internacional`
-                        : 'Padrão internacional atingido'}
-                    </span>
-                    <span className="text-slate-200 font-semibold">{c.value}%</span>
-                  </div>
-                </div>
-                <Progress
-                  value={c.value}
-                  className="h-2 bg-slate-800/80"
-                  indicatorClassName={
-                    c.value >= 75
-                      ? 'bg-emerald-500'
-                      : c.value >= 50
-                      ? 'bg-amber-500'
-                      : 'bg-rose-500'
-                  }
-                />
-                {c.explanation ? (
-                  <p className="text-xs text-slate-400 leading-relaxed pt-0.5">
-                    {c.explanation}
-                  </p>
-                ) : null}
-              </div>
-            ))}
+          {/* Next Steps Takeaway Note */}
+          <div className="p-3.5 rounded-xl bg-[#090D14]/50 border border-[#1E293B] text-left flex items-start gap-2.5">
+            {isApprovedUSLevel ? (
+              <>
+                <Sparkles className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-emerald-200/90 leading-relaxed">
+                  <strong>Excelente base:</strong> Seu perfil cumpre os requisitos essenciais. Na entrevista, faremos perguntas de lapidação para maximizar precisão e converter em propostas de alto nível.
+                </p>
+              </>
+            ) : (
+              <>
+                <Compass className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  <strong>Próxima etapa:</strong> A entrevista técnica de aprofundamento extrairá métricas e arquitetura para elevar sua nota ao padrão internacional.
+                </p>
+              </>
+            )}
           </div>
 
-          {/* Recommended Positioning & Tactical Role Switcher */}
+          {/* Recommended Positioning & Tactical Role Switcher In-line */}
           {review.profileDirection && (
             <div className="p-4 rounded-xl bg-[#090D14]/70 border border-[#1E293B] space-y-2.5">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
@@ -325,10 +263,70 @@ export function DiagnosticView({
               )}
             </div>
           )}
+
+          {/* Executive Summary */}
+          <div className="pt-4 border-t border-[#1E293B] space-y-2">
+            <span className="text-xs font-medium text-slate-400 block">
+              Diagnóstico geral
+            </span>
+            <FormattedText
+              text={review.executiveSummary}
+              as="p"
+              className="text-xs sm:text-sm text-slate-300 leading-relaxed bg-[#090D14]/50 p-3.5 rounded-xl border border-[#1E293B]"
+            />
+          </div>
+        </div>
+
+        {/* Right Column (lg:col-span-7): Matriz dos 5 Critérios Técnicos */}
+        <div className="lg:col-span-7 p-6 rounded-2xl bg-[#0F1623]/80 border border-[#1E293B] space-y-5">
+          <div>
+            <h2 className="font-bold text-base text-white flex items-center gap-2">
+              <Compass className="w-4 h-4 text-blue-400" />
+              Critérios de Avaliação Técnica
+            </h2>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Avaliação pilar por pilar e o delta necessário para atingir o padrão internacional.
+            </p>
+          </div>
+
+          {/* Clean Criteria Bars with Proportional Spacing and Delas in Portuguese */}
+          <div className="space-y-3.5">
+            {criteria.map((c) => (
+              <div key={c.key} className="space-y-1.5 p-3.5 rounded-xl bg-[#090D14]/60 border border-[#1E293B]">
+                <div className="flex justify-between items-baseline text-xs">
+                  <span className="text-slate-200 font-medium">{c.label}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-400 text-xs">
+                      {c.value < 100
+                        ? `Faltam ${100 - c.value}% para o padrão internacional`
+                        : 'Padrão internacional atingido'}
+                    </span>
+                    <span className="text-slate-200 font-semibold">{c.value}%</span>
+                  </div>
+                </div>
+                <Progress
+                  value={c.value}
+                  className="h-2 bg-slate-800/80"
+                  indicatorClassName={
+                    c.value >= 75
+                      ? 'bg-emerald-500'
+                      : c.value >= 50
+                      ? 'bg-amber-500'
+                      : 'bg-rose-500'
+                  }
+                />
+                {c.explanation ? (
+                  <p className="text-xs text-slate-400 leading-relaxed pt-0.5">
+                    {c.explanation}
+                  </p>
+                ) : null}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Section by Section Critique (Fluid Editorial Format) */}
+      {/* Section by Section Critique (Amplo Grid de 2 Colunas) */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
@@ -339,14 +337,14 @@ export function DiagnosticView({
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {(review.critique || []).map((item, idx) => {
             const issues = item.issues || [];
             const strengths = item.strengths || [];
             const hasNoRedFlags = issues.length === 0;
 
             return (
-              <div key={idx} className="p-5 rounded-2xl border border-[#1E293B] bg-[#0F1623]/80 space-y-3.5">
+              <div key={idx} className="p-6 rounded-2xl border border-[#1E293B] bg-[#0F1623]/80 space-y-4">
                 <div className="flex items-center justify-between gap-2">
                   <h3 className="font-semibold text-sm sm:text-base text-white">{item.section}</h3>
                   {hasNoRedFlags ? (
@@ -408,7 +406,7 @@ export function DiagnosticView({
         </div>
       </div>
 
-      {/* Bottom Dossier Action Footer (Zero Arrows) */}
+      {/* Bottom Dossier Action Footer (Largura Total Ancorada) */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 sm:p-6 rounded-2xl bg-[#0F1623]/90 border border-[#1E293B]">
         <div className="space-y-1">
           <h2 className="font-semibold text-white text-sm sm:text-base">
@@ -425,7 +423,7 @@ export function DiagnosticView({
           variant="default"
           size="lg"
           onClick={handleProceed}
-          className="w-full sm:w-auto font-semibold bg-blue-600 hover:bg-blue-500 text-white flex-shrink-0 px-6 h-11 rounded-xl shadow-sm"
+          className="w-full sm:w-auto font-semibold bg-blue-600 hover:bg-blue-500 text-white flex-shrink-0 px-6 h-11 rounded-xl shadow-sm cursor-pointer"
         >
           <span>{isApprovedUSLevel ? 'Lapidar detalhes na entrevista' : 'Avançar para a entrevista'}</span>
         </Button>
