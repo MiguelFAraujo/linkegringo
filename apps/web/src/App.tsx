@@ -358,8 +358,8 @@ export function App() {
     setApiKey('');
     clearStoredApiKey();
     clearCachedGeminiModels();
-    setModel('gemini-2.0-flash');
-    setStoredModel('gemini-2.0-flash');
+    setModel('gemini-2.5-flash');
+    setStoredModel('gemini-2.5-flash');
   };
 
   const hasActiveSession = Boolean(profile && review);
@@ -369,6 +369,7 @@ export function App() {
       <Header
         apiKey={apiKey}
         providerId={providerId}
+        model={model}
         onOpenApiKeyDialog={() => setApiKeyDialogOpen(true)}
         onOpenOnboarding={() => setOnboardingOpen(true)}
         onToggleDemoMode={handleToggleDemoMode}

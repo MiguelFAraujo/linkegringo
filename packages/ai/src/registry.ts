@@ -27,39 +27,49 @@ export interface GeminiModelOption {
 }
 
 export function assignGeminiModelBadge(id: string): string | undefined {
-  if (id === 'gemini-2.0-flash') {
+  if (
+    id.startsWith('gemini-3.6') ||
+    id.startsWith('gemini-3.5') ||
+    id === 'gemini-2.5-flash'
+  ) {
     return 'Recomendado';
   }
-  if (id.startsWith('gemini-2.5') || id.includes('preview') || id.includes('experimental') || id.includes('-exp')) {
+  if (id.includes('preview') || id.includes('experimental') || id.includes('-exp')) {
     return 'Experimental';
   }
-  if (id.startsWith('gemini-1.5') || id.startsWith('gemini-2.0')) {
+  if (id.startsWith('gemini-1.5') || id.startsWith('gemini-2.5') || id.startsWith('gemini-3')) {
     return 'Estável';
+  }
+  if (id.startsWith('gemini-2.0')) {
+    return 'Legado';
   }
   return undefined;
 }
 
 export function getModelSortWeight(id: string): number {
-  if (id === 'gemini-2.0-flash') return 1000;
-  if (id === 'gemini-2.5-flash') return 900;
-  if (id.startsWith('gemini-2.5-flash')) return 890;
-  if (id === 'gemini-2.5-pro') return 850;
-  if (id.startsWith('gemini-2.5-pro')) return 840;
-  if (id === 'gemini-2.0-flash-lite') return 820;
-  if (id.startsWith('gemini-2.0-flash')) return 800;
-  if (id.startsWith('gemini-2.0-pro')) return 750;
-  if (id === 'gemini-1.5-flash') return 700;
-  if (id.startsWith('gemini-1.5-flash-8b')) return 650;
-  if (id.startsWith('gemini-1.5-flash')) return 680;
-  if (id === 'gemini-1.5-pro') return 600;
-  if (id.startsWith('gemini-1.5-pro')) return 590;
+  if (id === 'gemini-3.6-flash') return 1200;
+  if (id.startsWith('gemini-3.6-flash')) return 1190;
+  if (id === 'gemini-3.5-flash') return 1150;
+  if (id.startsWith('gemini-3.5-flash')) return 1140;
+  if (id.startsWith('gemini-3')) return 1100;
+  if (id === 'gemini-2.5-flash') return 1000;
+  if (id.startsWith('gemini-2.5-flash')) return 990;
+  if (id === 'gemini-2.5-pro') return 950;
+  if (id.startsWith('gemini-2.5-pro')) return 940;
+  if (id === 'gemini-1.5-flash') return 800;
+  if (id.startsWith('gemini-1.5-flash-8b')) return 770;
+  if (id.startsWith('gemini-1.5-flash')) return 780;
+  if (id === 'gemini-1.5-pro') return 750;
+  if (id.startsWith('gemini-1.5-pro')) return 740;
+  if (id === 'gemini-2.0-flash') return 200; // Deprecated by Google
+  if (id.startsWith('gemini-2.0')) return 190;
 
   let weight = 0;
   if (id.startsWith('gemini-3')) weight += 600;
   else if (id.startsWith('gemini-2.5')) weight += 500;
-  else if (id.startsWith('gemini-2.0')) weight += 400;
   else if (id.startsWith('gemini-1.5')) weight += 300;
-  else if (id.startsWith('gemini-1.0')) weight += 100;
+  else if (id.startsWith('gemini-2.0')) weight += 100;
+  else if (id.startsWith('gemini-1.0')) weight += 50;
 
   if (id.includes('flash')) weight += 50;
   if (id.includes('pro')) weight += 30;
@@ -149,26 +159,26 @@ export async function fetchGeminiModels(apiKey: string): Promise<RemoteGeminiMod
   return models;
 }
 
-export const DEFAULT_GEMINI_MODEL = 'gemini-2.0-flash';
+export const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash';
 
 export const AVAILABLE_GEMINI_MODELS: GeminiModelOption[] = [
   {
-    id: 'gemini-2.0-flash',
-    name: 'Gemini 2.0 Flash',
-    badge: 'Recomendado • Mais Estável',
-    description: 'Ultra rápido, altamente estável e com suporte multimodal nativo sem filas de espera.',
-  },
-  {
     id: 'gemini-2.5-flash',
     name: 'Gemini 2.5 Flash',
-    badge: 'Experimental • Preview',
-    description: 'Raciocínio avançado, porém sujeito a picos de demanda temporários (503) nos servidores da Google.',
+    badge: 'Recomendado • Alta Velocidade',
+    description: 'Raciocínio avançado, suporte multimodal nativo a PDFs e alta performance.',
   },
   {
     id: 'gemini-1.5-flash',
     name: 'Gemini 1.5 Flash',
-    badge: 'Legado Estável',
-    description: 'Modelo clássico da Google, ideal como plano de contingência contínuo.',
+    badge: 'Estável',
+    description: 'Modelo clássico de alta velocidade e ampla compatibilidade.',
+  },
+  {
+    id: 'gemini-1.5-pro',
+    name: 'Gemini 1.5 Pro',
+    badge: 'Capacidade Estendida',
+    description: 'Janela de contexto ultra ampla para perfis extensos e múltiplos documentos.',
   },
 ];
 
@@ -198,9 +208,11 @@ export function createAiProvider(
   switch (providerId) {
     case 'gemini': {
       const apiKey = (config.apiKey as string) || '';
+      const rawModel = (config.model as string) || '';
+      const model = rawModel && rawModel !== 'gemini-2.0-flash' ? rawModel : DEFAULT_GEMINI_MODEL;
       return new GeminiAiProvider({
         apiKey,
-        model: (config.model as string) || DEFAULT_GEMINI_MODEL,
+        model,
         retryDelayMs: config.retryDelayMs as number | undefined,
       });
     }
@@ -211,4 +223,5 @@ export function createAiProvider(
       throw new Error(`Provedor de IA desconhecido: "${providerId}"`);
   }
 }
+
 

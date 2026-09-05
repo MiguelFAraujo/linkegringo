@@ -233,24 +233,24 @@ describe('fetchGeminiModels', () => {
       expect(models.some((m) => m.id === 'text-embedding-004')).toBe(false);
       expect(models.some((m) => m.id === 'imagen-3.0-generate-002')).toBe(false);
 
-      // Verify IDs have stripped prefix
+      // Verify IDs have stripped prefix and modern sorting
       expect(models.map((m) => m.id)).toEqual([
-        'gemini-2.0-flash',
         'gemini-2.5-flash',
         'gemini-1.5-flash',
         'gemini-1.5-pro',
+        'gemini-2.0-flash',
       ]);
 
       // Check badges
-      const flash20 = models.find((m) => m.id === 'gemini-2.0-flash');
-      expect(flash20?.badge).toBe('Recomendado');
-      expect(flash20?.inputTokenLimit).toBe(1048576);
-
       const flash25 = models.find((m) => m.id === 'gemini-2.5-flash');
-      expect(flash25?.badge).toBe('Experimental');
+      expect(flash25?.badge).toBe('Recomendado');
 
       const flash15 = models.find((m) => m.id === 'gemini-1.5-flash');
       expect(flash15?.badge).toBe('Estável');
+
+      const flash20 = models.find((m) => m.id === 'gemini-2.0-flash');
+      expect(flash20?.badge).toBe('Legado');
+      expect(flash20?.inputTokenLimit).toBe(1048576);
     } finally {
       globalThis.fetch = originalFetch;
     }
@@ -325,27 +325,29 @@ describe('fetchGeminiModels', () => {
       expect(callCount).toBe(2);
       expect(models.length).toBe(3);
       expect(models.map((m) => m.id)).toEqual([
-        'gemini-2.0-flash',
         'gemini-2.5-flash-preview',
         'gemini-1.5-flash',
+        'gemini-2.0-flash',
       ]);
     } finally {
       globalThis.fetch = originalFetch;
     }
   });
 
-  it('prioritizes gemini 2.5 flash variants above 1.5 models in getModelSortWeight', async () => {
+  it('prioritizes gemini 3.x and 2.5 flash variants above legacy models in getModelSortWeight', async () => {
     const { getModelSortWeight } = await import('./registry.js');
-    const weight20Flash = getModelSortWeight('gemini-2.0-flash');
+    const weight36Flash = getModelSortWeight('gemini-3.6-flash');
     const weight25Flash = getModelSortWeight('gemini-2.5-flash');
     const weight25FlashPreview = getModelSortWeight('gemini-2.5-flash-preview');
     const weight15Flash = getModelSortWeight('gemini-1.5-flash');
     const weight15Pro = getModelSortWeight('gemini-1.5-pro');
+    const weight20Flash = getModelSortWeight('gemini-2.0-flash');
 
-    expect(weight20Flash).toBeGreaterThan(weight25Flash);
+    expect(weight36Flash).toBeGreaterThan(weight25Flash);
     expect(weight25Flash).toBeGreaterThan(weight25FlashPreview);
     expect(weight25FlashPreview).toBeGreaterThan(weight15Flash);
     expect(weight15Flash).toBeGreaterThan(weight15Pro);
+    expect(weight15Pro).toBeGreaterThan(weight20Flash);
   });
 });
 

@@ -146,8 +146,8 @@ export function isAuthError(err: any): boolean {
 }
 
 export function getFallbackModels(primaryModel: string): string[] {
-  const defaults = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.5-flash'];
-  const list = [primaryModel, ...defaults];
+  const defaults = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-3.6-flash'];
+  const list = [primaryModel, ...defaults].filter((m) => m !== 'gemini-2.0-flash');
   return Array.from(new Set(list));
 }
 
@@ -162,7 +162,7 @@ export class GeminiAiProvider implements AiProvider {
       throw new Error('Chave de API do Gemini não informada.');
     }
     this.ai = new GoogleGenAI({ apiKey: config.apiKey });
-    this.model = config.model || 'gemini-2.0-flash';
+    this.model = config.model && config.model !== 'gemini-2.0-flash' ? config.model : 'gemini-2.5-flash';
     this.retryDelayMs = typeof config.retryDelayMs === 'number' ? config.retryDelayMs : 1500;
   }
 
@@ -211,6 +211,23 @@ export class GeminiAiProvider implements AiProvider {
             );
           }
 
+          // Check if Google returned 404 / deprecated model error
+          const is404 =
+            err?.status === 404 ||
+            err?.code === 404 ||
+            Number(err?.error?.code) === 404 ||
+            String(err?.message || '').toLowerCase().includes('404') ||
+            String(err?.message || '').toLowerCase().includes('no longer available') ||
+            String(err?.message || '').toLowerCase().includes('not_found');
+
+          if (is404) {
+            console.warn(
+              `[GeminiAiProvider] Modelo "${candidate}" não está disponível ou foi descontinuado pela Google (404 Not Found). Alternando para o próximo modelo...`,
+            );
+            // Skip retrying this model, break inner loop to try next candidate model!
+            break;
+          }
+
           if (!isTransientOrHighDemandError(err)) {
             throw err;
           }
@@ -247,8 +264,7 @@ export class GeminiAiProvider implements AiProvider {
 
   async testConnection(): Promise<boolean> {
     try {
-      const response = await this.ai.models.generateContent({
-        model: this.model,
+      const response = await this.executeGenerateContent({
         contents: 'Ping. Responda apenas "OK".',
       });
       return Boolean(response.text && response.text.length > 0);

@@ -17,6 +17,7 @@ function GithubIcon({ className }: { className?: string }) {
 interface HeaderProps {
   apiKey: string;
   providerId: string;
+  model?: string;
   onOpenApiKeyDialog: () => void;
   onOpenOnboarding: () => void;
   onToggleDemoMode: () => void;
@@ -27,6 +28,7 @@ interface HeaderProps {
 export function Header({
   apiKey,
   providerId,
+  model,
   onOpenApiKeyDialog,
   onOpenOnboarding,
   onToggleDemoMode,
@@ -46,7 +48,7 @@ export function Header({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-extrabold text-xl tracking-tight text-white">
+              <span className="font-bold text-lg tracking-tight text-white">
                 Linke<span className="text-emerald-400">Gringo</span>
               </span>
               <Badge variant="outline" className="text-[10px] uppercase font-mono tracking-wider py-0 px-1.5 border-emerald-500/30 text-emerald-400">
@@ -74,7 +76,7 @@ export function Header({
               onClick={onOpenApiKeyDialog}
             >
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Gemini 2.5 Flash Conectado</span>
+              <span>{model ? `${model} Conectado` : 'Gemini Conectado'}</span>
             </Badge>
           ) : (
             <Badge

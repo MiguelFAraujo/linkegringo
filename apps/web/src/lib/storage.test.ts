@@ -65,9 +65,9 @@ describe('Storage Helpers - Gemini Models Cache', () => {
   });
 
   it('stores and retrieves selected model', () => {
-    expect(getStoredModel()).toBe('gemini-2.0-flash'); // default fallback
+    expect(getStoredModel()).toBe('gemini-2.5-flash'); // default fallback
 
-    setStoredModel('gemini-2.5-flash');
-    expect(getStoredModel()).toBe('gemini-2.5-flash');
+    setStoredModel('gemini-1.5-pro');
+    expect(getStoredModel()).toBe('gemini-1.5-pro');
   });
 });

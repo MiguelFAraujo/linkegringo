@@ -18,7 +18,7 @@ describe('ApiKeyDialog Component', () => {
         onOpenChange={vi.fn()}
         apiKey=""
         providerId="gemini"
-        model="gemini-2.0-flash"
+        model="gemini-2.5-flash"
         onSave={vi.fn()}
         onClear={vi.fn()}
       />,
@@ -49,7 +49,7 @@ describe('ApiKeyDialog Component', () => {
         onOpenChange={vi.fn()}
         apiKey="valid-test-key-cached"
         providerId="gemini"
-        model="gemini-2.0-flash"
+        model="gemini-2.5-flash"
         onSave={vi.fn()}
         onClear={vi.fn()}
       />,
@@ -118,7 +118,7 @@ describe('ApiKeyDialog Component', () => {
         onOpenChange={onOpenChange}
         apiKey="my-saved-key"
         providerId="gemini"
-        model="gemini-2.0-flash"
+        model="gemini-2.5-flash"
         onSave={onSave}
         onClear={vi.fn()}
       />,
@@ -127,7 +127,7 @@ describe('ApiKeyDialog Component', () => {
     const saveBtn = screen.getByRole('button', { name: /Salvar Configuração/i });
     fireEvent.click(saveBtn);
 
-    expect(onSave).toHaveBeenCalledWith('my-saved-key', 'gemini', 'gemini-2.0-flash');
+    expect(onSave).toHaveBeenCalledWith('my-saved-key', 'gemini', 'gemini-2.5-flash');
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
@@ -140,7 +140,7 @@ describe('ApiKeyDialog Component', () => {
         onOpenChange={vi.fn()}
         apiKey="key-to-remove"
         providerId="gemini"
-        model="gemini-2.0-flash"
+        model="gemini-2.5-flash"
         onSave={vi.fn()}
         onClear={onClear}
       />,
@@ -168,7 +168,7 @@ describe('ApiKeyDialog Component', () => {
         onOpenChange={vi.fn()}
         apiKey=""
         providerId="gemini"
-        model="gemini-2.0-flash"
+        model="gemini-2.5-flash"
         onSave={vi.fn()}
         onClear={vi.fn()}
       />,
@@ -206,7 +206,7 @@ describe('ApiKeyDialog Component', () => {
         onOpenChange={vi.fn()}
         apiKey=""
         providerId="gemini"
-        model="gemini-2.0-flash"
+        model="gemini-2.5-flash"
         onSave={vi.fn()}
         onClear={vi.fn()}
       />,
@@ -236,7 +236,7 @@ describe('ApiKeyDialog Component', () => {
         onOpenChange={vi.fn()}
         apiKey=""
         providerId="gemini"
-        model="gemini-2.0-flash"
+        model="gemini-2.5-flash"
         onSave={vi.fn()}
         onClear={vi.fn()}
       />,
