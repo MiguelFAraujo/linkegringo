@@ -395,7 +395,7 @@ export function App() {
   const hasActiveSession = Boolean(profile && review);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0B0F17] text-slate-100">
+    <div className="min-h-screen flex flex-col bg-[#090D14] text-slate-100">
       <Header
         apiKey={apiKey}
         providerId={providerId}
@@ -407,7 +407,7 @@ export function App() {
         hasActiveSession={hasActiveSession}
       />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Error notification banner */}
         {errorMessage && (
           <div className="max-w-3xl mx-auto mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 flex items-center justify-between gap-3 text-xs sm:text-sm">

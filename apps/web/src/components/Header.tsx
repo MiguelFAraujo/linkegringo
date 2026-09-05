@@ -1,6 +1,6 @@
-import { Key, Sparkles, HelpCircle, Globe, RefreshCw } from 'lucide-react';
+import React from 'react';
+import { Key, HelpCircle, RefreshCw } from 'lucide-react';
 import { Button } from './ui/button';
-import { Badge } from './ui/badge';
 
 function GithubIcon({ className }: { className?: string }) {
   return (
@@ -39,113 +39,95 @@ export function Header({
   const hasKey = Boolean(apiKey && apiKey.trim().length > 0);
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md">
+    <header className="sticky top-0 z-40 w-full border-b border-[#1E293B] bg-[#090D14]/90 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
         {/* Brand */}
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center shadow-md shadow-emerald-950/40">
-            <Globe className="h-5 w-5 text-white" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-lg tracking-tight text-white">
-                Linke<span className="text-emerald-400">Gringo</span>
-              </span>
-              <Badge variant="outline" className="text-[10px] uppercase font-mono tracking-wider py-0 px-1.5 border-emerald-500/30 text-emerald-400">
-                BYOK • 100% Client-Side
-              </Badge>
-            </div>
-            <p className="text-[11px] text-slate-400 hidden sm:block">
-              Posicionamento internacional para devs brasileiros nos EUA
-            </p>
-          </div>
+        <div className="flex flex-col sm:flex-row sm:items-baseline sm:gap-3">
+          <span className="font-semibold text-lg tracking-tight text-white">
+            LinkeGringo
+          </span>
+          <span className="text-xs text-slate-400 hidden sm:inline">
+            Posicionamento internacional para desenvolvedores
+          </span>
         </div>
 
         {/* Status & Actions */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Status Badge */}
+        <div className="flex items-center gap-3 sm:gap-4">
+          {/* Status Indicator */}
           {isDemo ? (
-            <Badge variant="warning" className="cursor-pointer gap-1.5 py-1 px-3 text-xs" onClick={onOpenApiKeyDialog}>
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Modo Demo (Offline)</span>
-            </Badge>
+            <button
+              type="button"
+              onClick={onToggleDemoMode}
+              className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium bg-[#0F1623] text-slate-300 border border-[#1E293B] hover:border-slate-600 transition-colors cursor-pointer"
+              title="Modo Demonstração ativo. Clique para alternar."
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+              <span>Modo Demonstração</span>
+            </button>
           ) : hasKey ? (
-            <Badge
-              variant="success"
-              className="cursor-pointer gap-1.5 py-1 px-3 text-xs bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
-              onClick={onOpenApiKeyDialog}
-            >
-              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>{model ? `${model} Conectado` : 'Gemini Conectado'}</span>
-            </Badge>
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium bg-[#0F1623] text-slate-300 border border-[#1E293B]">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              <span>{model || 'Gemini Conectado'}</span>
+            </div>
           ) : (
-            <Badge
-              variant="destructive"
-              className="cursor-pointer gap-1.5 py-1 px-3 text-xs bg-amber-500/15 text-amber-300 border-amber-500/30 animate-pulse"
-              onClick={onOpenApiKeyDialog}
-            >
-              <Key className="w-3.5 h-3.5" />
-              <span>Configurar API Key</span>
-            </Badge>
-          )}
-
-          {/* New / Reset Session Button if in session */}
-          {hasActiveSession && (
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
-              onClick={onResetSession}
-              className="text-slate-400 hover:text-slate-200 hidden md:flex items-center gap-1.5"
-              title="Recomeçar do zero"
+              onClick={onOpenApiKeyDialog}
+              className="text-xs text-slate-300 hover:text-white border-[#1E293B] bg-[#0F1623] hover:bg-[#151E2E] h-8 px-3 gap-1.5 font-normal"
             >
-              <RefreshCw className="w-4 h-4" />
-              <span>Novo Perfil</span>
+              <Key className="w-3.5 h-3.5 text-slate-400" />
+              <span>Configurar Chave</span>
             </Button>
           )}
 
-          {/* Demo Toggle Button */}
-          <Button
-            variant={isDemo ? 'secondary' : 'outline'}
-            size="sm"
-            onClick={onToggleDemoMode}
-            className="text-xs"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span className="hidden sm:inline">{isDemo ? 'Usar Gemini Real' : 'Modo Demo'}</span>
-          </Button>
+          {/* Clean Action Bar */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {hasActiveSession && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onResetSession}
+                className="text-xs text-slate-400 hover:text-slate-200 hover:bg-[#0F1623] h-8 px-2.5 gap-1.5 font-normal"
+                title="Recomeçar do zero"
+              >
+                <RefreshCw className="w-3.5 h-3.5 text-slate-400" />
+                <span>Novo Perfil</span>
+              </Button>
+            )}
 
-          {/* Config Key Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onOpenApiKeyDialog}
-            title="Gerenciar Chave de API"
-            className="text-slate-400 hover:text-white"
-          >
-            <Key className="w-4 h-4" />
-          </Button>
+            {(hasKey || isDemo) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onOpenApiKeyDialog}
+                className="text-xs text-slate-400 hover:text-slate-200 hover:bg-[#0F1623] h-8 px-2.5 gap-1.5 font-normal"
+              >
+                <Key className="w-3.5 h-3.5 text-slate-400" />
+                <span>Chave de API</span>
+              </Button>
+            )}
 
-          {/* Help / Tutorial */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onOpenOnboarding}
-            title="Como funciona"
-            className="text-slate-400 hover:text-white"
-          >
-            <HelpCircle className="w-4 h-4" />
-          </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onOpenOnboarding}
+              className="text-xs text-slate-400 hover:text-slate-200 hover:bg-[#0F1623] h-8 px-2.5 gap-1.5 font-normal"
+            >
+              <HelpCircle className="w-3.5 h-3.5 text-slate-400" />
+              <span>Como Funciona</span>
+            </Button>
 
-          {/* GitHub Repo Link */}
-          <a
-            href="https://github.com/Muriel-Gasparini/linkegringo"
-            target="_blank"
-            rel="noreferrer"
-            className="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition-colors"
-            title="Repositório no GitHub"
-          >
-            <GithubIcon className="w-4 h-4" />
-          </a>
+            <a
+              href="https://github.com/Muriel-Gasparini/linkegringo"
+              target="_blank"
+              rel="noreferrer"
+              className="text-slate-400 hover:text-slate-200 p-2 rounded-lg hover:bg-[#0F1623] transition-colors"
+              title="Repositório no GitHub"
+            >
+              <GithubIcon className="w-4 h-4" />
+            </a>
+          </div>
         </div>
       </div>
     </header>

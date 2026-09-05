@@ -1,14 +1,10 @@
 import React, { useState, useRef } from 'react';
-import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import {
   FileText,
   FileCheck,
   X,
-  Sparkles,
-  ArrowRight,
-  ShieldCheck,
   AlertCircle,
   Plus,
   Info,
@@ -144,230 +140,223 @@ export function FileUploadDropzone({
   return (
     <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in duration-300">
       {/* Hero Intro */}
-      <div className="text-center space-y-3">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-semibold border border-blue-500/20">
-          <ShieldCheck className="w-3.5 h-3.5" />
-          Posicionamento Técnico Internacional
-        </div>
-        <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
-          Destrave seu Perfil do LinkedIn para{' '}
-          <span className="text-blue-400">
-            Recrutadores dos EUA
-          </span>
+      <div className="text-center space-y-2.5">
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white leading-tight">
+          Destrave seu perfil do LinkedIn para recrutadores dos EUA
         </h1>
-        <p className="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto">
+        <p className="text-sm text-slate-400 max-w-2xl mx-auto leading-relaxed">
           Faça o upload do seu perfil em PDF e defina seu cargo-alvo. Receba um diagnóstico técnico detalhado, passe pela entrevista de aprofundamento e receba o perfil pronto em inglês nativo.
         </p>
       </div>
 
-      {/* Main Dropzone Card */}
-      <Card className="border border-slate-800 bg-slate-900/60 shadow-2xl">
-        <CardContent className="p-6 sm:p-8 space-y-6">
-          {/* Target Role Selector */}
-          <div className="space-y-2.5 p-4 rounded-xl border border-slate-800 bg-slate-950/50">
-            <div className="flex items-center justify-between">
-              <label htmlFor="target-role" className="text-xs font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-                <Briefcase className="w-3.5 h-3.5 text-blue-400" />
-                Cargo Alvo nos EUA
-              </label>
-              <span className="text-[11px] text-slate-500">Alinha o escrutínio e as palavras-chave</span>
-            </div>
-
-            <Input
-              id="target-role"
-              type="text"
-              value={targetRole}
-              onChange={(e) => setTargetRole(e.target.value)}
-              placeholder="Ex: Senior Backend Engineer, Senior Full Stack Engineer..."
-              className="text-sm bg-slate-900/90 border-slate-700/80 focus-visible:border-blue-500"
-            />
-
-            <div className="flex flex-wrap items-center gap-1.5 pt-1">
-              <span className="text-[11px] text-slate-400 mr-1">Sugestões rápidas:</span>
-              {QUICK_TARGET_ROLES.map((role) => (
-                <button
-                  key={role}
-                  type="button"
-                  onClick={() => setTargetRole(role)}
-                  className={`px-2.5 py-1 rounded-lg text-xs transition-colors border cursor-pointer ${
-                    targetRole === role
-                      ? 'bg-blue-600/20 text-blue-300 border-blue-500/40 font-medium'
-                      : 'bg-slate-900/60 text-slate-400 hover:text-slate-200 border-slate-800 hover:border-slate-700'
-                  }`}
-                >
-                  {role}
-                </button>
-              ))}
-            </div>
+      {/* Main Upload Container */}
+      <div className="rounded-2xl border border-[#1E293B] bg-[#0F1623]/80 p-5 sm:p-6 space-y-5">
+        {/* Target Role Selector */}
+        <div className="space-y-2.5 p-4 rounded-xl border border-[#1E293B] bg-[#090D14]/60">
+          <div className="flex items-center justify-between">
+            <label htmlFor="target-role" className="text-xs font-medium text-slate-300 flex items-center gap-1.5">
+              <Briefcase className="w-3.5 h-3.5 text-slate-400" />
+              Cargo alvo nos EUA
+            </label>
+            <span className="text-[11px] text-slate-500">Alinha o escrutínio e as palavras-chave</span>
           </div>
 
-          {/* Primary Upload: LinkedIn PDF */}
-          <div
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            onClick={() => !linkedinFile && linkedinInputRef.current?.click()}
-            className={`relative rounded-2xl p-8 border-2 border-dashed transition-all flex flex-col items-center justify-center text-center cursor-pointer ${
-              isDragging
-                ? 'border-blue-500 bg-blue-500/10 scale-[1.01]'
-                : linkedinFile
-                ? 'border-blue-500/50 bg-blue-950/20 cursor-default'
-                : 'border-slate-700/80 bg-slate-900/80 hover:border-blue-500/50 hover:bg-slate-850'
-            }`}
-          >
-            <input
-              ref={linkedinInputRef}
-              type="file"
-              accept=".pdf,application/pdf"
-              className="hidden"
-              onChange={handleLinkedinFileChange}
-            />
+          <Input
+            id="target-role"
+            type="text"
+            value={targetRole}
+            onChange={(e) => setTargetRole(e.target.value)}
+            placeholder="Ex: Senior Backend Engineer, Senior Full Stack Engineer..."
+            className="text-sm bg-[#0F1623] border-[#1E293B] text-slate-200 placeholder:text-slate-500 focus-visible:border-slate-600 focus-visible:ring-1 focus-visible:ring-slate-600"
+          />
 
-            {linkedinFile ? (
-              <div className="w-full flex items-center justify-between gap-4 p-2">
-                <div className="flex items-center gap-3 text-left overflow-hidden">
-                  <div className="h-12 w-12 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center flex-shrink-0">
-                    <FileCheck className="h-6 w-6" />
-                  </div>
-                  <div className="truncate">
-                    <p className="font-semibold text-white truncate text-base">{linkedinFile.name}</p>
-                    <p className="text-xs text-slate-400">
-                      PDF do LinkedIn • {formatFileSize(linkedinFile.size)}
-                    </p>
-                  </div>
-                </div>
-
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setLinkedinFile(null);
-                  }}
-                  className="text-slate-400 hover:text-rose-400 hover:bg-rose-500/10"
-                  title="Remover arquivo"
-                >
-                  <X className="w-5 h-5" />
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <div className="h-14 w-14 mx-auto rounded-2xl bg-blue-500/10 text-blue-400 flex items-center justify-center shadow-inner">
-                  <FileText className="h-7 w-7" />
-                </div>
-                <div>
-                  <p className="font-bold text-base text-white">
-                    Arraste o PDF do seu LinkedIn aqui
-                  </p>
-                  <p className="text-xs text-slate-400 mt-1">
-                    ou clique para selecionar no computador
-                  </p>
-                </div>
-                <div className="inline-flex items-center gap-1.5 text-xs text-slate-400 bg-slate-950/60 px-3 py-1 rounded-full border border-slate-800">
-                  <Info className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                  <span>No LinkedIn: Perfil ➔ Mais ➔ Salvar como PDF</span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Secondary Optional Upload: Resume / CV */}
-          <div className="pt-2 border-t border-slate-800/80">
-            <input
-              ref={cvInputRef}
-              type="file"
-              accept=".pdf,application/pdf"
-              className="hidden"
-              onChange={handleCvFileChange}
-            />
-
-            {cvFile ? (
-              <div className="flex items-center justify-between p-3 rounded-xl border border-slate-800 bg-slate-950/40">
-                <div className="flex items-center gap-2.5 truncate">
-                  <FileText className="w-4 h-4 text-blue-400 flex-shrink-0" />
-                  <span className="text-xs text-slate-200 truncate">{cvFile.name}</span>
-                  <span className="text-[11px] text-slate-500">({formatFileSize(cvFile.size)})</span>
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setCvFile(null)}
-                  className="text-xs text-slate-400 hover:text-rose-400 h-7 px-2"
-                >
-                  Remover
-                </Button>
-              </div>
-            ) : (
+          <div className="flex flex-wrap items-center gap-1.5 pt-1">
+            <span className="text-[11px] text-slate-500 mr-1">Sugestões rápidas:</span>
+            {QUICK_TARGET_ROLES.map((role) => (
               <button
+                key={role}
                 type="button"
-                onClick={() => cvInputRef.current?.click()}
-                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-slate-800 hover:border-slate-700 bg-slate-950/30 text-xs text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+                onClick={() => setTargetRole(role)}
+                className={`px-2.5 py-1 rounded-md text-xs transition-colors border cursor-pointer ${
+                  targetRole === role
+                    ? 'bg-[#1E293B] text-white border-slate-600 font-medium'
+                    : 'bg-[#0F1623]/60 text-slate-400 hover:text-slate-200 border-[#1E293B] hover:border-slate-700'
+                }`}
               >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Adicionar Currículo em PDF (Opcional para enriquecer métricas)</span>
+                {role}
               </button>
-            )}
+            ))}
           </div>
+        </div>
 
-          {/* Error message */}
-          {error && (
-            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 flex items-center gap-2 text-xs">
-              <AlertCircle className="w-4 h-4 flex-shrink-0" />
-              <span>{error}</span>
+        {/* Primary Upload: LinkedIn PDF Dropzone */}
+        <div
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          onClick={() => !linkedinFile && linkedinInputRef.current?.click()}
+          className={`relative rounded-xl p-8 border border-dashed transition-colors flex flex-col items-center justify-center text-center cursor-pointer ${
+            isDragging
+              ? 'border-slate-400 bg-[#151E2E]'
+              : linkedinFile
+              ? 'border-slate-700 bg-[#090D14]/80 cursor-default'
+              : 'border-[#1E293B] bg-[#090D14]/40 hover:border-slate-600 hover:bg-[#090D14]/70'
+          }`}
+        >
+          <input
+            ref={linkedinInputRef}
+            type="file"
+            accept=".pdf,application/pdf"
+            className="hidden"
+            onChange={handleLinkedinFileChange}
+          />
+
+          {linkedinFile ? (
+            <div className="w-full flex items-center justify-between gap-4 p-2">
+              <div className="flex items-center gap-3 text-left overflow-hidden">
+                <div className="h-10 w-10 rounded-lg bg-[#151E2E] text-slate-300 flex items-center justify-center flex-shrink-0 border border-[#1E293B]">
+                  <FileCheck className="h-5 w-5 text-slate-300" />
+                </div>
+                <div className="truncate">
+                  <p className="font-medium text-white truncate text-sm">{linkedinFile.name}</p>
+                  <p className="text-xs text-slate-400">
+                    PDF do LinkedIn ({formatFileSize(linkedinFile.size)})
+                  </p>
+                </div>
+              </div>
+
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLinkedinFile(null);
+                }}
+                className="text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 h-8 w-8"
+                title="Remover arquivo"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-2.5 py-1">
+              <div className="h-11 w-11 mx-auto rounded-xl bg-[#151E2E] text-slate-400 flex items-center justify-center border border-[#1E293B]">
+                <FileText className="h-5 w-5 text-slate-300 stroke-[1.5]" />
+              </div>
+              <div>
+                <p className="font-medium text-sm text-slate-200">
+                  Arraste o PDF do seu LinkedIn aqui
+                </p>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  ou selecione o arquivo no computador
+                </p>
+              </div>
+              <div className="inline-flex items-center gap-1.5 text-xs text-slate-400 bg-[#090D14]/80 px-3 py-1 rounded-md border border-[#1E293B]">
+                <Info className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
+                <span>No LinkedIn: Perfil &gt; Mais &gt; Salvar como PDF</span>
+              </div>
             </div>
           )}
+        </div>
 
-          {/* Action CTAs */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onLoadDemo(targetRole || undefined)}
-              className="w-full sm:w-auto text-amber-400 hover:text-amber-300 border-amber-500/30 hover:bg-amber-500/10 text-xs"
-            >
-              <Sparkles className="w-4 h-4" />
-              Testar com Perfil de Demonstração (Lucas Silveira)
-            </Button>
+        {/* Secondary Optional Upload: Resume / CV */}
+        <div className="pt-2 border-t border-[#1E293B]">
+          <input
+            ref={cvInputRef}
+            type="file"
+            accept=".pdf,application/pdf"
+            className="hidden"
+            onChange={handleCvFileChange}
+          />
 
-            <Button
+          {cvFile ? (
+            <div className="flex items-center justify-between p-3 rounded-xl border border-[#1E293B] bg-[#090D14]/50">
+              <div className="flex items-center gap-2.5 truncate">
+                <FileText className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                <span className="text-xs text-slate-200 truncate">{cvFile.name}</span>
+                <span className="text-[11px] text-slate-500">({formatFileSize(cvFile.size)})</span>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setCvFile(null)}
+                className="text-xs text-slate-400 hover:text-rose-400 h-7 px-2"
+              >
+                Remover
+              </Button>
+            </div>
+          ) : (
+            <button
               type="button"
-              variant="default"
-              size="lg"
-              disabled={!linkedinFile || isLoading}
-              onClick={handleSubmit}
-              className="w-full sm:w-auto font-bold text-sm bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-950/50"
+              onClick={() => cvInputRef.current?.click()}
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-[#1E293B] hover:border-slate-700 bg-[#090D14]/30 text-xs text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
             >
-              {isLoading ? (
-                <div className="flex items-center gap-2">
-                  <div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                  <span>Extraindo Perfil & Analisando...</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <span>Analisar Perfil</span>
-                  <ArrowRight className="w-4 h-4" />
-                </div>
-              )}
-            </Button>
+              <Plus className="w-3.5 h-3.5" />
+              <span>Adicionar currículo em PDF (opcional para enriquecer métricas)</span>
+            </button>
+          )}
+        </div>
+
+        {/* Error message */}
+        {error && (
+          <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 flex items-center gap-2 text-xs">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <span>{error}</span>
           </div>
-        </CardContent>
-      </Card>
+        )}
 
-      {/* Trust & Privacy Card */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 text-center text-xs text-slate-400">
-        <div className="p-3 rounded-xl bg-slate-900/40 border border-slate-800/80">
-          <p className="font-semibold text-slate-200">100% Client-Side</p>
-          <p className="mt-0.5">Executa diretamente no seu browser, zero servidores nossos.</p>
+        {/* Action CTAs */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => onLoadDemo(targetRole || undefined)}
+            className="w-full sm:w-auto text-xs text-slate-400 hover:text-slate-200 hover:bg-[#151E2E] border border-[#1E293B] font-normal"
+          >
+            Testar com perfil de demonstração
+          </Button>
+
+          <Button
+            type="button"
+            variant="default"
+            size="lg"
+            disabled={!linkedinFile || isLoading}
+            onClick={handleSubmit}
+            className="w-full sm:w-auto font-medium text-sm bg-white text-slate-950 hover:bg-slate-200 disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed transition-colors"
+          >
+            {isLoading ? (
+              <div className="flex items-center gap-2">
+                <div className="h-4 w-4 rounded-full border-2 border-slate-950 border-t-transparent animate-spin" />
+                <span>Analisando perfil...</span>
+              </div>
+            ) : (
+              <span>Analisar Perfil</span>
+            )}
+          </Button>
         </div>
-        <div className="p-3 rounded-xl bg-slate-900/40 border border-slate-800/80">
-          <p className="font-semibold text-slate-200">Bring Your Own Key</p>
-          <p className="mt-0.5">Utilize a cota gratuita do Google AI Studio com privacidade auditável.</p>
+      </div>
+
+      {/* Trust Grid */}
+      <div className="pt-6 border-t border-[#1E293B] grid grid-cols-1 sm:grid-cols-3 gap-5 text-left">
+        <div>
+          <h3 className="text-xs font-semibold text-slate-200">Processamento local</h3>
+          <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+            Executa diretamente no seu navegador, sem trafegar por servidores de aplicação externos.
+          </p>
         </div>
-        <div className="p-3 rounded-xl bg-slate-900/40 border border-slate-800/80">
-          <p className="font-semibold text-slate-200">Sem Alucinações</p>
-          <p className="mt-0.5">Você valida os fatos técnicos antes de gerar o novo perfil.</p>
+        <div>
+          <h3 className="text-xs font-semibold text-slate-200">Chave própria (BYOK)</h3>
+          <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+            Utilize a cota gratuita do Google AI Studio com controle absoluto e privacidade auditável.
+          </p>
+        </div>
+        <div>
+          <h3 className="text-xs font-semibold text-slate-200">Validação rigorosa</h3>
+          <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+            Fatos técnicos e métricas extraídos são revisados com você antes de compor o perfil final.
+          </p>
         </div>
       </div>
     </div>
