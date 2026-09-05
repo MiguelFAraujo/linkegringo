@@ -81,12 +81,13 @@ export function ModelSelect({
 }: ModelSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeIndex, setActiveIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const selectedModel = models.find((m) => m.id === value);
 
-  // Close on outside click or Escape
+  // Close on outside click or Escape (using capture to avoid closing parent Dialog)
   useEffect(() => {
     if (!isOpen) return;
     const handleClickOutside = (e: MouseEvent) => {
@@ -96,15 +97,17 @@ export function ModelSelect({
     };
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
         setIsOpen(false);
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown, { capture: true });
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keydown', handleKeyDown, { capture: true });
     };
   }, [isOpen]);
 
@@ -114,6 +117,7 @@ export function ModelSelect({
       setTimeout(() => {
         searchInputRef.current?.focus();
       }, 50);
+      setActiveIndex(0);
     } else {
       setSearchQuery('');
     }
@@ -128,6 +132,22 @@ export function ModelSelect({
       (m.description && m.description.toLowerCase().includes(q))
     );
   });
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActiveIndex((prev) => (prev < filteredModels.length - 1 ? prev + 1 : prev));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActiveIndex((prev) => (prev > 0 ? prev - 1 : 0));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (filteredModels[activeIndex]) {
+        onChange(filteredModels[activeIndex].id);
+        setIsOpen(false);
+      }
+    }
+  };
 
   const isActuallyDisabled = disabled || isLoading;
 
@@ -187,7 +207,6 @@ export function ModelSelect({
       {/* Popover Dropdown */}
       {isOpen && !isActuallyDisabled && (
         <div
-          role="listbox"
           className="absolute left-0 right-0 z-50 mt-1.5 rounded-xl border border-slate-700/80 bg-slate-900 shadow-2xl p-2 max-h-80 flex flex-col backdrop-blur-md"
         >
           {/* Quick Search */}
@@ -197,14 +216,21 @@ export function ModelSelect({
               ref={searchInputRef}
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setActiveIndex(0);
+              }}
+              onKeyDown={handleSearchKeyDown}
               placeholder="Buscar por nome ou id (ex: 2.0, flash, pro)..."
               className="w-full bg-transparent text-xs text-slate-100 placeholder-slate-500 focus:outline-none"
             />
             {searchQuery && (
               <button
                 type="button"
-                onClick={() => setSearchQuery('')}
+                onClick={() => {
+                  setSearchQuery('');
+                  setActiveIndex(0);
+                }}
                 className="text-slate-400 hover:text-white p-0.5"
                 title="Limpar busca"
               >
@@ -214,14 +240,17 @@ export function ModelSelect({
           </div>
 
           {/* List Options */}
-          <div className="overflow-y-auto space-y-1 pr-1 max-h-56">
+          <div role="listbox" className="overflow-y-auto space-y-1 pr-1 max-h-56">
             {filteredModels.length === 0 ? (
               <div className="p-4 text-center text-xs text-slate-500">
-                Nenhum modelo encontrado para "{searchQuery}"
+                {searchQuery.trim()
+                  ? `Nenhum modelo encontrado para "${searchQuery}"`
+                  : 'Nenhum modelo disponível.'}
               </div>
             ) : (
-              filteredModels.map((m) => {
+              filteredModels.map((m, index) => {
                 const isSelected = m.id === value;
+                const isFocused = index === activeIndex;
                 const tokenSummary = formatTokensSummary(m.inputTokenLimit, m.outputTokenLimit);
 
                 return (
@@ -234,10 +263,13 @@ export function ModelSelect({
                       onChange(m.id);
                       setIsOpen(false);
                     }}
+                    onMouseEnter={() => setActiveIndex(index)}
                     className={`w-full flex items-start justify-between gap-3 p-2.5 rounded-lg text-left transition-colors cursor-pointer ${
                       isSelected
                         ? 'bg-emerald-500/15 border border-emerald-500/40 text-white'
-                        : 'hover:bg-slate-800/80 border border-transparent text-slate-300'
+                        : isFocused
+                          ? 'bg-slate-800/90 border border-slate-700/60 text-slate-200'
+                          : 'hover:bg-slate-800/80 border border-transparent text-slate-300'
                     }`}
                   >
                     <div className="min-w-0 space-y-0.5 flex-1">

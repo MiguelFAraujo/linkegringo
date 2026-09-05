@@ -87,8 +87,12 @@ export function getCachedGeminiModels(apiKey?: string): CachedGeminiModelsData |
     if (!raw) return null;
     const parsed = JSON.parse(raw) as CachedGeminiModelsData;
     if (!parsed || !Array.isArray(parsed.models)) return null;
-    if (apiKey && parsed.apiKeyHash !== hashApiKey(apiKey)) {
-      return null;
+    if (apiKey !== undefined) {
+      const trimmed = apiKey.trim();
+      if (!trimmed) return null;
+      if (parsed.apiKeyHash !== hashApiKey(trimmed)) {
+        return null;
+      }
     }
     return parsed;
   } catch {

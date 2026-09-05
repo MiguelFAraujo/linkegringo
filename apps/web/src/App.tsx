@@ -16,6 +16,7 @@ import {
   setStoredProviderId,
   getStoredModel,
   setStoredModel,
+  clearCachedGeminiModels,
   getStoredSession,
   saveStoredSession,
   clearStoredSession,
@@ -356,6 +357,9 @@ export function App() {
   const handleClearApiKey = () => {
     setApiKey('');
     clearStoredApiKey();
+    clearCachedGeminiModels();
+    setModel('gemini-2.0-flash');
+    setStoredModel('gemini-2.0-flash');
   };
 
   const hasActiveSession = Boolean(profile && review);

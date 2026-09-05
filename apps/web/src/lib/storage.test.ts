@@ -49,6 +49,13 @@ describe('Storage Helpers - Gemini Models Cache', () => {
     expect(cachedMismatch).toBeNull();
   });
 
+  it('returns null when checking cache with empty or whitespace key', () => {
+    setCachedGeminiModels('test-key-abc', sampleModels);
+
+    expect(getCachedGeminiModels('')).toBeNull();
+    expect(getCachedGeminiModels('   ')).toBeNull();
+  });
+
   it('clears cached models', () => {
     setCachedGeminiModels('test-key-abc', sampleModels);
     clearCachedGeminiModels();

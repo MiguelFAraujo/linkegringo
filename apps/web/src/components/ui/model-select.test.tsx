@@ -146,7 +146,7 @@ describe('ModelSelect Component', () => {
     expect(screen.getByText(/Nenhum modelo encontrado para "non-existent-query-xyz"/i)).toBeDefined();
   });
 
-  it('closes dropdown when Escape is pressed', () => {
+  it('closes dropdown and stops propagation when Escape is pressed', () => {
     render(
       <ModelSelect
         value="gemini-2.0-flash"
@@ -159,7 +159,47 @@ describe('ModelSelect Component', () => {
     fireEvent.click(trigger);
     expect(screen.getByRole('listbox')).toBeDefined();
 
-    fireEvent.keyDown(document, { key: 'Escape' });
+    const notPrevented = fireEvent.keyDown(window, { key: 'Escape' });
+    expect(notPrevented).toBe(false);
     expect(screen.queryByRole('listbox')).toBeNull();
+  });
+
+  it('supports keyboard navigation with ArrowDown, ArrowUp and Enter to select', () => {
+    const handleChange = vi.fn();
+    render(
+      <ModelSelect
+        value="gemini-2.0-flash"
+        onChange={handleChange}
+        models={mockModels}
+      />,
+    );
+
+    const trigger = screen.getByRole('button');
+    fireEvent.click(trigger);
+
+    const searchInput = screen.getByPlaceholderText(/Buscar por nome ou id/i);
+    // Move down to index 1 (gemini-2.5-flash)
+    fireEvent.keyDown(searchInput, { key: 'ArrowDown' });
+    // Press Enter to select
+    fireEvent.keyDown(searchInput, { key: 'Enter' });
+
+    expect(handleChange).toHaveBeenCalledWith('gemini-2.5-flash');
+    expect(screen.queryByRole('listbox')).toBeNull();
+  });
+
+  it('displays "Nenhum modelo disponível." when models array is empty and opened', () => {
+    render(
+      <ModelSelect
+        value=""
+        onChange={vi.fn()}
+        models={[]}
+        disabled={false}
+      />,
+    );
+
+    const trigger = screen.getByRole('button');
+    fireEvent.click(trigger);
+
+    expect(screen.getByText('Nenhum modelo disponível.')).toBeDefined();
   });
 });

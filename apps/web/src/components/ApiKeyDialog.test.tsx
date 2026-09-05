@@ -151,4 +151,104 @@ describe('ApiKeyDialog Component', () => {
 
     expect(onClear).toHaveBeenCalled();
   });
+
+  it('triggers model fetch on input blur when valid key is typed', async () => {
+    const fetchSpy = vi.spyOn(ai, 'fetchGeminiModels').mockResolvedValue([
+      {
+        id: 'gemini-2.0-flash',
+        displayName: 'Gemini 2.0 Flash OnBlur',
+        description: 'Test onblur model',
+        supportedGenerationMethods: ['generateContent'],
+      },
+    ]);
+
+    render(
+      <ApiKeyDialog
+        open={true}
+        onOpenChange={vi.fn()}
+        apiKey=""
+        providerId="gemini"
+        model="gemini-2.0-flash"
+        onSave={vi.fn()}
+        onClear={vi.fn()}
+      />,
+    );
+
+    const input = screen.getByPlaceholderText('AIzaSy...');
+    fireEvent.change(input, { target: { value: 'AIzaSyTestKey123' } });
+    fireEvent.blur(input);
+
+    await waitFor(() => {
+      expect(fetchSpy).toHaveBeenCalledWith('AIzaSyTestKey123');
+      expect(screen.getByText('Gemini 2.0 Flash OnBlur')).toBeDefined();
+    });
+  });
+
+  it('triggers model fetch when test connection succeeds', async () => {
+    const fetchSpy = vi.spyOn(ai, 'fetchGeminiModels').mockResolvedValue([
+      {
+        id: 'gemini-2.0-flash',
+        displayName: 'Gemini 2.0 Flash OnTest',
+        description: 'Test ontest model',
+        supportedGenerationMethods: ['generateContent'],
+      },
+    ]);
+
+    vi.spyOn(ai, 'createAiProvider').mockReturnValue({
+      id: 'gemini',
+      name: 'Google Gemini',
+      testConnection: vi.fn().mockResolvedValue(true),
+    } as any);
+
+    render(
+      <ApiKeyDialog
+        open={true}
+        onOpenChange={vi.fn()}
+        apiKey=""
+        providerId="gemini"
+        model="gemini-2.0-flash"
+        onSave={vi.fn()}
+        onClear={vi.fn()}
+      />,
+    );
+
+    const input = screen.getByPlaceholderText('AIzaSy...');
+    fireEvent.change(input, { target: { value: 'AIzaSyValidKeyPing' } });
+
+    const testBtn = screen.getByRole('button', { name: /Testar Conexão/i });
+    fireEvent.click(testBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Conexão estabelecida com sucesso/i)).toBeDefined();
+      expect(fetchSpy).toHaveBeenCalledWith('AIzaSyValidKeyPing');
+      expect(screen.getByText('Gemini 2.0 Flash OnTest')).toBeDefined();
+    });
+  });
+
+  it('shows auth error and keeps selector disabled when API key is invalid', async () => {
+    vi.spyOn(ai, 'fetchGeminiModels').mockRejectedValue(
+      new Error('Falha ao buscar modelos do Google Gemini (400): API key not valid.'),
+    );
+
+    render(
+      <ApiKeyDialog
+        open={true}
+        onOpenChange={vi.fn()}
+        apiKey=""
+        providerId="gemini"
+        model="gemini-2.0-flash"
+        onSave={vi.fn()}
+        onClear={vi.fn()}
+      />,
+    );
+
+    const input = screen.getByPlaceholderText('AIzaSy...');
+    fireEvent.change(input, { target: { value: 'invalid-key-xyz123' } });
+    fireEvent.blur(input);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Chave de API do Gemini inválida ou sem permissão/i)).toBeDefined();
+      expect(screen.getByText('Insira uma chave válida para carregar os modelos')).toBeDefined();
+    });
+  });
 });

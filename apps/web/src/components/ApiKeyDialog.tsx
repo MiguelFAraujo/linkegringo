@@ -24,6 +24,7 @@ import {
   createAiProvider,
   fetchGeminiModels,
   getAvailableProviders,
+  isAuthError,
 } from '@linkegringo/ai';
 import { getCachedGeminiModels, setCachedGeminiModels } from '../lib/storage';
 import { ModelSelect, type ModelOption } from './ui/model-select';
@@ -68,12 +69,7 @@ export function ApiKeyDialog({
         }));
       }
     }
-    return AVAILABLE_GEMINI_MODELS.map((m) => ({
-      id: m.id,
-      displayName: m.name,
-      description: m.description,
-      badge: m.badge,
-    }));
+    return [];
   });
 
   const loadModels = React.useCallback(async (key: string, forceFresh: boolean = false) => {
@@ -123,17 +119,30 @@ export function ApiKeyDialog({
       }
     } catch (err: any) {
       console.warn('[ApiKeyDialog] Failed to fetch remote models:', err);
-      setFetchError(err?.message || 'Falha ao buscar modelos');
-      setModels((prev) =>
-        prev.length > 0
-          ? prev
-          : AVAILABLE_GEMINI_MODELS.map((m) => ({
-              id: m.id,
-              displayName: m.name,
-              description: m.description,
-              badge: m.badge,
-            })),
-      );
+      const isAuth =
+        isAuthError(err) ||
+        (typeof err?.message === 'string' &&
+          (err.message.includes('400') ||
+            err.message.includes('401') ||
+            err.message.includes('403') ||
+            err.message.toLowerCase().includes('not valid')));
+
+      if (isAuth) {
+        setFetchError('Chave de API do Gemini inválida ou sem permissão. Verifique sua chave.');
+        setModels([]);
+      } else {
+        setFetchError(err?.message || 'Falha ao buscar modelos');
+        setModels((prev) =>
+          prev.length > 0
+            ? prev
+            : AVAILABLE_GEMINI_MODELS.map((m) => ({
+                id: m.id,
+                displayName: m.name,
+                description: m.description,
+                badge: m.badge,
+              })),
+        );
+      }
     } finally {
       setIsFetchingModels(false);
     }
@@ -170,6 +179,14 @@ export function ApiKeyDialog({
     return () => clearTimeout(timer);
   }, [currentKey, currentProvider, loadModels]);
 
+  const handleKeyBlur = () => {
+    if (currentProvider !== 'gemini') return;
+    const trimmed = currentKey.trim();
+    if (trimmed.length >= 10 && models.length === 0 && !isFetchingModels) {
+      loadModels(trimmed, false);
+    }
+  };
+
   const handleTest = async () => {
     if (currentProvider === 'gemini' && !currentKey.trim()) {
       setTestResult({ ok: false, message: 'Digite ou cole uma chave de API antes de testar.' });
@@ -190,6 +207,9 @@ export function ApiKeyDialog({
           ok: true,
           message: 'Conexão estabelecida com sucesso com o Google Gemini!',
         });
+        if (currentProvider === 'gemini') {
+          await loadModels(currentKey.trim(), false);
+        }
       } else {
         setTestResult({
           ok: false,
@@ -213,6 +233,8 @@ export function ApiKeyDialog({
 
   const handleRemove = () => {
     setCurrentKey('');
+    setModels([]);
+    setCurrentModel('gemini-2.0-flash');
     onClear();
     setTestResult(null);
   };
@@ -294,6 +316,7 @@ export function ApiKeyDialog({
                     setCurrentKey(e.target.value);
                     setTestResult(null);
                   }}
+                  onBlur={handleKeyBlur}
                   className="font-mono text-xs"
                 />
 
@@ -327,7 +350,7 @@ export function ApiKeyDialog({
                     setTestResult(null);
                   }}
                   models={models}
-                  disabled={!currentKey.trim() || (models.length === 0 && !isFetchingModels)}
+                  disabled={!currentKey.trim() || models.length === 0 || isFetchingModels}
                   disabledMessage="Insira uma chave válida para carregar os modelos"
                   isLoading={isFetchingModels}
                 />
