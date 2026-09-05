@@ -56,7 +56,7 @@ export function FactsConfirmation({
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in duration-300">
+    <div className="max-w-5xl mx-auto w-full space-y-6 animate-in fade-in duration-300">
       <Card className="border-[#1E293B] bg-[#0F1623]/80 shadow-2xl">
         <CardHeader className="space-y-2 p-6 sm:p-8 pb-4">
           <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#090D14] text-slate-300 text-xs font-medium border border-[#1E293B] w-fit">
@@ -98,7 +98,7 @@ export function FactsConfirmation({
           </div>
 
           {/* Facts list with tactile selection */}
-          <div className="space-y-2.5 max-h-[440px] overflow-y-auto pr-1">
+          <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
             {factsList.map((fact) => {
               const isChecked = fact.confirmed;
               return (
@@ -114,7 +114,7 @@ export function FactsConfirmation({
                       handleToggle(fact.id);
                     }
                   }}
-                  className={`flex items-start gap-3.5 p-3.5 rounded-xl border transition-all cursor-pointer select-none focus:outline-none focus:ring-1 focus:ring-blue-500/50 ${
+                  className={`flex items-start gap-3.5 p-4 rounded-xl border transition-all cursor-pointer select-none focus:outline-none focus:ring-1 focus:ring-blue-500/50 ${
                     isChecked
                       ? 'border-emerald-500/40 bg-emerald-950/15 text-slate-100 shadow-sm'
                       : 'border-[#1E293B] bg-[#090D14]/50 text-slate-400 hover:border-slate-700'
@@ -149,11 +149,11 @@ export function FactsConfirmation({
           </div>
 
           {/* Add custom fact */}
-          <div className="space-y-2.5 pt-4 border-t border-[#1E293B]">
+          <div className="space-y-2.5 pt-5 border-t border-[#1E293B]">
             <label className="block text-xs font-medium text-slate-300">
               Lembrou de mais algum fato técnico ou métrica de impacto?
             </label>
-            <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex flex-col sm:flex-row gap-2.5">
               <Input
                 type="text"
                 value={newFactStatement}
@@ -165,14 +165,14 @@ export function FactsConfirmation({
                   }
                 }}
                 placeholder="Ex: Otimizou queries SQL reduzindo tempo de execução de 40min para 3min..."
-                className="text-xs bg-[#090D14] border-[#1E293B] text-slate-200 placeholder:text-slate-500 focus:border-blue-500"
+                className="text-xs sm:text-sm bg-[#090D14] border-[#1E293B] text-slate-200 placeholder:text-slate-500 focus:border-blue-500 h-10 px-3.5"
               />
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={handleAddFact}
-                className="text-xs flex-shrink-0 gap-1.5 border-[#1E293B] hover:bg-slate-800 text-slate-200"
+                className="text-xs flex-shrink-0 gap-1.5 border-[#1E293B] hover:bg-slate-800 text-slate-200 h-10 px-4"
               >
                 <Plus className="w-3.5 h-3.5 text-blue-400" />
                 <span>Adicionar</span>
