@@ -60,4 +60,35 @@ describe('FormattedText Component', () => {
     expect(container.querySelector('strong')).toBeNull();
     expect(container.textContent).toBe('Este é um **texto não fechado');
   });
+
+  it('renders bold italic markdown (***bold italic***) as strong and em', () => {
+    const { container } = render(<FormattedText text="Perfil ***Nível Gringo Aprovado***!" />);
+    const strong = container.querySelector('strong');
+    const em = container.querySelector('em');
+    expect(strong).not.toBeNull();
+    expect(em).not.toBeNull();
+    expect(strong?.textContent).toBe('Nível Gringo Aprovado');
+    expect(em?.textContent).toBe('Nível Gringo Aprovado');
+  });
+
+  it('renders nested italic inside bold markdown (**bold with *italic* inside**)', () => {
+    const { container } = render(
+      <FormattedText text="Trabalho com **sistemas de *alta escala* distribuídos**." />,
+    );
+    const strong = container.querySelector('strong');
+    const em = container.querySelector('em');
+    expect(strong).not.toBeNull();
+    expect(em).not.toBeNull();
+    expect(strong?.textContent).toBe('sistemas de alta escala distribuídos');
+    expect(em?.textContent).toBe('alta escala');
+  });
+
+  it('preserves literal non-markdown asterisks surrounded by whitespace (e.g. math or lists)', () => {
+    const { container } = render(
+      <FormattedText text="Otimizou CPU * RAM * Disco e calculou 5 * 4 = 20." />,
+    );
+    expect(container.querySelector('em')).toBeNull();
+    expect(container.querySelector('strong')).toBeNull();
+    expect(container.textContent).toBe('Otimizou CPU * RAM * Disco e calculou 5 * 4 = 20.');
+  });
 });

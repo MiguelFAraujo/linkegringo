@@ -6,8 +6,10 @@ export interface FormattedTextProps {
   as?: 'span' | 'p' | 'div';
 }
 
+const tokenRegex =
+  /(`[^`]+`|\*\*\*[^\s*](?:[\s\S]*?[^\s*])?\*\*\*|\*\*[^\s*](?:[\s\S]*?[^\s*])?\*\*|\*[^\s*](?:[\s\S]*?[^\s*])?\*)/g;
+
 function parseInline(content: string, keyPrefix: string): React.ReactNode[] {
-  const tokenRegex = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*)/g;
   const parts = content.split(tokenRegex);
 
   return parts.map((part, index) => {
@@ -22,6 +24,17 @@ function parseInline(content: string, keyPrefix: string): React.ReactNode[] {
         >
           {part.slice(1, -1)}
         </code>
+      );
+    }
+
+    if (part.startsWith('***') && part.endsWith('***') && part.length >= 6) {
+      const inner = part.slice(3, -3);
+      return (
+        <strong key={key} className="font-semibold text-slate-100">
+          <em className="italic text-slate-200">
+            {parseInline(inner, `${key}-bi`)}
+          </em>
+        </strong>
       );
     }
 
