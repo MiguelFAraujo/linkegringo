@@ -158,49 +158,10 @@ export function sanitizeReviewBenchmarks(review: ProfileReview): ProfileReview {
       }
     : undefined;
 
-  const normalizedScores = { ...review.scores };
-  if (cleanScoreExplanations) {
-    const pillars = [
-      'searchRelevance',
-      'humanVoice',
-      'credibility',
-      'positioningClarity',
-      'evidenceCoverage',
-    ] as const;
-
-    for (const p of pillars) {
-      const score = normalizedScores[p];
-      const explanation = cleanScoreExplanations[p] || '';
-
-      const isPositiveAuthority =
-        /(?:perfeitamente|natural|idiom[aá]tico|n[ií]tido|s[oó]lida|autoridade|sem clich[êe]s|100%|alinhad[ao]|excel[êe]ncia|imediata|cumpre integralmente|indexa perfeitamente)/i.test(
-          explanation,
-        );
-      const hasDeficiencyNotice =
-        /(?:falta[m\s]|aus[êe]ncia|gap|insuficiente|gen[eé]rico|fraco|precisa|deve\s|melhorar|corrigir|reduz)/i.test(
-          explanation,
-        );
-
-      if (score >= 94 && (isPositiveAuthority || !hasDeficiencyNotice)) {
-        normalizedScores[p] = 100;
-      }
-    }
-  }
-
-  const avgScores = Math.round(
-    (normalizedScores.searchRelevance +
-      normalizedScores.humanVoice +
-      normalizedScores.credibility +
-      normalizedScores.positioningClarity +
-      normalizedScores.evidenceCoverage) /
-      5,
-  );
-  const normalizedOverall = Math.max(review.overallScore, avgScores);
-
   return {
     ...review,
-    overallScore: normalizedOverall,
-    scores: normalizedScores,
+    overallScore: review.overallScore,
+    scores: { ...review.scores },
     executiveSummary: scrubEmojis(scrubFalseBenchmarks(review.executiveSummary)),
     scoreExplanations: cleanScoreExplanations,
     critique: (review.critique || []).map((c) => {

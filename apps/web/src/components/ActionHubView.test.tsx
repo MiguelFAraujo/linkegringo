@@ -66,7 +66,7 @@ describe('ActionHubView Component', () => {
     expect(avatarImg.getAttribute('src')).toBe('https://unavatar.io/linkedin/lucas-silveira');
   });
 
-  it('renders the 5-minute interactive LinkedIn checklist with working checkboxes', () => {
+  it('renders the 5-minute interactive LinkedIn checklist with 6 LinkedIn Recruiter actions and working checkboxes', () => {
     render(
       <ActionHubView
         originalProfile={MOCK_PROFILE}
@@ -77,12 +77,20 @@ describe('ActionHubView Component', () => {
     );
 
     expect(screen.getByText(/Passos para atualizar o LinkedIn/i)).toBeDefined();
-    expect(screen.getByText(/0 \/ 5 concluídos/i)).toBeDefined();
+    expect(screen.getByText(/0 \/ 6 concluídos/i)).toBeDefined();
 
-    const headlineCheckbox = screen.getByText(/1\. Atualize sua Headline no LinkedIn/i);
+    // Verify presence of all 6 recruiter actions
+    expect(screen.getByText(/1\. Atualize Headline e About no LinkedIn/i)).toBeDefined();
+    expect(screen.getByText(/2\. Atualize os Bullets das Experiências/i)).toBeDefined();
+    expect(screen.getByText(/3\. Ative "Open to Work" Invisível/i)).toBeDefined();
+    expect(screen.getByText(/4\. Crie o Perfil Secundário em Inglês/i)).toBeDefined();
+    expect(screen.getByText(/5\. Vincule experiências às Páginas Oficiais/i)).toBeDefined();
+    expect(screen.getByText(/6\. Configure Seção em Destaque & Top Skills/i)).toBeDefined();
+
+    const headlineCheckbox = screen.getByText(/1\. Atualize Headline e About no LinkedIn/i);
     fireEvent.click(headlineCheckbox);
 
-    expect(screen.getByText(/1 \/ 5 concluídos/i)).toBeDefined();
+    expect(screen.getByText(/1 \/ 6 concluídos/i)).toBeDefined();
   });
 
   it('renders the technical interview preparation guide card', () => {

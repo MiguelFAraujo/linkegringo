@@ -96,36 +96,42 @@ export function ActionHubView({
   // Copy states
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
-  // 5-Minute Checklist State
+  // 5-Minute Checklist State (6 Critical LinkedIn Recruiter Actions)
   const [checklist, setChecklist] = useState<ChecklistItem[]>([
     {
-      id: 'step-headline',
-      label: '1. Atualize sua Headline no LinkedIn',
-      detail: 'Cole o novo título focado em sistemas e valor técnico de alto nível.',
-      completed: false,
-    },
-    {
-      id: 'step-about',
-      label: '2. Substitua seu About / Summary',
-      detail: 'Cole o novo resumo estruturado em inglês americano com hook direto de 2 linhas.',
+      id: 'step-headline-about',
+      label: '1. Atualize Headline e About no LinkedIn',
+      detail: 'Cole o novo título estratégico e o About em inglês americano com hook direto de 2 linhas.',
       completed: false,
     },
     {
       id: 'step-experience',
-      label: '3. Atualize os Bullets das Experiências',
-      detail: 'Substitua as descrições passivas pelos novos bullet points orientados a impacto (XYZ).',
-      completed: false,
-    },
-    {
-      id: 'step-skills',
-      label: '4. Reordene suas Top 5 Skills',
-      detail: 'Priorize as tecnologias essenciais do seu cargo-alvo para buscas de recrutadores.',
+      label: '2. Atualize os Bullets das Experiências',
+      detail: 'Substitua descrições passivas pelos novos bullet points orientados a impacto (Framework XYZ).',
       completed: false,
     },
     {
       id: 'step-opentowork',
-      label: '5. Ative "Open to Work" para US Remote',
-      detail: 'Configure a visibilidade para "Recruiters only" e adicione localização "United States (Remote)".',
+      label: '3. Ative "Open to Work" Invisível ("Apenas Recrutadores")',
+      detail: 'Configure a visibilidade para recrutadores, modelo Remoto e localidade Estados Unidos (Spotlight).',
+      completed: false,
+    },
+    {
+      id: 'step-secondary-profile',
+      label: '4. Crie o Perfil Secundário em Inglês',
+      detail: 'Use a opção "Adicionar perfil em outro idioma" para indexação nativa no algoritmo de busca dos EUA.',
+      completed: false,
+    },
+    {
+      id: 'step-company-pages',
+      label: '5. Vincule experiências às Páginas Oficiais',
+      detail: 'Conecte cada cargo à Company Page oficial no LinkedIn, eliminando os logotipos cinzas não verificados.',
+      completed: false,
+    },
+    {
+      id: 'step-featured-skills',
+      label: '6. Configure Seção em Destaque & Top Skills',
+      detail: 'Fixe GitHub e artigos técnicos no Featured, e ordene as 3 a 5 principais competências do seu cargo.',
       completed: false,
     },
   ]);
@@ -673,7 +679,7 @@ export function ActionHubView({
         </CardHeader>
 
         <CardContent className="p-5 sm:p-6 pt-0">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
             {checklist.map((item) => (
               <div
                 key={item.id}

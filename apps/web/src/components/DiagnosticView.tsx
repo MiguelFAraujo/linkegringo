@@ -6,6 +6,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
 import {
   CheckCircle2,
   XCircle,
+  HelpCircle,
   BarChart3,
   UserCheck,
   ShieldCheck,
@@ -18,6 +19,10 @@ import {
 import type { Profile, ProfileReview } from '@linkegringo/core';
 import { FormattedText } from './ui/formatted-text';
 import { CandidateAvatar } from './ui/candidate-avatar';
+
+const isTriageInquiry = (issue: string) =>
+  issue.startsWith('Ponto de atenção') ||
+  issue.toLowerCase().includes('ponto de atenção');
 
 interface DiagnosticViewProps {
   profile: Profile;
@@ -34,7 +39,7 @@ export function DiagnosticView({
   onProceedToInterview,
   onProceedToObjective,
 }: DiagnosticViewProps) {
-  const isApprovedUSLevel = review.overallScore >= 92;
+  const isApprovedUSLevel = review.overallScore >= 90;
 
   const [selectedRole, setSelectedRole] = useState(
     targetRole || review.profileDirection?.primaryRole || 'Senior Software Engineer',
@@ -50,7 +55,7 @@ export function DiagnosticView({
   };
 
   const getScoreLabel = (score: number) => {
-    if (score >= 92) return 'Perfil Aprovado para Vagas nos EUA';
+    if (score >= 90) return 'Perfil Aprovado para Triagem nos EUA';
     if (score >= 70) return 'Perfil Competitivo com Ajustes Pontuais';
     if (score >= 55) return 'Perfil Razoável com Pontos Críticos de Atenção';
     if (score >= 40) return 'Baixo Sinal de Senioridade para o Mercado dos EUA';
@@ -110,7 +115,7 @@ export function DiagnosticView({
               <div className="flex flex-wrap items-center gap-2">
                 <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                  Perfil Aprovado para Vagas nos EUA
+                  Perfil Aprovado para Triagem nos EUA
                 </span>
                 <span className="text-xs font-medium text-emerald-400">
                   Nota {review.overallScore}/100
@@ -153,7 +158,7 @@ export function DiagnosticView({
                   variant="success"
                   className="text-xs font-medium py-0.5 px-2 bg-emerald-500/15 text-emerald-300 border-emerald-500/30 flex items-center gap-1"
                 >
-                  <CheckCircle2 className="w-3 h-3" /> Perfil Aprovado para Vagas nos EUA
+                  <CheckCircle2 className="w-3 h-3" /> Perfil Aprovado para Triagem nos EUA
                 </Badge>
               )}
             </div>
@@ -366,6 +371,8 @@ export function DiagnosticView({
               const issues = item.issues || [];
               const strengths = item.strengths || [];
               const hasNoRedFlags = issues.length === 0;
+              const hasOnlyTriage = issues.length > 0 && issues.every(isTriageInquiry);
+              const hasRedFlags = issues.some((i) => !isTriageInquiry(i));
 
               return (
                 <div key={idx} className="p-6 rounded-2xl border border-[#1E293B] bg-[#0F1623]/80 space-y-4 shadow-lg">
@@ -375,6 +382,11 @@ export function DiagnosticView({
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/30">
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                         Sem Red Flags
+                      </span>
+                    ) : hasOnlyTriage ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-medium border border-amber-500/40 bg-amber-950/20 text-amber-300">
+                        <HelpCircle className="w-3.5 h-3.5 text-amber-400" />
+                        Ponto de Atenção
                       </span>
                     ) : (
                       <span
@@ -399,15 +411,22 @@ export function DiagnosticView({
 
                   {issues.length > 0 && (
                     <div className="space-y-1.5 pt-1">
-                      <span className="text-xs font-medium text-rose-400 block">
-                        Red Flags Identificadas:
+                      <span className={`text-xs font-medium block ${hasRedFlags ? 'text-rose-400' : 'text-amber-400'}`}>
+                        {hasRedFlags ? 'Red Flags Identificadas:' : 'Pontos de Atenção na Triagem:'}
                       </span>
-                      {issues.map((issue, i) => (
-                        <div key={i} className="flex items-start gap-2 text-xs sm:text-sm text-slate-300">
-                          <XCircle className="w-3.5 h-3.5 text-rose-400 flex-shrink-0 mt-0.5" />
-                          <FormattedText text={issue} as="span" />
-                        </div>
-                      ))}
+                      {issues.map((issue, i) => {
+                        const isTriage = isTriageInquiry(issue);
+                        return (
+                          <div key={i} className="flex items-start gap-2 text-xs sm:text-sm text-slate-300">
+                            {isTriage ? (
+                              <HelpCircle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0 mt-0.5" />
+                            ) : (
+                              <XCircle className="w-3.5 h-3.5 text-rose-400 flex-shrink-0 mt-0.5" />
+                            )}
+                            <FormattedText text={issue} as="span" />
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
 
@@ -434,6 +453,7 @@ export function DiagnosticView({
               {review.critique.map((item, idx) => {
                 const issues = item.issues || [];
                 const hasNoRedFlags = issues.length === 0;
+                const hasOnlyTriage = issues.length > 0 && issues.every(isTriageInquiry);
                 return (
                   <TabsTrigger
                     key={idx}
@@ -444,6 +464,13 @@ export function DiagnosticView({
                     {hasNoRedFlags ? (
                       <span className="p-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30" title="Sem red flags">
                         <CheckCircle2 className="w-3 h-3" />
+                      </span>
+                    ) : hasOnlyTriage ? (
+                      <span
+                        className="text-[10px] font-semibold px-2 py-0.5 rounded-full border border-amber-500/40 bg-amber-950/40 text-amber-300"
+                        title="Ponto de atenção na triagem"
+                      >
+                        Ponto de Atenção
                       </span>
                     ) : (
                       <span
@@ -467,6 +494,8 @@ export function DiagnosticView({
               const issues = item.issues || [];
               const strengths = item.strengths || [];
               const hasNoRedFlags = issues.length === 0;
+              const hasOnlyTriage = issues.length > 0 && issues.every(isTriageInquiry);
+              const hasRedFlags = issues.some((i) => !isTriageInquiry(i));
 
               return (
                 <TabsContent
@@ -485,6 +514,11 @@ export function DiagnosticView({
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30">
                         <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                         Sem Red Flags
+                      </span>
+                    ) : hasOnlyTriage ? (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold border border-amber-500/40 bg-amber-950/30 text-amber-300">
+                        <HelpCircle className="w-4 h-4 text-amber-400" />
+                        Ponto de Atenção na Triagem
                       </span>
                     ) : (
                       <span
@@ -515,26 +549,35 @@ export function DiagnosticView({
 
                   {/* 2-Column Findings Split */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-                    {/* Red Flags Column (Only rendered if issues exist) */}
+                    {/* Red Flags / Triage Inquiries Column */}
                     {issues.length > 0 ? (
-                      <div className="space-y-3 p-4 rounded-xl bg-rose-950/10 border border-rose-500/20">
+                      <div className={`space-y-3 p-4 rounded-xl border ${
+                        hasRedFlags
+                          ? 'bg-rose-950/10 border-rose-500/20'
+                          : 'bg-amber-950/10 border-amber-500/20'
+                      }`}>
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-semibold text-rose-400 flex items-center gap-1.5">
-                            <XCircle className="w-3.5 h-3.5" />
-                            Red Flags Identificadas:
+                          <span className={`text-xs font-semibold flex items-center gap-1.5 ${
+                            hasRedFlags ? 'text-rose-400' : 'text-amber-400'
+                          }`}>
+                            {hasRedFlags ? <XCircle className="w-3.5 h-3.5" /> : <HelpCircle className="w-3.5 h-3.5" />}
+                            {hasRedFlags ? 'Red Flags Identificadas:' : 'Pontos de Atenção na Triagem:'}
                           </span>
-                          <span className="text-[11px] font-mono text-rose-400/80">
+                          <span className={`text-[11px] font-mono ${hasRedFlags ? 'text-rose-400/80' : 'text-amber-400/80'}`}>
                             {issues.length} {issues.length === 1 ? 'item' : 'itens'}
                           </span>
                         </div>
 
                         <div className="space-y-2">
-                          {issues.map((issue, i) => (
-                            <div key={i} className="flex items-start gap-2 text-xs sm:text-sm text-slate-300">
-                              <span className="text-rose-400 font-bold">•</span>
-                              <FormattedText text={issue} as="span" />
-                            </div>
-                          ))}
+                          {issues.map((issue, i) => {
+                            const isTriage = isTriageInquiry(issue);
+                            return (
+                              <div key={i} className="flex items-start gap-2 text-xs sm:text-sm text-slate-300">
+                                <span className={`${isTriage ? 'text-amber-400' : 'text-rose-400'} font-bold`}>•</span>
+                                <FormattedText text={issue} as="span" />
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     ) : (

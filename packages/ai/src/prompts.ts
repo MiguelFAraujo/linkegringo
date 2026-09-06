@@ -69,61 +69,72 @@ Act as a skeptical US technical recruiter and engineering hiring manager screeni
    - Chaotic pivots between unrelated roles or domains without a coherent narrative bridge.
    - Generic mass-application look lacking deliberate positioning for international remote roles in the US market.
 
-RULES FOR SECTIONS WITHOUT RED FLAGS (issues.length === 0):
-- When a profile section complies with US standards and has zero red flags:
-  * "issues": MUST be an empty array: []
-  * "severity": MUST be "low"
-  * "strengths": MUST list the factual technical strengths identified in that section
-  * "assessment": MUST describe the technical facts and evidence with precision, WITHOUT inventing comparative praise or false benchmarks (e.g., state what standards are met factually, NEVER say "um dos melhores resumos avaliados" or similar).
+RECRUITER TRIAGE INQUIRY HEURISTICS (PONTOS DE ATENÇÃO NA TRIAGEM):
+A senior US technical recruiter looks beyond basic disqualifiers to spot nuances that require investigation or polish:
+1. Short Stint Transition (< 1 year): A recent stint of under 12 months is NOT a disqualifying red flag, but a natural question mark for recruiters ("Why did they leave after X months?"). Flag as: "Ponto de atenção na triagem: Período de permanência inferior a 1 ano no histórico recente. O recrutador americano perguntará com naturalidade o contexto da transição; prepare uma narrativa assertiva destacando o impacto entregue ou conclusão do escopo."
+2. Qualitative Impact without Dollar ($) or Data Volume: Claims that a system "cut revenue leakage", "reduced cloud costs", or "migrated databases without downtime" are positive, but without dollar amounts ($) or database size/rows they remain qualitative. Flag as: "Ponto de atenção na triagem: O impacto foi descrito de forma qualitativa. Na entrevista, quantifique o valor em dólares ($) ou a volumetria de dados/registros para maximizar a autoridade técnica."
+3. Headline Technology Overload (> 4-5 technologies): Listing 8-12 technologies in the headline dilutes specialized positioning. Flag as: "Ponto de atenção na triagem: A headline lista muitas tecnologias concorrendo por atenção. Foque nos 3-4 termos centrais para não diluir o sinal de especialização."
+4. Summary Density (> 2.000 characters): While technically rich, dense summaries of 2.000+ chars compete with experience bullets in the 6-second F-pattern scan. Flag as: "Ponto de atenção na triagem: O resumo é denso e concorre com as experiências na triagem rápida de 6 segundos. Recomendamos condensar para 1.200–1.600 caracteres com parágrafos curtos de 2-3 linhas e bullets."
+5. Stack Asymmetry: When a candidate claims "Senior Full Stack" but their text shows 90% backend depth with supporting frontend, recommend evaluating whether anchoring as "Senior Backend Engineer" provides higher competitive conversion.
 
-ZERO PHANTOM DEDUCTIONS & STRICT 100% FOR FLAWLESS PILLARS:
-- When a candidate's profile section or technical dimension has ZERO concrete flaws or gaps, you MUST award 100 pts (NOT 94, 95, or 96).
-- DO NOT withhold 100 out of false modesty, statistical hesitation, or generic skepticism. If you cannot articulate an explicit, objective, factual technical deficiency in scoreExplanations, the score MUST BE 100.
-- If a pillar scores 100, confirm factually in scoreExplanations that the criterion is fully met with zero gaps for US recruiters (e.g., "A comunicação é natural em inglês americano idiomático com autoridade técnica imediata e zero clichês corporativos; cumpre 100% do padrão internacional"). Do NOT invent missing deltas, never say "faltam X%", and never suggest unnecessary academic or skills expansions.
+LINKEDIN RECRUITER ESSENTIAL SIGNALS (CRITICAL SEARCH BEHAVIORS):
+1. Language Settings: Ensure candidate has an official secondary profile in English ("Add profile in another language") so US recruiters filtering by English find the profile directly.
+2. Open to Work Spotlight: Recommend activating "Open to Work" in invisible mode ("Recruiters only") with Target Location "United States" and Job Type "Remote" (prioritizes profile in the LinkedIn Recruiter Spotlight filter without the public green badge).
+3. Institutional Company Pages: Ensure experiences link to official LinkedIn Company Pages (with logos) to avoid the "grey building" icon of unverified companies.
+4. Featured Section: Pinned link to GitHub profile and technical articles for immediate social proof.
+
+RULES FOR SECTIONS AND ISSUES:
+- Severe red flags (e.g. Portuguese language, missing metrics, buzzwords) = assign appropriate severity ("high" | "medium").
+- Recruiter triage inquiry points = formulate as "Ponto de atenção na triagem: [consultive note]" and assign severity "low".
+- Sections with zero red flags and zero triage points: set "issues": [], "severity": "low", populate "strengths" with technical facts, and ensure "assessment" is strictly factual and technical without any comparative praise.
+- ZERO PHANTOM DEDUCTIONS: If a dimension has zero concrete technical flaws or gaps, you MUST award 100 pts (NOT 94, 95, or 96). Do NOT withhold 100 out of false modesty. If you cannot articulate an explicit, objective, factual technical deficiency in scoreExplanations, the score MUST BE 100.
 
 SENIOR ENGINEERS WITHOUT FORMAL DEGREES (SELF-TAUGHT) & MERIT-BASED CREDIBILITY:
 - US tech hiring is strictly meritocratic and grounded in real-world software engineering outcomes.
 - For developers and software engineers with proven industry experience (3+ to 7+ years), a university degree or formal academic credential is NOT required. Lack of education entries on LinkedIn is standard practice and MUST NEVER reduce the Credibility score or overall score.
-- NEVER advise or criticize candidates with: "Para atingir 100%, basta documentar formações acadêmicas ou cursos formais na seção correspondente". An engineer with a solid career trajectory in production systems qualifies for 100% in Credibility on their work history alone.
+- NEVER advise or criticize candidates with: "Para atingir 100%, basta documentar formações acadêmicas ou cursos formais na seção correspondente". An engineer with a solid career trajectory in production systems qualifies for top Credibility on their work history alone.
 - NEVER advise senior candidates to label themselves as "self-taught" or "autodidata" in their headline or about section. At the senior level, experience speaks for itself; labeling oneself as "self-taught" acts as an unneeded disclaimer that distracts from proven senior engineering capabilities.
 
 Objective Scoring Rubric (5 Pillars - Deterministic Evaluation 0-100):
 1. Idioma & Internacionalização (Human Voice / Language):
-   - 100% American English with natural, idiomatic professional phrasing, direct technical tone, and zero corporate clichés = 100 pts.
-   - Minor non-idiomatic phrasing with otherwise clear English = 80-90 pts (specify exact phrasing in scoreExplanations).
-   - Portuguese text mixed with English, or profile entirely in Portuguese = 30-55 pts (cripples US ATS indexing and recruiter searchability).
+   - 100% American English with natural, idiomatic professional phrasing, direct technical tone, and optimal scannability = 96-100 pts.
+   - Natural English but dense summary (> 2.000 chars) = 90-94 pts (add triage inquiry point on summary density).
+   - Portuguese text mixed with English, or profile entirely in Portuguese = 30-55 pts.
 2. Métricas & Framework XYZ (Evidence Coverage):
-   - Experience bullet points consistently using Google/STAR XYZ formula ("Accomplished [X], as measured by [Y], by doing [Z]") with numbers, %, $, latency reduction, transactions/sec, or scale across experiences = 100 pts.
-   - Some metrics present but inconsistent across roles = 70-85 pts.
-   - Vague, passive descriptions ("Participei de...", "Responsável por...", "Worked on tickets") without measurable impact = 25-50 pts.
+   - Bullet points consistently using XYZ formula with hard metrics, dollar amounts ($), latency, and scale = 96-100 pts.
+   - Strong operational metrics (ms, requests, users) but missing dollar ($) figures or database volumes = 90-94 pts (add triage inquiry point on qualitative impact).
+   - Some metrics present but inconsistent = 70-85 pts.
+   - Vague, passive descriptions without measurable impact = 25-50 pts.
 3. Relevância de Busca (Search Relevance):
-   - ATS and recruiter boolean search relevance is evaluated holistically across the ENTIRE profile (Headline, About, and Experiences combined).
-   - When core stack technologies (e.g. Node.js, NestJS, TypeScript, PostgreSQL, React, Docker, AWS) essential to the target role are present and contextualized across Headline, About, and Experiences = 100 pts.
-   - Missing 1-2 secondary cloud/database keywords = 80-90 pts.
+   - ATS and recruiter boolean search relevance evaluated holistically across Headline, About, and Experiences.
+   - High-signal headline with 3-4 core technologies and architectural scope, cleanly matching target role = 96-100 pts.
+   - Core stack present but headline overloaded (> 5 technologies competing) = 90-94 pts (add triage inquiry point on headline focus).
    - Missing core languages or frameworks for the target role = 35-55 pts.
    - CRITICAL: LinkedIn's PDF export only outputs 3 to 5 Top Skills. NEVER penalize Search Relevance due to having only 3 to 5 skills in the PDF export, and NEVER tell the candidate to "expandir a lista de competências formais do LinkedIn".
 4. Clareza de Posicionamento (Positioning Clarity):
-   - Clean, high-signal headline stating clear senior role, core stack (3-4 technologies), and architectural scope, fully aligned with About and work history = 100 pts.
-   - Clichés ("Passionate software engineer", "Buscando desafios", "Open to work") or vague titles = 30-50 pts.
+   - Laser-focused positioning anchor, with perfect alignment across headline, summary, and experiences = 96-100 pts.
+   - Strong candidate but stack asymmetry (e.g. claims Full Stack but 90% backend) = 90-94 pts (add triage inquiry point on positioning alignment).
+   - Clichés ("Passionate", "Buscando desafios", "Open to work") or vague titles = 30-50 pts.
 5. Credibilidade e Escopo Arquitetural (Credibility):
-   - Coherent career trajectory showing depth, architectural decision-making, production impact, and seniority = 100 pts.
-   - Remember: Proven production experience > Academic diplomas. Self-taught engineers with solid production history receive 100 pts; NEVER deduct points for missing formal college degrees or courses.
+   - Coherent career trajectory showing depth, architectural decision-making, production impact, and technical ownership = 96-100 pts.
+   - Solid production trajectory but with a recent short stint (< 1 year) requiring prepared interview narrative = 88-92 pts (add triage inquiry point on transition narrative).
+   - Remember: Proven production experience > Academic diplomas. Self-taught engineers with solid production history receive full credibility; NEVER deduct points for missing formal college degrees or courses.
    - Lack of evidence regarding systems design, scalability, or invisible work = 35-55 pts.
 
-RECOGNITION OF ALREADY OPTIMIZED PROFILES (92 to 100 points):
-- If the submitted profile already satisfies these criteria (100% natural English, metric-driven XYZ bullets, clean senior headline, structured About, proven credibility):
-  * Award an overallScore between 92 and 100 (award 100 if all pillars achieve flawless execution).
-  * In executiveSummary, state factually: "Perfil no padrão internacional de excelência para os EUA. O perfil cumpre os padrões mais rigorosos de contratação remota americana, com forte tração técnica e métricas comprovadas. As sugestões a seguir são apenas refinamentos opcionais."
-  * DO NOT invent fictitious problems or assign "high" severity issues. All critique items must have severity "low", noting strengths and suggesting only minor polish.
+RECOGNITION OF ALREADY OPTIMIZED PROFILES (90 to 94 points - APPROVED FOR US TRIAGE):
+- If the submitted profile demonstrates strong technical traction (production systems, XYZ metrics, natural English, solid stack):
+  * Award an overallScore between 90 and 94 ("Perfil aprovado para triagem nos EUA").
+  * In executiveSummary, state factually: "Perfil aprovado para triagem nos EUA. Demonstra sólida experiência em produção e métricas reais de engenharia. Os pontos de atenção a seguir são refinamentos consultivos de recrutador para elevar sua nota ao nível de elite (98+)."
+  * Do NOT assign "high" severity issues. Populate constructive triage inquiry points with severity "low" and celebrate concrete technical strengths.
 
-RIGOROUS CALIBRATION FOR GRINGO-APPROVED LEVEL (92+ SCORE):
-- overallScore >= 92 requires:
-  1. 100% natural, idiomatic American English.
-  2. Ultra-concise, high-signal headline: strictly senior role anchor, 3-4 core technologies, architectural scope (e.g., Distributed Systems, High-Throughput APIs), and cloud/DevOps. ZERO buzzwords ("passionate", "problem solver"), zero corporate clichés, and ZERO fabricated vertical product niches (no "CRM", "ERP", "Retail" unless explicitly supported by work history).
+RIGOROUS CALIBRATION FOR ELITE LEVEL (95+ SCORE):
+- overallScore >= 95 requires:
+  1. 100% natural, idiomatic American English with highly scannable summary.
+  2. Ultra-concise, high-signal headline: strictly senior role anchor, 3-4 core technologies, architectural scope (e.g., Distributed Systems, High-Throughput APIs), and cloud/DevOps. ZERO buzzwords and ZERO overloaded lists.
   3. Structured About section with strong hook, architectural scale philosophy, and categorized tech stack.
-  4. Hard, quantifiable metrics in EVERY SINGLE professional experience bullet (XYZ / STAR framework: %, $, latency reduction in ms, requests/sec, throughput, scale).
-- Profiles in English that lack hard quantifiable metrics across experiences or have generic headlines MUST NOT receive 92+. Cap them at 85 maximum.
-- ONLY award overallScore >= 92 if the profile already demonstrates exceptional technical traction and measurable impact across all 5 pillars.
+  4. Hard, quantifiable metrics in EVERY SINGLE professional experience bullet (including dollar $ impact or massive data volumes).
+  5. Coherent, stable career trajectory with established technical ownership.
+- Profiles lacking dollar impact, having overloaded headlines, or with dense summaries MUST be calibrated in the 90-94 range.
 
 TEMPORAL REFERENCE & EDUCATION DATES:
 - Evaluate candidate career chronology against the current real-world date.
@@ -133,7 +144,7 @@ CONTEXT ON THE DATA SOURCE & LINKEDIN FORMATTING (INCLUDING SKILLS EXPORT):
 - The candidate's real profile on LinkedIn is ALREADY visually well-structured, properly paragraphed, and formatted with clean line breaks on their live profile page.
 - The raw document you receive comes from LinkedIn's "Save to PDF" export, which technically merges and flattens all text, removing line breaks and concatenating paragraphs into a single continuous run-on block. This raw text does NOT reflect the candidate's actual profile layout or writing style.
 - Therefore, you MUST take it as a given fact that the candidate's visual formatting, line spacing, and paragraphing on LinkedIn are already flawless. Focus 100% on the intellectual substance: positioning clarity, technical depth, quantifiable impact, and credible evidence.
-- NEVER advise, warn, or comment on paragraphs, line breaks, text density, or spacing—the candidate's actual live profile is already properly formatted. Never critique or penalize the Summary as "too dense" or "lacking line breaks".
+- NEVER advise, warn, or comment on paragraphs, line breaks, text density, or spacing—the candidate's actual live profile is already properly formatted.
 - The LinkedIn "Save to PDF" export feature ONLY outputs up to 3 to 5 "Top Skills", omitting the full skills catalog of up to 50 skills from the live profile. Evaluate ATS Search Relevance holistically across Headline, About, and Experiences. NEVER penalize Search Relevance due to having only 3 to 5 skills in the PDF, and NEVER instruct the candidate to "expandir a lista de competências formais do LinkedIn".
 
 Typical unoptimized profiles (Portuguese text, passive duties, missing metrics, buzzword headlines):
@@ -303,7 +314,15 @@ export function buildInterviewPrompt(
   review?: ProfileReview,
 ): string {
   const dateAnchor = currentDate ?? formatCurrentDate();
-  const isElitePolishMode = (review?.overallScore ?? 0) >= 92;
+  const isElitePolishMode = (review?.overallScore ?? 0) >= 90;
+
+  const recruiterInquiryPoints = (review?.critique || [])
+    .flatMap((c) =>
+      (c.issues || []).filter(
+        (i) => i.startsWith('Ponto de atenção na triagem:') || i.toLowerCase().includes('atenção'),
+      ),
+    )
+    .filter(Boolean);
 
   return `Current Real-World Date: ${dateAnchor}
 
@@ -316,6 +335,16 @@ Generate surgical, high-impact polish questions focusing strictly on:
 1. Critical architectural trade-offs and decision frameworks (e.g., event-driven vs. synchronous, data consistency models).
 2. Extreme edge-case handling, system degradation under heavy load, and resilience engineering.
 3. Quantifiable business outcomes, p99 latency optimization, and cost-efficiency trade-offs.
+` : ''}
+${recruiterInquiryPoints.length > 0 ? `
+RECRUITER TRIAGE INQUIRY POINTS IDENTIFIED IN DIAGNOSTIC:
+The diagnostic audit identified the following specific points that a US hiring manager will investigate:
+${recruiterInquiryPoints.map((pt, idx) => `${idx + 1}. ${pt}`).join('\n')}
+
+Prioritize formulating questions that help the candidate resolve these points:
+- For qualitative impact statements, ask for approximate monetary figures ($ saved or generated) or data volumes (GB, millions of records).
+- For short employment stints (< 1 year), ask how the candidate summarizes the transition assertively, highlighting the project conclusion or impact delivered.
+- For architectural specialization or stack asymmetry, ask about the core engineering trade-off!
 ` : ''}
 Candidate Objective:
 ${JSON.stringify(objective, null, 2)}
@@ -370,22 +399,22 @@ export function buildInterviewProgressPrompt(
   return `Current Real-World Date: ${dateAnchor}
 
 Evaluate interview progress and extract verifiable facts.
-
-Current Evaluation Round: Round ${roundNumber} of 2.${roundNumber >= 2 ? ' THIS IS ROUND 2 (FINAL ROUND): You MUST set readyForGeneration: true and questions: [].' : ''}
-
-Objective:
+Candidate Objective:
 ${JSON.stringify(objective, null, 2)}
 
-Profile:
+Interview Round: ${roundNumber} of 2
+${roundNumber >= 2 ? '\nFINAL ROUND CONSTRAINT: This is round 2 of 2. You MUST set readyForGeneration: true and return questions: [] under all circumstances.\n' : ''}
+
+Original Profile:
 ${JSON.stringify(profile, null, 2)}
 
-Questions Asked:
-${JSON.stringify(plan.questions, null, 2)}
+Interview Plan:
+${JSON.stringify(plan, null, 2)}
 
 Candidate Answers:
 ${JSON.stringify(answers, null, 2)}
 
-Previously Extracted Facts:
+Previously Confirmed Facts:
 ${JSON.stringify(previousFacts, null, 2)}
 
 Return JSON:
@@ -422,10 +451,12 @@ Key Principles for US Tech Positioning:
      Example for Full Stack: "Senior Full Stack Engineer | React, Node.js, TypeScript | Distributed Systems & High-Throughput APIs | AWS, Docker"
      Example for Backend: "Senior Backend Engineer | Java, Spring Boot, Apache Kafka | Distributed Systems & Event-Driven Architecture | AWS, Kubernetes"
      Zero corporate fluff or clichés (no "Passionate software engineer building dreams", "Problem solver", "Buscando desafios").
-2. ABOUT / SUMMARY:
-   - First 2 lines hook the recruiter: state seniority, core technical archetype, and the scale of systems designed.
-   - Middle paragraphs: Concrete engineering philosophy, high-scale architectures, distributed systems resilience, trade-offs, and testing/observability culture.
-   - Final line: Clean, categorized tech stack list (Core Technologies, Architecture & Patterns, Cloud & DevOps, Databases & Storage).
+2. ABOUT / SUMMARY (OPTIMIZED FOR 6-SECOND F-PATTERN SCAN, 1,200 TO 1,600 CHARACTERS):
+   - Hook: The first 2 lines (before the 200-250 character "See more" cutoff) MUST immediately declare the candidate's senior role, primary stack, and operating scale.
+   - Middle: 2-3 short, breathable paragraphs (2-3 lines each) covering engineering philosophy, high-scale architectures, distributed systems resilience, trade-offs, and testing/observability culture.
+   - Stack: Categorized bullet points (Languages & Frameworks, Architecture & Patterns, Cloud & Infrastructure, Databases & Queues).
+   - CTA: Clear 1-line closing bridge for international remote opportunities.
+   - Total length: Strictly between 1,200 and 1,600 characters with generous whitespace.
 3. EXPERIENCES:
    - For each role, write 3-5 punchy bullet points using the XYZ / STAR framework: "Accomplished [X], as measured by [Y], by doing [Z]".
    - Lead with strong past-tense action verbs (Architected, Engineered, Optimized, Spearheaded, Reduced, Designed).
@@ -434,7 +465,7 @@ Key Principles for US Tech Positioning:
 4. SKILLS:
    - Curate and order the top 15-25 skills prioritized for semantic search and ATS matching in the target role.
 5. EVOLUTION OF SCORE:
-   - Calculate the new improved overallScore (typically 90-96) and criteria breakdown, reflecting how the added metrics, positioning clarity, and native English phrasing eliminated previous bottlenecks.
+   - Calculate the new improved overallScore (typically 96-98) and criteria breakdown, reflecting how the added metrics, positioning clarity, and native English phrasing eliminated previous bottlenecks.
 6. HARD GRAMMATICAL RULE:
    - NEVER use em dash (—) or en dash (–) anywhere in rewritten content. Use commas, colons, hyphens (-), or parentheses instead.`;
 

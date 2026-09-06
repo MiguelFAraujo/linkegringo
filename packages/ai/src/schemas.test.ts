@@ -101,13 +101,13 @@ describe('Prompts Temporal Anchor, Education Future Dates & PDF Extraction Warni
     expect(prompt).toContain('NEVER critique, penalize, or comment on paragraphs, line breaks, or spacing');
   });
 
-  it('PARSE_AND_DIAGNOSE_SYSTEM_PROMPT includes 92+ rigorous calibration, context on data source, and education date rules', () => {
-    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('RIGOROUS CALIBRATION FOR GRINGO-APPROVED LEVEL (92+ SCORE)');
+  it('PARSE_AND_DIAGNOSE_SYSTEM_PROMPT includes elite rigorous calibration, context on data source, and education date rules', () => {
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('RIGOROUS CALIBRATION FOR ELITE LEVEL (95+ SCORE)');
     expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('TEMPORAL REFERENCE & EDUCATION DATES');
     expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('CONTEXT ON THE DATA SOURCE & LINKEDIN FORMATTING');
     expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('take it as a given fact that the candidate\'s visual formatting');
-    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('RECOGNITION OF ALREADY OPTIMIZED PROFILES (92 to 100 points)');
-    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('Award an overallScore between 92 and 100');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('RECOGNITION OF ALREADY OPTIMIZED PROFILES (90 to 94 points - APPROVED FOR US TRIAGE)');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('Award an overallScore between 90 and 94');
   });
 
   it('buildInterviewPrompt, buildInterviewProgressPrompt, and buildRewriteProfilePrompt inject date anchor', () => {

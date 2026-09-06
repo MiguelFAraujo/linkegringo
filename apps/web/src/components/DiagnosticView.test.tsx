@@ -16,32 +16,32 @@ describe('DiagnosticView Component', () => {
     );
 
     expect(screen.getByText('42')).toBeDefined();
-    expect(screen.queryByText(/Perfil Aprovado para Vagas nos EUA/i)).toBeNull();
+    expect(screen.queryByText(/Perfil Aprovado para Triagem nos EUA/i)).toBeNull();
     expect(screen.getByText(/Otimizar Perfil/i)).toBeDefined();
     expect(screen.getByText(/Avançar para a entrevista/i)).toBeDefined();
   });
 
-  it('does NOT render celebratory banner when score is 91 (under 92 cutoff)', () => {
+  it('does NOT render celebratory banner when score is 89 (under 90 cutoff)', () => {
     const handleProceed = vi.fn();
-    const score91Review = {
+    const score89Review = {
       ...MOCK_REVIEW,
-      overallScore: 91,
+      overallScore: 89,
     };
 
     render(
       <DiagnosticView
         profile={MOCK_PROFILE}
-        review={score91Review}
+        review={score89Review}
         onProceedToObjective={handleProceed}
       />,
     );
 
-    expect(screen.getByText('91')).toBeDefined();
-    expect(screen.queryByText(/Perfil Aprovado para Vagas nos EUA/i)).toBeNull();
+    expect(screen.getByText('89')).toBeDefined();
+    expect(screen.queryByText(/Perfil Aprovado para Triagem nos EUA/i)).toBeNull();
     expect(screen.getByText(/Otimizar Perfil/i)).toBeDefined();
   });
 
-  it('renders celebratory banner and badge for optimized profile (score >= 92)', () => {
+  it('renders celebratory banner and badge for optimized profile (score >= 90)', () => {
     const handleProceed = vi.fn();
     const highReview = {
       ...MOCK_REVIEW,
@@ -75,7 +75,7 @@ describe('DiagnosticView Component', () => {
 
     expect(screen.getByText('92')).toBeDefined();
     // Celebratory badge and banner should be present
-    const approvedBadges = screen.getAllByText(/Perfil Aprovado para Vagas nos EUA/i);
+    const approvedBadges = screen.getAllByText(/Perfil Aprovado para Triagem nos EUA/i);
     expect(approvedBadges.length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText(/Seu perfil já cumpre os padrões de contratação dos EUA/i)).toBeDefined();
     expect(screen.getByText(/Lapidar Perfil/i)).toBeDefined();
@@ -89,6 +89,37 @@ describe('DiagnosticView Component', () => {
     const proceedBtn = screen.getByText(/Lapidar Detalhes & Avançar/i);
     fireEvent.click(proceedBtn);
     expect(handleProceed).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders "Ponto de Atenção" amber badge for recruiter triage inquiries', () => {
+    const handleProceed = vi.fn();
+    const triageReview = {
+      ...MOCK_REVIEW,
+      overallScore: 92,
+      critique: [
+        {
+          section: 'Headline',
+          assessment: 'Headline técnica clara.',
+          strengths: ['Stack core bem definida'],
+          issues: ['Ponto de atenção na triagem: A headline lista muitas tecnologias concorrendo por atenção.'],
+          severity: 'low' as const,
+        },
+      ],
+    };
+
+    render(
+      <DiagnosticView
+        profile={MOCK_PROFILE}
+        review={triageReview}
+        onProceedToInterview={handleProceed}
+      />,
+    );
+
+    expect(screen.getAllByText('Ponto de Atenção').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText('Pontos de Atenção na Triagem:')).toBeDefined();
+    expect(screen.queryByText('Red Flags Identificadas:')).toBeNull();
+    expect(screen.queryByText('Grave')).toBeNull();
+    expect(screen.getByText(/A headline lista muitas tecnologias concorrendo por atenção/i)).toBeDefined();
   });
 
   it('renders "Sem Red Flags" badge when critique section has zero issues', () => {

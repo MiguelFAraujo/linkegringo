@@ -70,12 +70,12 @@ describe('Helper Utilities', () => {
 });
 
 describe('Prompts & Deterministic Rubric', () => {
-  it('PARSE_AND_DIAGNOSE_SYSTEM_PROMPT includes 5-pillar objective rubric and 92-100 recognition', async () => {
+  it('PARSE_AND_DIAGNOSE_SYSTEM_PROMPT includes 5-pillar objective rubric and 90-94 recruiter triage recognition', async () => {
     const { PARSE_AND_DIAGNOSE_SYSTEM_PROMPT } = await import('./prompts.js');
     expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('Objective Scoring Rubric (5 Pillars - Deterministic Evaluation 0-100)');
     expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('Framework XYZ');
-    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('RECOGNITION OF ALREADY OPTIMIZED PROFILES (92 to 100 points)');
-    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('DO NOT invent fictitious problems');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('RECOGNITION OF ALREADY OPTIMIZED PROFILES (90 to 94 points - APPROVED FOR US TRIAGE)');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('RECRUITER TRIAGE INQUIRY HEURISTICS (PONTOS DE ATENÇÃO NA TRIAGEM)');
   });
 
   it('PARSE_AND_DIAGNOSE_SYSTEM_PROMPT strictly prohibits false benchmarks and invented praise', async () => {
@@ -118,7 +118,8 @@ describe('Prompts & Deterministic Rubric', () => {
     expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('Inflated job titles');
 
     // Rules for sections without red flags
-    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('RULES FOR SECTIONS WITHOUT RED FLAGS (issues.length === 0)');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('RULES FOR SECTIONS AND ISSUES:');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('Sections with zero red flags and zero triage points');
 
     // buildParseAndDiagnosePrompt critique audit rules
     const prompt = buildParseAndDiagnosePrompt();
@@ -195,7 +196,7 @@ describe('Prompts & Deterministic Rubric', () => {
     expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('expandir a lista de competências formais do LinkedIn');
 
     // Strict 100% rule & zero phantom deductions
-    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('ZERO PHANTOM DEDUCTIONS & STRICT 100% FOR FLAWLESS PILLARS');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('ZERO PHANTOM DEDUCTIONS');
     expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('NOT 94, 95, or 96');
 
     // Self-taught senior engineers merit
@@ -209,19 +210,19 @@ describe('Prompts & Deterministic Rubric', () => {
     expect(builtPrompt).toContain('ZERO PHANTOM DEDUCTIONS');
   });
 
-  it('sanitizeReviewBenchmarks normalizes flawless scores >= 94 to 100 and removes academic & skills expansion demands', async () => {
+  it('sanitizeReviewBenchmarks preserves realistic calibrated scores and removes academic & skills expansion demands', async () => {
     const { sanitizeReviewBenchmarks } = await import('./providers/gemini.js');
 
     const reviewWithFlawlessExplanations = {
       targetMarket: 'United States',
       language: 'en',
-      overallScore: 95,
+      overallScore: 94,
       scores: {
         searchRelevance: 95,
-        humanVoice: 96,
-        credibility: 95,
-        positioningClarity: 96,
-        evidenceCoverage: 100,
+        humanVoice: 94,
+        credibility: 92,
+        positioningClarity: 94,
+        evidenceCoverage: 95,
       },
       scoreExplanations: {
         searchRelevance:
@@ -246,13 +247,13 @@ describe('Prompts & Deterministic Rubric', () => {
 
     const result = sanitizeReviewBenchmarks(reviewWithFlawlessExplanations);
 
-    // Scores >= 94 without deficiencies should be normalized to 100
-    expect(result.scores.searchRelevance).toBe(100);
-    expect(result.scores.humanVoice).toBe(100);
-    expect(result.scores.credibility).toBe(100);
-    expect(result.scores.positioningClarity).toBe(100);
-    expect(result.scores.evidenceCoverage).toBe(100);
-    expect(result.overallScore).toBe(100);
+    // Authentic scores should be preserved without artificial 100% overrides
+    expect(result.scores.searchRelevance).toBe(95);
+    expect(result.scores.humanVoice).toBe(94);
+    expect(result.scores.credibility).toBe(92);
+    expect(result.scores.positioningClarity).toBe(94);
+    expect(result.scores.evidenceCoverage).toBe(95);
+    expect(result.overallScore).toBe(94);
 
     // Explanations should not contain academic or PDF skills expansion demands
     expect(result.scoreExplanations?.credibility).not.toContain('basta documentar formações acadêmicas');
@@ -289,12 +290,56 @@ describe('Prompts & Deterministic Rubric', () => {
     const facts: any[] = [];
 
     const round1Prompt = buildInterviewProgressPrompt(MOCK_PROFILE, objective, plan, answers, facts, 1);
-    expect(round1Prompt).toContain('Current Evaluation Round: Round 1 of 2.');
-    expect(round1Prompt).not.toContain('THIS IS ROUND 2 (FINAL ROUND)');
+    expect(round1Prompt).toContain('Interview Round: 1 of 2');
+    expect(round1Prompt).not.toContain('FINAL ROUND CONSTRAINT');
 
     const round2Prompt = buildInterviewProgressPrompt(MOCK_PROFILE, objective, plan, answers, facts, 2);
-    expect(round2Prompt).toContain('Current Evaluation Round: Round 2 of 2.');
-    expect(round2Prompt).toContain('THIS IS ROUND 2 (FINAL ROUND): You MUST set readyForGeneration: true and questions: []');
+    expect(round2Prompt).toContain('Interview Round: 2 of 2');
+    expect(round2Prompt).toContain('FINAL ROUND CONSTRAINT: This is round 2 of 2. You MUST set readyForGeneration: true and return questions: [] under all circumstances.');
+  });
+
+  it('buildInterviewPrompt extracts recruiter triage inquiry points and injects them into the interview prompt', async () => {
+    const { buildInterviewPrompt } = await import('./prompts.js');
+    const { MOCK_PROFILE, MOCK_REVIEW } = await import('./providers/mock.js');
+
+    const reviewWithInquiry = {
+      ...MOCK_REVIEW,
+      overallScore: 92,
+      critique: [
+        {
+          section: 'Headline',
+          assessment: 'Headline técnica clara.',
+          strengths: ['Stack moderna'],
+          issues: ['Ponto de atenção na triagem: Headline com 6 tecnologias competindo por atenção.'],
+          severity: 'low' as const,
+        },
+        {
+          section: 'Experiences',
+          assessment: 'Experiências sólidas.',
+          strengths: ['Resultados mensuráveis'],
+          issues: ['Ponto de atenção na triagem: Transição recente de 8 meses sem narrativa explícita de conclusão de projeto.'],
+          severity: 'low' as const,
+        },
+      ],
+    };
+
+    const prompt = buildInterviewPrompt(
+      MOCK_PROFILE,
+      {
+        targetMarket: 'United States',
+        primaryRole: 'Senior Full Stack Engineer',
+        seniority: 'senior',
+        workPreference: 'remote',
+        excludedTechnologies: [],
+      },
+      'September 2026',
+      reviewWithInquiry,
+    );
+
+    expect(prompt).toContain('RECRUITER TRIAGE INQUIRY POINTS IDENTIFIED IN DIAGNOSTIC:');
+    expect(prompt).toContain('Headline com 6 tecnologias competindo por atenção.');
+    expect(prompt).toContain('Transição recente de 8 meses');
+    expect(prompt).toContain('Prioritize formulating questions that help the candidate resolve these points');
   });
 
   it('MockAiProvider respects candidate primaryRole in rewritten headline', async () => {
