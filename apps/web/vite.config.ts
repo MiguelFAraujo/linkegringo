@@ -29,7 +29,7 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
   },
-  server:{
-    allowedHosts: ['localhost', 'f655-2804-77c-b004-4f01-3d79-d85a-43c4-f397.ngrok-free.app'],
-  }
+  server: {
+    host: true,
+  },
 });
