@@ -251,4 +251,49 @@ describe('ApiKeyDialog Component', () => {
       expect(screen.getByText('Insira uma chave válida para carregar os modelos')).toBeDefined();
     });
   });
+
+  it('switches to demo mode smoothly without bouncing back to gemini and saves providerId demo', async () => {
+    const onSave = vi.fn();
+    const onOpenChange = vi.fn();
+
+    render(
+      <ApiKeyDialog
+        open={true}
+        onOpenChange={onOpenChange}
+        apiKey="AIzaSySomeGeminiKey"
+        providerId="gemini"
+        model="gemini-3.5-flash"
+        onSave={onSave}
+        onClear={vi.fn()}
+      />,
+    );
+
+    // Initial state: Google Gemini is selected
+    expect(screen.getByText(/Google Gemini API Key/i)).toBeDefined();
+
+    // Click on Modo Demonstração
+    const demoButton = screen.getByRole('button', { name: /Modo Demonstração/i });
+    fireEvent.click(demoButton);
+
+    // Should switch to demo mode and render the demo banner, hiding Gemini inputs
+    await waitFor(() => {
+      expect(screen.getByText(/Modo Demonstração Ativo \(Offline\)/i)).toBeDefined();
+      expect(screen.queryByText(/Google Gemini API Key/i)).toBeNull();
+    });
+
+    // Test connection in demo mode
+    const testBtn = screen.getByRole('button', { name: /Testar Conexão/i });
+    fireEvent.click(testBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Modo Demonstração pronto para uso/i)).toBeDefined();
+    });
+
+    // Click Salvar Configuração
+    const saveBtn = screen.getByRole('button', { name: /Salvar Configuração/i });
+    fireEvent.click(saveBtn);
+
+    expect(onSave).toHaveBeenCalledWith('AIzaSySomeGeminiKey', 'demo', 'gemini-3.5-flash');
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
 });

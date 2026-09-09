@@ -98,9 +98,7 @@ export function ApiKeyDialog({
           if (prev && /^gemini-3\.[5-8]-flash/.test(prev) && mapped.some((m) => m.id === prev)) {
             return prev;
           }
-          const fallback = mapped[0]?.id || 'gemini-3.5-flash';
-          onSave(trimmed, currentProvider, fallback);
-          return fallback;
+          return mapped[0]?.id || 'gemini-3.5-flash';
         });
         return;
       }
@@ -127,9 +125,7 @@ export function ApiKeyDialog({
           if (prev && /^gemini-3\.[5-8]-flash/.test(prev) && mapped.some((m) => m.id === prev)) {
             return prev;
           }
-          const fallback = mapped[0]?.id || 'gemini-3.5-flash';
-          onSave(trimmed, currentProvider, fallback);
-          return fallback;
+          return mapped[0]?.id || 'gemini-3.5-flash';
         });
       }
     } catch (err: any) {
@@ -161,19 +157,21 @@ export function ApiKeyDialog({
     } finally {
       setIsFetchingModels(false);
     }
-  }, [currentProvider, onSave]);
+  }, []);
 
   // Sync state when opened
   React.useEffect(() => {
-    setCurrentKey(apiKey);
-    setCurrentProvider(providerId);
-    const safeModel = model && /^gemini-3\.[5-8]-flash/.test(model) ? model : 'gemini-3.5-flash';
-    setCurrentModel(safeModel);
-    setTestResult(null);
-    setFetchError(null);
+    if (open) {
+      setCurrentKey(apiKey);
+      setCurrentProvider(providerId);
+      const safeModel = model && /^gemini-3\.[5-8]-flash/.test(model) ? model : 'gemini-3.5-flash';
+      setCurrentModel(safeModel);
+      setTestResult(null);
+      setFetchError(null);
 
-    if (open && providerId === 'gemini' && apiKey.trim()) {
-      loadModels(apiKey.trim(), false);
+      if (providerId === 'gemini' && apiKey.trim()) {
+        loadModels(apiKey.trim(), false);
+      }
     }
   }, [open, apiKey, providerId, model, loadModels]);
 
@@ -221,7 +219,10 @@ export function ApiKeyDialog({
       if (ok) {
         setTestResult({
           ok: true,
-          message: 'Conexão estabelecida com sucesso com o Google Gemini!',
+          message:
+            currentProvider === 'demo'
+              ? 'Modo Demonstração pronto para uso (offline).'
+              : 'Conexão estabelecida com sucesso com o Google Gemini!',
         });
         if (currentProvider === 'gemini') {
           await loadModels(currentKey.trim(), false);
@@ -305,6 +306,19 @@ export function ApiKeyDialog({
               })}
             </div>
           </div>
+
+          {/* Demo Mode Info Banner */}
+          {currentProvider === 'demo' && (
+            <div className="p-3.5 rounded-xl border border-amber-500/20 bg-amber-500/5 text-amber-200/90 text-xs leading-relaxed space-y-1.5">
+              <div className="font-semibold text-amber-300 flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-amber-400" />
+                Modo Demonstração Ativo (Offline)
+              </div>
+              <p className="text-slate-400 text-[11px] leading-normal">
+                Você pode testar todo o fluxo do LinkeGringo (raio-x, entrevista adaptativa, confirmação de fatos e Action Hub) com dados de exemplo de alta qualidade, sem precisar de chave de API e sem consumir limites.
+              </p>
+            </div>
+          )}
 
           {/* Gemini Key Input & Model Selector */}
           {currentProvider === 'gemini' && (
