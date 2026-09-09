@@ -201,6 +201,7 @@ export function createAiProvider(
         retryDelayMs: config.retryDelayMs as number | undefined,
       });
     }
+    case 'mock':
     case 'demo': {
       return new DemoAiProvider();
     }
@@ -208,5 +209,6 @@ export function createAiProvider(
       throw new Error(`Provedor de IA desconhecido: "${providerId}"`);
   }
 }
+
 
 

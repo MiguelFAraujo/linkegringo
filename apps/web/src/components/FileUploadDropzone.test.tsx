@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
 import { FileUploadDropzone, QUICK_TARGET_ROLES } from './FileUploadDropzone';
 
@@ -54,5 +54,53 @@ describe('FileUploadDropzone Component', () => {
 
     const analyzeBtn = screen.getByText('Analisar Perfil').closest('button');
     expect(analyzeBtn?.hasAttribute('disabled')).toBe(true);
+  });
+
+  it('does NOT contain any CV or additional resume upload fields', () => {
+    render(<FileUploadDropzone {...defaultProps} />);
+
+    // Ensure no mentions of additional CV or resume
+    expect(screen.queryByText(/currículo/i)).toBeNull();
+    expect(screen.queryByText(/cv/i)).toBeNull();
+  });
+
+  it('handles LinkedIn PDF selection and triggers onAnalyze with clean payload', async () => {
+    const handleAnalyze = vi.fn().mockResolvedValue(undefined);
+    render(<FileUploadDropzone {...defaultProps} onAnalyze={handleAnalyze} />);
+
+    const fakePdf = new File(['%PDF-test'], 'perfil_linkedin.pdf', { type: 'application/pdf' });
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    expect(input).toBeDefined();
+
+    fireEvent.change(input, { target: { files: [fakePdf] } });
+
+    // File name should be displayed
+    expect(screen.getByText('perfil_linkedin.pdf')).toBeDefined();
+
+    const analyzeBtn = screen.getByText('Analisar Perfil').closest('button') as HTMLButtonElement;
+    expect(analyzeBtn.hasAttribute('disabled')).toBe(false);
+
+    fireEvent.click(analyzeBtn);
+
+    await waitFor(() => {
+      expect(handleAnalyze).toHaveBeenCalledWith({
+        file: fakePdf,
+        fileName: 'perfil_linkedin.pdf',
+        pdfBase64: expect.any(String),
+        targetRole: 'Senior Backend Engineer',
+      });
+    });
+  });
+
+  it('displays custom loadingMessage when loading', () => {
+    render(
+      <FileUploadDropzone
+        {...defaultProps}
+        isLoading={true}
+        loadingMessage="Extraindo perfil do LinkedIn..."
+      />,
+    );
+
+    expect(screen.getByText('Extraindo perfil do LinkedIn...')).toBeDefined();
   });
 });

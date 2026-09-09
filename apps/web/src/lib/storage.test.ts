@@ -6,6 +6,10 @@ import {
   getStoredModel,
   setStoredModel,
   hashApiKey,
+  getStoredChatHistory,
+  setStoredChatHistory,
+  clearStoredChatHistory,
+  clearStoredSession,
 } from './storage';
 import type { RemoteGeminiModel } from '@linkegringo/ai';
 
@@ -74,3 +78,40 @@ describe('Storage Helpers - Gemini Models Cache', () => {
     expect(getStoredModel()).toBe('gemini-3.5-flash'); // falls back because 2.0 is outside 3.5-3.8 flash
   });
 });
+
+describe('Storage Helpers - Chat History Persistence', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('returns null when no chat history is stored', () => {
+    expect(getStoredChatHistory()).toBeNull();
+  });
+
+  it('stores and retrieves chat history array correctly', () => {
+    const mockHistory = [
+      { role: 'user', parts: [{ text: 'Parse profile' }] },
+      { role: 'model', parts: [{ text: 'Result' }] },
+    ];
+
+    setStoredChatHistory(mockHistory);
+    const retrieved = getStoredChatHistory();
+
+    expect(retrieved).toEqual(mockHistory);
+  });
+
+  it('clears chat history via clearStoredChatHistory', () => {
+    setStoredChatHistory([{ role: 'user', parts: [{ text: 'Hello' }] }]);
+    clearStoredChatHistory();
+
+    expect(getStoredChatHistory()).toBeNull();
+  });
+
+  it('clears chat history when clearStoredSession is called', () => {
+    setStoredChatHistory([{ role: 'user', parts: [{ text: 'Hello' }] }]);
+    clearStoredSession();
+
+    expect(getStoredChatHistory()).toBeNull();
+  });
+});
+

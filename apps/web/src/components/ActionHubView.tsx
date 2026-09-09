@@ -478,7 +478,7 @@ export function ActionHubView({
                   <span className="font-semibold text-rose-400 text-xs block">
                     Antes (LinkedIn Original)
                   </span>
-                  <p className="text-slate-400 whitespace-pre-line leading-relaxed italic text-xs sm:text-sm max-h-80 overflow-y-auto">
+                  <p className="text-slate-400 whitespace-pre-wrap leading-relaxed italic text-xs sm:text-sm max-h-80 overflow-y-auto">
                     {originalProfile.summary || '(Resumo curto ou sem dados de escala)'}
                   </p>
                 </div>
@@ -489,8 +489,8 @@ export function ActionHubView({
                   </span>
                   <FormattedText
                     text={analysis.rewritten.summary}
-                    as="p"
-                    className="text-slate-100 whitespace-pre-line leading-relaxed text-xs sm:text-sm font-normal max-h-80 overflow-y-auto"
+                    as="div"
+                    className="text-slate-100 whitespace-pre-wrap leading-relaxed text-xs sm:text-sm font-normal max-h-80 overflow-y-auto"
                   />
                 </div>
               </div>

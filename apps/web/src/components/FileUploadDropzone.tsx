@@ -6,14 +6,13 @@ import {
   FileCheck,
   X,
   AlertCircle,
-  Plus,
   Info,
   Briefcase,
   ShieldCheck,
   KeyRound,
   CheckCircle2,
 } from 'lucide-react';
-import { fileToBase64 } from '@/lib/file-utils';
+import { fileToBase64 } from '../lib/file-utils';
 
 export const QUICK_TARGET_ROLES = [
   'Senior Backend Engineer',
@@ -23,15 +22,18 @@ export const QUICK_TARGET_ROLES = [
   'Mobile Engineer (iOS/Android)',
 ];
 
-interface FileUploadDropzoneProps {
-  onAnalyze: (files: {
-    pdfBase64: string;
-    cvPdfBase64?: string;
-    fileName: string;
-    targetRole?: string;
-  }) => Promise<void>;
+export interface FileUploadData {
+  file: File;
+  fileName: string;
+  pdfBase64: string;
+  targetRole?: string;
+}
+
+export interface FileUploadDropzoneProps {
+  onAnalyze: (data: FileUploadData | any) => Promise<void>;
   onLoadDemo: (targetRole?: string) => void;
   isLoading: boolean;
+  loadingMessage?: string;
   onOpenApiKeyDialog: () => void;
   hasApiKey: boolean;
   isDemoMode: boolean;
@@ -41,18 +43,17 @@ export function FileUploadDropzone({
   onAnalyze,
   onLoadDemo,
   isLoading,
+  loadingMessage,
   onOpenApiKeyDialog,
   hasApiKey,
   isDemoMode,
 }: FileUploadDropzoneProps) {
   const [linkedinFile, setLinkedinFile] = useState<File | null>(null);
-  const [cvFile, setCvFile] = useState<File | null>(null);
   const [targetRole, setTargetRole] = useState('Senior Backend Engineer');
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const linkedinInputRef = useRef<HTMLInputElement>(null);
-  const cvInputRef = useRef<HTMLInputElement>(null);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -92,17 +93,6 @@ export function FileUploadDropzone({
     }
   };
 
-  const handleCvFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
-        setError('O currículo adicional precisa ser um arquivo PDF.');
-        return;
-      }
-      setCvFile(file);
-    }
-  };
-
   const handleSubmit = async () => {
     if (!linkedinFile) {
       setError('Faça o upload do PDF do seu LinkedIn para começar.');
@@ -117,19 +107,14 @@ export function FileUploadDropzone({
     setError(null);
     try {
       const pdfBase64 = await fileToBase64(linkedinFile);
-      let cvPdfBase64: string | undefined;
-      if (cvFile) {
-        cvPdfBase64 = await fileToBase64(cvFile);
-      }
-
       await onAnalyze({
-        pdfBase64,
-        cvPdfBase64,
+        file: linkedinFile,
         fileName: linkedinFile.name,
+        pdfBase64,
         targetRole: targetRole.trim() || undefined,
       });
     } catch (err: any) {
-      console.error('Erro ao ler arquivos:', err);
+      console.error('Erro ao processar arquivo:', err);
       setError(`Erro ao processar arquivo: ${err?.message || 'Arquivo inválido'}`);
     }
   };
@@ -320,45 +305,6 @@ export function FileUploadDropzone({
               )}
             </div>
 
-            {/* Currículo adicional em PDF */}
-            <div className="pt-2 border-t border-white/[0.08]">
-              <input
-                ref={cvInputRef}
-                type="file"
-                accept=".pdf,application/pdf"
-                className="hidden"
-                onChange={handleCvFileChange}
-              />
-
-              {cvFile ? (
-                <div className="flex items-center justify-between p-3 rounded-xl border border-white/[0.08] bg-[#090D14]/50">
-                  <div className="flex items-center gap-2.5 truncate">
-                    <FileText className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                    <span className="text-xs text-slate-200 truncate">{cvFile.name}</span>
-                    <span className="text-[11px] text-slate-500">({formatFileSize(cvFile.size)})</span>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setCvFile(null)}
-                    className="text-xs text-slate-400 hover:text-rose-400 h-7 px-2 cursor-pointer"
-                  >
-                    Remover
-                  </Button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => cvInputRef.current?.click()}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-white/[0.08] hover:border-slate-700 bg-[#090D14]/30 text-xs text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Adicionar currículo em PDF (opcional para enriquecer métricas)</span>
-                </button>
-              )}
-            </div>
-
             {/* Mensagem de erro */}
             {error && (
               <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 flex items-center gap-2 text-xs">
@@ -389,7 +335,7 @@ export function FileUploadDropzone({
                 {isLoading ? (
                   <div className="flex items-center gap-2">
                     <div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                    <span>Analisando perfil...</span>
+                    <span>{loadingMessage || 'Analisando perfil...'}</span>
                   </div>
                 ) : (
                   <span>Analisar Perfil</span>
@@ -402,4 +348,3 @@ export function FileUploadDropzone({
     </div>
   );
 }
-

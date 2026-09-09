@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { OnboardingModal } from './components/OnboardingModal';
 import { ApiKeyDialog } from './components/ApiKeyDialog';
-import { FileUploadDropzone } from './components/FileUploadDropzone';
+import { FileUploadDropzone, type FileUploadData } from './components/FileUploadDropzone';
 import { DiagnosticView } from './components/DiagnosticView';
 import { InterviewView } from './components/InterviewView';
 import { FactsConfirmation } from './components/FactsConfirmation';
@@ -21,9 +21,13 @@ import {
   clearStoredSession,
   hasSeenOnboarding,
   setOnboardingSeen,
+  getStoredChatHistory,
+  setStoredChatHistory,
+  clearStoredChatHistory,
 } from './lib/storage';
 import { createAiProvider, formatCurrentDate } from '@linkegringo/ai';
 import type {
+  AiProvider,
   CareerObjective,
   ConfirmedFact,
   InterviewAnswer,
@@ -45,6 +49,7 @@ interface SessionState {
   interviewRound?: number;
   facts?: ConfirmedFact[];
   analysis?: ProfileAnalysis;
+  chatHistory?: unknown[];
 }
 
 export function App() {
@@ -63,11 +68,42 @@ export function App() {
   const [analysis, setAnalysis] = useState<ProfileAnalysis | null>(null);
 
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState<string>('');
+  const [fileName, setFileName] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Modals
   const [apiKeyDialogOpen, setApiKeyDialogOpen] = useState(false);
   const [onboardingOpen, setOnboardingOpen] = useState(false);
+
+  // Active AI Provider instance retention across turns and re-renders
+  const providerRef = React.useRef<AiProvider | null>(null);
+
+  const getActiveProvider = () => {
+    if (!providerRef.current) {
+      const provider = createAiProvider(providerId, { apiKey, model });
+      const history = getStoredChatHistory();
+      if (history && history.length > 0) {
+        provider.restoreChatHistory?.(history);
+      }
+      providerRef.current = provider;
+    }
+    return providerRef.current;
+  };
+
+  const lastConfigRef = React.useRef({ providerId, apiKey, model });
+  useEffect(() => {
+    if (
+      lastConfigRef.current.providerId !== providerId ||
+      lastConfigRef.current.apiKey !== apiKey ||
+      lastConfigRef.current.model !== model
+    ) {
+      lastConfigRef.current = { providerId, apiKey, model };
+      if (!providerRef.current || providerRef.current.id !== providerId) {
+        providerRef.current = null;
+      }
+    }
+  }, [providerId, apiKey, model]);
 
   // Restore session on mount
   useEffect(() => {
@@ -91,6 +127,18 @@ export function App() {
       if (saved.interviewRound) setInterviewRound(saved.interviewRound);
       if (saved.facts) setFacts(saved.facts);
       if (saved.analysis) setAnalysis(saved.analysis);
+
+      // Restore AI chat history for session continuity across page reloads
+      const savedChatHistory = saved.chatHistory || getStoredChatHistory();
+      if (savedChatHistory && savedChatHistory.length > 0) {
+        try {
+          setStoredChatHistory(savedChatHistory);
+          const provider = getActiveProvider();
+          provider.restoreChatHistory?.(savedChatHistory);
+        } catch {
+          // Non-critical: provider may not support chat history restoration
+        }
+      }
     } else {
       // First time visitor check
       if (!hasSeenOnboarding()) {
@@ -103,6 +151,22 @@ export function App() {
   // Persist session changes
   useEffect(() => {
     if (profile && review) {
+      // Retrieve chat history from the active provider if available
+      let chatHistory: unknown[] | undefined;
+      try {
+        const history = providerRef.current?.getChatHistory?.();
+        if (history && history.length > 0) {
+          chatHistory = history;
+        } else {
+          const stored = getStoredChatHistory();
+          if (stored && stored.length > 0) {
+            chatHistory = stored;
+          }
+        }
+      } catch {
+        // Non-critical: provider may not support getChatHistory
+      }
+
       const stateToSave: SessionState = {
         step,
         profile,
@@ -113,40 +177,46 @@ export function App() {
         interviewRound,
         facts,
         analysis: analysis || undefined,
+        chatHistory,
       };
       saveStoredSession(stateToSave);
+
+      // Also persist chat history separately for resilience
+      if (chatHistory && chatHistory.length > 0) {
+        setStoredChatHistory(chatHistory);
+      }
     }
   }, [step, profile, review, objective, interviewPlan, interviewAnswers, interviewRound, facts, analysis]);
 
-  const getActiveProvider = () => {
-    return createAiProvider(providerId, { apiKey, model });
-  };
-
-  // Step 1 ➔ Step 2: Upload and Diagnose
-  const handleAnalyze = async (files: {
-    pdfBase64: string;
-    cvPdfBase64?: string;
-    fileName: string;
-    targetRole?: string;
-  }) => {
+  // Step 1 ➔ Step 2: Upload, Parse and Diagnose
+  const handleAnalyze = async (uploadData: FileUploadData) => {
     setIsLoading(true);
+    setLoadingMessage('Analisando perfil com IA multimodal...');
     setErrorMessage(null);
 
     try {
       const provider = getActiveProvider();
-      const result = await provider.parseAndDiagnose({
-        pdfBase64: files.pdfBase64,
-        cvPdfBase64: files.cvPdfBase64,
-        targetRole: files.targetRole,
-        currentDate: formatCurrentDate(),
+      const currentDate = new Date().toISOString();
+
+      // Unified single-turn multimodal analysis: PDF base64 + targetRole + currentDate
+      const { profile: parsedProfile, review: profileReview } = await provider.parseAndDiagnose({
+        pdfBase64: uploadData.pdfBase64,
+        targetRole: uploadData.targetRole,
+        currentDate,
       });
 
-      setProfile(result.profile);
-      setReview(result.review);
-      if (files.targetRole) {
+      const history = provider.getChatHistory?.();
+      if (history && history.length > 0) {
+        setStoredChatHistory(history);
+      }
+
+      setProfile(parsedProfile);
+      setReview(profileReview);
+      setFileName(uploadData.fileName);
+      if (uploadData.targetRole) {
         setObjective({
           targetMarket: 'United States',
-          primaryRole: files.targetRole,
+          primaryRole: uploadData.targetRole,
           seniority: 'senior',
           workPreference: 'remote',
           excludedTechnologies: [],
@@ -160,24 +230,38 @@ export function App() {
       );
     } finally {
       setIsLoading(false);
+      setLoadingMessage('');
     }
   };
 
   // Instant Demo Mode
   const handleLoadDemo = async (targetRole?: string) => {
     setIsLoading(true);
+    setLoadingMessage('Carregando perfil de demonstração...');
     setErrorMessage(null);
     setProviderId('demo');
     setStoredProviderId('demo');
 
     try {
       const provider = createAiProvider('demo');
-      const result = await provider.parseAndDiagnose({ targetRole });
-      setProfile(result.profile);
-      setReview(result.review);
+      providerRef.current = provider;
+      const currentDate = new Date().toISOString();
+      const { profile: demoProfile, review: demoReview } = await provider.parseAndDiagnose({
+        targetRole,
+        currentDate,
+      });
+
+      const history = provider.getChatHistory?.();
+      if (history && history.length > 0) {
+        setStoredChatHistory(history);
+      }
+
+      setProfile(demoProfile);
+      setReview(demoReview);
+      setFileName('perfil-demonstracao.pdf');
       setObjective({
         targetMarket: 'United States',
-        primaryRole: targetRole || result.review.profileDirection.primaryRole,
+        primaryRole: targetRole || demoReview.profileDirection.primaryRole,
         seniority: 'senior',
         workPreference: 'remote',
         excludedTechnologies: [],
@@ -188,6 +272,7 @@ export function App() {
       setErrorMessage('Erro ao carregar dados de demonstração.');
     } finally {
       setIsLoading(false);
+      setLoadingMessage('');
     }
   };
 
@@ -215,6 +300,11 @@ export function App() {
         review,
         currentDate: formatCurrentDate(),
       });
+
+      const history = provider.getChatHistory?.();
+      if (history && history.length > 0) {
+        setStoredChatHistory(history);
+      }
 
       setInterviewPlan(plan);
       setInterviewRound(1);
@@ -245,6 +335,11 @@ export function App() {
         roundNumber: interviewRound,
         currentDate: formatCurrentDate(),
       });
+
+      const history = provider.getChatHistory?.();
+      if (history && history.length > 0) {
+        setStoredChatHistory(history);
+      }
 
       // Merge newly extracted facts with existing facts
       const mergedFacts = [...facts];
@@ -334,7 +429,13 @@ export function App() {
         confirmedFacts,
         initialReview: review || undefined,
         currentDate: formatCurrentDate(),
+        interviewAnswers,
       });
+
+      const history = provider.getChatHistory?.();
+      if (history && history.length > 0) {
+        setStoredChatHistory(history);
+      }
 
       setAnalysis(finalAnalysis);
       setStep('action-hub');
@@ -348,7 +449,9 @@ export function App() {
 
   // Reset Session
   const handleResetSession = () => {
+    providerRef.current = null;
     clearStoredSession();
+    clearStoredChatHistory();
     setStep('upload');
     setProfile(null);
     setReview(null);
@@ -358,11 +461,14 @@ export function App() {
     setInterviewRound(1);
     setFacts([]);
     setAnalysis(null);
+    setFileName(null);
+    setLoadingMessage('');
     setErrorMessage(null);
   };
 
   // Toggle Demo Mode from Header
   const handleToggleDemoMode = () => {
+    providerRef.current = null;
     if (providerId === 'demo') {
       setProviderId('gemini');
       setStoredProviderId('gemini');
@@ -374,6 +480,7 @@ export function App() {
 
   // Save API Key, Provider & Model from Dialog
   const handleSaveApiKey = (newKey: string, newProviderId: string, newModel?: string) => {
+    providerRef.current = null;
     setApiKey(newKey);
     setStoredApiKey(newKey);
     setProviderId(newProviderId);
@@ -385,6 +492,7 @@ export function App() {
   };
 
   const handleClearApiKey = () => {
+    providerRef.current = null;
     setApiKey('');
     clearStoredApiKey();
     clearCachedGeminiModels();
@@ -428,6 +536,7 @@ export function App() {
             onAnalyze={handleAnalyze}
             onLoadDemo={handleLoadDemo}
             isLoading={isLoading}
+            loadingMessage={loadingMessage}
             onOpenApiKeyDialog={() => setApiKeyDialogOpen(true)}
             hasApiKey={Boolean(apiKey && apiKey.trim().length > 0)}
             isDemoMode={providerId === 'demo'}

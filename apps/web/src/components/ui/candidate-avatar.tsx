@@ -15,10 +15,19 @@ const sizeClasses: Record<'sm' | 'md' | 'lg' | 'xl', { container: string; text: 
 };
 
 const INVALID_PLACEHOLDERS = new Set(['user', 'unknown', 'candidato', 'profile', 'null', 'undefined']);
+const DEMO_PLACEHOLDERS = new Set([
+  'demo',
+  'mock',
+  'demo-candidate',
+  'demo-profile',
+  'candidato-demo',
+  'fictional',
+  'fictional-candidate',
+]);
 
 /**
  * Extracts and cleans a LinkedIn username/slug from a raw publicId or full URL.
- * Returns null if the value is missing, empty, or a LinkeGringo fallback sentinel.
+ * Returns null if the value is missing, empty, or a LinkeGringo fallback/demo sentinel.
  */
 export function extractLinkedInSlug(raw?: string): string | null {
   if (!raw || typeof raw !== 'string') return null;
@@ -34,7 +43,15 @@ export function extractLinkedInSlug(raw?: string): string | null {
   slug = slug.replace(/^@/, '');
   slug = slug.replace(/\/+$/, '').trim();
 
-  if (!slug || INVALID_PLACEHOLDERS.has(slug.toLowerCase())) {
+  const lower = slug.toLowerCase();
+  if (
+    !slug ||
+    INVALID_PLACEHOLDERS.has(lower) ||
+    DEMO_PLACEHOLDERS.has(lower) ||
+    lower.startsWith('demo-') ||
+    lower.startsWith('mock-') ||
+    lower.startsWith('fictional-')
+  ) {
     return null;
   }
 
@@ -50,13 +67,25 @@ export function CandidateAvatar({
   const [imgError, setImgError] = useState(false);
 
   const cleanSlug = extractLinkedInSlug(publicId);
+  const isDemo = Boolean(
+    publicId &&
+      (DEMO_PLACEHOLDERS.has(publicId.toLowerCase()) ||
+        publicId.toLowerCase().startsWith('demo-') ||
+        publicId.toLowerCase().startsWith('mock-') ||
+        publicId.toLowerCase().startsWith('fictional-')),
+  );
 
   // Reset image error state if publicId changes (e.g., switching profile or loading demo)
   useEffect(() => {
     setImgError(false);
-  }, [cleanSlug]);
+  }, [cleanSlug, isDemo]);
 
-  const avatarUrl = cleanSlug ? `https://unavatar.io/linkedin/${encodeURIComponent(cleanSlug)}` : null;
+  let avatarUrl: string | null = null;
+  if (isDemo) {
+    avatarUrl = '/demo-avatar.svg';
+  } else if (cleanSlug) {
+    avatarUrl = `https://unavatar.io/linkedin/${encodeURIComponent(cleanSlug)}`;
+  }
 
   const initials = (() => {
     if (!name || !name.trim()) return 'P';

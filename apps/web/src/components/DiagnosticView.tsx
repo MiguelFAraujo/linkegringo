@@ -15,6 +15,7 @@ import {
   Compass,
   Layers,
   LayoutGrid,
+  AlertTriangle,
 } from 'lucide-react';
 import type { Profile, ProfileReview } from '@linkegringo/core';
 import { FormattedText } from './ui/formatted-text';
@@ -284,6 +285,32 @@ export function DiagnosticView({
               className="text-xs sm:text-sm text-slate-300 leading-relaxed bg-[#090D14]/50 p-3.5 rounded-xl border border-[#1E293B]"
             />
           </div>
+
+          {/* Triage Bottlenecks — US Tech Recruiter Screen */}
+          {review.triageBottlenecks && review.triageBottlenecks.length > 0 && (
+            <div className="p-4 rounded-xl bg-rose-950/20 border border-rose-500/30 space-y-2.5 text-left">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-rose-400 flex-shrink-0" />
+                <h3 className="text-xs font-semibold text-rose-300 uppercase tracking-wider">
+                  Gargalos de Triagem (Filtro Recrutadores EUA)
+                </h3>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 font-mono">
+                  {review.triageBottlenecks.length}
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Pontos que causam descarte imediato na triagem de 6 segundos de recrutadores americanos:
+              </p>
+              <ul className="space-y-1.5 pt-1">
+                {review.triageBottlenecks.map((bottleneck, i) => (
+                  <li key={i} className="flex items-start gap-2 text-xs text-slate-200">
+                    <span className="text-rose-400 font-bold">•</span>
+                    <span>{bottleneck}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
 
         {/* Right Column (lg:col-span-7): Matriz dos 5 Critérios Técnicos */}

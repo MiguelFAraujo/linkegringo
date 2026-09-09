@@ -7,6 +7,7 @@ const STORAGE_KEYS = {
   CACHED_MODELS: 'linkegringo_cached_gemini_models',
   SESSION: 'linkegringo_active_session',
   ONBOARDING_SEEN: 'linkegringo_onboarding_seen',
+  CHAT_HISTORY: 'linkegringo_chat_history',
 };
 
 export function getStoredApiKey(): string {
@@ -149,8 +150,36 @@ export function saveStoredSession<T>(data: T): void {
 export function clearStoredSession(): void {
   try {
     localStorage.removeItem(STORAGE_KEYS.SESSION);
+    localStorage.removeItem(STORAGE_KEYS.CHAT_HISTORY);
   } catch (err) {
     console.warn('[storage] Failed to clear session:', err);
+  }
+}
+
+export function getStoredChatHistory(): unknown[] | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.CHAT_HISTORY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setStoredChatHistory(history: unknown[]): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.CHAT_HISTORY, JSON.stringify(history));
+  } catch (err) {
+    console.warn('[storage] Failed to save chat history:', err);
+  }
+}
+
+export function clearStoredChatHistory(): void {
+  try {
+    localStorage.removeItem(STORAGE_KEYS.CHAT_HISTORY);
+  } catch (err) {
+    console.warn('[storage] Failed to clear chat history:', err);
   }
 }
 

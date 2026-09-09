@@ -4,12 +4,12 @@ import React from 'react';
 import { CandidateAvatar, extractLinkedInSlug } from './candidate-avatar';
 
 describe('extractLinkedInSlug', () => {
-  it('extracts plain slug directly', () => {
-    expect(extractLinkedInSlug('lucas-silveira')).toBe('lucas-silveira');
+  it('extracts plain slug directly for real users', () => {
+    expect(extractLinkedInSlug('pedro-dev')).toBe('pedro-dev');
   });
 
   it('strips full LinkedIn URLs with https and www', () => {
-    expect(extractLinkedInSlug('https://www.linkedin.com/in/lucas-silveira/')).toBe('lucas-silveira');
+    expect(extractLinkedInSlug('https://www.linkedin.com/in/pedro-dev/')).toBe('pedro-dev');
   });
 
   it('strips localized LinkedIn URLs like br.linkedin.com and pt.linkedin.com', () => {
@@ -29,16 +29,32 @@ describe('extractLinkedInSlug', () => {
     expect(extractLinkedInSlug('')).toBeNull();
     expect(extractLinkedInSlug(undefined)).toBeNull();
   });
+
+  it('filters out demo and mock prefixes to prevent querying real LinkedIn profiles', () => {
+    expect(extractLinkedInSlug('demo-candidate')).toBeNull();
+    expect(extractLinkedInSlug('demo')).toBeNull();
+    expect(extractLinkedInSlug('mock-user')).toBeNull();
+    expect(extractLinkedInSlug('fictional-candidate')).toBeNull();
+  });
 });
 
 describe('CandidateAvatar Component', () => {
-  it('renders image tag pointing to unavatar when valid publicId is provided', () => {
-    render(<CandidateAvatar publicId="lucas-silveira" name="Lucas Silveira" size="md" />);
+  it('renders fictional demo avatar SVG when publicId is a demo candidate', () => {
+    render(<CandidateAvatar publicId="demo-candidate" name="Alexandre Rocha" size="md" />);
 
     const img = screen.getByRole('img');
     expect(img).toBeDefined();
-    expect(img.getAttribute('src')).toBe('https://unavatar.io/linkedin/lucas-silveira');
-    expect(img.getAttribute('alt')).toBe('Foto de perfil de Lucas Silveira');
+    expect(img.getAttribute('src')).toBe('/demo-avatar.svg');
+    expect(img.getAttribute('alt')).toBe('Foto de perfil de Alexandre Rocha');
+  });
+
+  it('renders image tag pointing to unavatar when valid real user publicId is provided', () => {
+    render(<CandidateAvatar publicId="pedro-dev" name="Pedro Dev" size="md" />);
+
+    const img = screen.getByRole('img');
+    expect(img).toBeDefined();
+    expect(img.getAttribute('src')).toBe('https://unavatar.io/linkedin/pedro-dev');
+    expect(img.getAttribute('alt')).toBe('Foto de perfil de Pedro Dev');
   });
 
   it('renders initials fallback when publicId is "unknown" or "user"', () => {
@@ -47,9 +63,9 @@ describe('CandidateAvatar Component', () => {
     expect(screen.queryByRole('img')).toBeNull();
     expect(screen.getByText('AS')).toBeDefined();
 
-    rerender(<CandidateAvatar publicId="user" name="Lucas Silveira" size="lg" />);
+    rerender(<CandidateAvatar publicId="user" name="Alexandre Rocha" size="lg" />);
     expect(screen.queryByRole('img')).toBeNull();
-    expect(screen.getByText('LS')).toBeDefined();
+    expect(screen.getByText('AR')).toBeDefined();
   });
 
   it('derives initials correctly for 1-word, 2-word, and multi-word names', () => {

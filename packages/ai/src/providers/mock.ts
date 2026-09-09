@@ -5,16 +5,18 @@ import type {
   InterviewAnswer,
   InterviewPlan,
   InterviewProgress,
+  ParseAndDiagnoseInput,
   ParseAndDiagnoseResult,
   Profile,
   ProfileAnalysis,
   ProfileReview,
 } from '@linkegringo/core';
+import { enforceExperienceRecovery } from './gemini.js';
 
 export const MOCK_PROFILE: Profile = {
-  publicId: 'lucas-silveira',
-  firstName: 'Lucas',
-  lastName: 'Silveira',
+  publicId: 'demo-candidate',
+  firstName: 'Alexandre',
+  lastName: 'Rocha',
   headline: 'Desenvolvedor Backend | Java | Spring Boot | Microserviços | Buscando desafios',
   location: 'São Paulo, Brasil',
   summary:
@@ -128,19 +130,33 @@ export const MOCK_REVIEW: ProfileReview = {
       severity: 'medium',
     },
   ],
+  triageBottlenecks: [
+    'Perfil redigido em português inviabiliza indexação nas buscas ativas de tech recruiters nos EUA.',
+    'Ausência total de métricas mensuráveis ($, %, RPS, latência) sob o framework Google XYZ.',
+    'Headline com termos passivos ("Buscando desafios") que reduzem a autoridade técnica na triagem de 6 segundos.',
+  ],
 };
 
 export class DemoAiProvider implements AiProvider {
-  readonly id = 'demo';
-  readonly name = 'Modo Demonstração (Offline Mock)';
+  readonly id: string = 'demo';
+  readonly name: string = 'Modo Demonstração (Offline Mock)';
+  private chatHistory: unknown[] = [];
+
+  getChatHistory(): unknown[] {
+    return this.chatHistory;
+  }
+
+  restoreChatHistory(history: unknown[]): void {
+    this.chatHistory = Array.isArray(history) ? [...history] : [];
+  }
 
   async testConnection(): Promise<boolean> {
     return true;
   }
 
-  async parseAndDiagnose(input?: { targetRole?: string }): Promise<ParseAndDiagnoseResult> {
+  async parseAndDiagnose(input: ParseAndDiagnoseInput = {}): Promise<ParseAndDiagnoseResult> {
     // Simulate short network delay for smooth UX feel
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     const review = {
       ...MOCK_REVIEW,
@@ -153,9 +169,43 @@ export class DemoAiProvider implements AiProvider {
       },
     };
 
+    this.chatHistory = [
+      {
+        role: 'user',
+        parts: [{ text: input.pdfText || (input.pdfBase64 ? 'PDF base64 data' : 'Parse profile') }],
+      },
+      {
+        role: 'model',
+        parts: [{ text: JSON.stringify({ profile: MOCK_PROFILE, review }) }],
+      },
+    ];
+
     return {
       profile: MOCK_PROFILE,
       review,
+    };
+  }
+
+  async parseProfile(_input: { pdfText: string; currentDate?: string }): Promise<Profile> {
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    return MOCK_PROFILE;
+  }
+
+  async diagnoseProfile(input: {
+    profile: Profile;
+    targetRole?: string;
+    currentDate?: string;
+  }): Promise<ProfileReview> {
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    return {
+      ...MOCK_REVIEW,
+      profileDirection: {
+        ...MOCK_REVIEW.profileDirection,
+        primaryRole: input.targetRole || MOCK_REVIEW.profileDirection.primaryRole,
+        positioning: input.targetRole
+          ? `Senior ${input.targetRole}`
+          : MOCK_REVIEW.profileDirection.positioning,
+      },
     };
   }
 
@@ -293,21 +343,71 @@ export class DemoAiProvider implements AiProvider {
     objective: CareerObjective;
     confirmedFacts: ConfirmedFact[];
     initialReview?: ProfileReview;
+    currentDate?: string;
+    interviewAnswers?: InterviewAnswer[];
   }): Promise<ProfileAnalysis> {
-    await new Promise((resolve) => setTimeout(resolve, 900));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
-    return {
+    const defaultExperiences = [
+      {
+        title: 'Senior Software Engineer',
+        companyName: 'Fintech Pagamentos Brasil',
+        bullets: [
+          'Architected high-throughput event-driven microservices using Java 21, Spring Boot, and Apache Kafka, ensuring strict idempotency and sub-100ms response times.',
+          'Spearheaded the incremental extraction of core payment services from a legacy monolith into decoupled microservices with isolated PostgreSQL databases.',
+          'Instituted comprehensive observability practices with distributed tracing and metric dashboards, cutting production incident resolution time by 35%.',
+        ],
+      },
+      {
+        title: 'Software Engineer',
+        companyName: 'Varejo Online S.A.',
+        bullets: [
+          'Engineered core catalog and checkout backend services, sustaining high concurrent traffic during seasonal promotion spikes.',
+          'Refactored legacy query patterns and implemented caching layers, reducing database CPU load by 28%.',
+          'Mentored junior engineers on clean architecture patterns, automated unit testing with JUnit, and code review standards.',
+        ],
+      },
+    ];
+
+    const rewrittenExperiences = input.profile?.experiences && Array.isArray(input.profile.experiences)
+      ? enforceExperienceRecovery(input.profile.experiences, defaultExperiences)
+      : defaultExperiences;
+
+    let scores = {
+      searchRelevance: 95,
+      humanVoice: 92,
+      credibility: 96,
+      positioningClarity: 97,
+      evidenceCoverage: 91,
+    };
+    let overallScore = 94;
+
+    if (input.initialReview?.scores) {
+      const init = input.initialReview.scores;
+      scores = {
+        searchRelevance: Math.max(scores.searchRelevance, init.searchRelevance ?? 0),
+        humanVoice: Math.max(scores.humanVoice, init.humanVoice ?? 0),
+        credibility: Math.max(scores.credibility, init.credibility ?? 0),
+        positioningClarity: Math.max(scores.positioningClarity, init.positioningClarity ?? 0),
+        evidenceCoverage: Math.max(scores.evidenceCoverage, init.evidenceCoverage ?? 0),
+      };
+    }
+
+    if (typeof input.initialReview?.overallScore === 'number') {
+      overallScore = Math.max(overallScore, input.initialReview.overallScore);
+    }
+
+    const triageBottlenecks =
+      input.initialReview?.triageBottlenecks && input.initialReview.triageBottlenecks.length > 0
+        ? [...input.initialReview.triageBottlenecks]
+        : [...(MOCK_REVIEW.triageBottlenecks || [])];
+
+    const analysis: ProfileAnalysis = {
       targetMarket: 'United States',
       language: 'en',
       initialScore: input.initialReview?.overallScore ?? 42,
-      overallScore: 94,
-      scores: {
-        searchRelevance: 95,
-        humanVoice: 92,
-        credibility: 96,
-        positioningClarity: 97,
-        evidenceCoverage: 91,
-      },
+      overallScore,
+      scores,
       scoreExplanations: {
         searchRelevance: 'Headline otimizada com palavras-chave estratégicas e indexação ATS de alto sinal para recrutadores dos EUA.',
         humanVoice: 'Linguagem técnica natural em inglês americano, com narrativa executiva concisa e precisa.',
@@ -333,30 +433,12 @@ export class DemoAiProvider implements AiProvider {
           severity: 'low',
         },
       ],
+      triageBottlenecks,
       rewritten: {
         headline: `${input.objective.primaryRole || 'Senior Backend Engineer'} | Java, Spring Boot, React | Distributed Systems & High-Throughput APIs | AWS, Docker`,
         summary:
           'Senior Backend Engineer with 6+ years of experience designing and scaling fault-tolerant distributed systems and mission-critical financial APIs. Proven track record in decoupling monoliths into resilient microservices, optimizing database throughput, and building event-driven pipelines handling millions of daily transactions.\n\nDeeply focused on operational excellence, observability (metrics, tracing, p99 latency reduction), and automated CI/CD workflows that enable engineering teams to ship safely at high velocity.\n\nCore Technologies: Java 21, Spring Boot, Apache Kafka, PostgreSQL, Docker, Kubernetes, AWS, Microservices Architecture, Distributed Systems.',
-        experiences: [
-          {
-            title: 'Senior Software Engineer',
-            companyName: 'Fintech Pagamentos Brasil',
-            bullets: [
-              'Architected high-throughput event-driven microservices using Java 21, Spring Boot, and Apache Kafka, ensuring strict idempotency and sub-100ms response times.',
-              'Spearheaded the incremental extraction of core payment services from a legacy monolith into decoupled microservices with isolated PostgreSQL databases.',
-              'Instituted comprehensive observability practices with distributed tracing and metric dashboards, cutting production incident resolution time by 35%.',
-            ],
-          },
-          {
-            title: 'Software Engineer',
-            companyName: 'Varejo Online S.A.',
-            bullets: [
-              'Engineered core catalog and checkout backend services, sustaining high concurrent traffic during seasonal promotion spikes.',
-              'Refactored legacy query patterns and implemented caching layers, reducing database CPU load by 28%.',
-              'Mentored junior engineers on clean architecture patterns, automated unit testing with JUnit, and code review standards.',
-            ],
-          },
-        ],
+        experiences: rewrittenExperiences,
         skills: [
           'Java',
           'Spring Boot',
@@ -376,5 +458,18 @@ export class DemoAiProvider implements AiProvider {
         ],
       },
     };
+
+    this.chatHistory.push(
+      { role: 'user', parts: [{ text: 'Generate rewritten profile' }] },
+      { role: 'model', parts: [{ text: JSON.stringify(analysis) }] },
+    );
+
+    return analysis;
   }
 }
+
+export class MockAiProvider extends DemoAiProvider {
+  override readonly id = 'mock';
+  override readonly name = 'Mock AI Provider';
+}
+

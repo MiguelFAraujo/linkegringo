@@ -69,6 +69,11 @@ export const profileReviewSchema = z.object({
   executiveSummary: z.string(),
   profileDirection: profileDirectionSchema,
   critique: z.array(sectionCritiqueSchema).default([]),
+  triageBottlenecks: z.preprocess((val) => {
+    if (Array.isArray(val)) return val;
+    if (typeof val === 'string' && val.trim()) return [val.trim()];
+    return [];
+  }, z.array(z.string()).default([])),
 });
 export type ProfileReview = z.infer<typeof profileReviewSchema>;
 
@@ -107,6 +112,11 @@ export const profileAnalysisSchema = z.object({
   executiveSummary: z.string(),
   profileDirection: profileDirectionSchema,
   critique: z.array(sectionCritiqueSchema).default([]),
+  triageBottlenecks: z.preprocess((val) => {
+    if (Array.isArray(val)) return val;
+    if (typeof val === 'string' && val.trim()) return [val.trim()];
+    return [];
+  }, z.array(z.string()).default([])),
   rewritten: rewrittenProfileSchema,
 });
 export type ProfileAnalysis = z.infer<typeof profileAnalysisSchema>;

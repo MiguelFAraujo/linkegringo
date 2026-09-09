@@ -1,4 +1,4 @@
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, type Chat, type Content, type Part } from '@google/genai';
 import type {
   AiProvider,
   CareerObjective,
@@ -6,6 +6,7 @@ import type {
   InterviewAnswer,
   InterviewPlan,
   InterviewProgress,
+  ParseAndDiagnoseInput,
   ParseAndDiagnoseResult,
   Profile,
   ProfileAnalysis,
@@ -19,23 +20,64 @@ import {
   profileSchema,
 } from '@linkegringo/core';
 import {
+  buildDiagnoseProfilePrompt,
   buildInterviewProgressPrompt,
   buildInterviewPrompt,
   buildParseAndDiagnosePrompt,
+  buildParseProfilePrompt,
   buildRewriteProfilePrompt,
+  DIAGNOSE_PROFILE_SYSTEM_PROMPT,
   INTERVIEW_PROGRESS_SYSTEM_PROMPT,
   INTERVIEW_SYSTEM_PROMPT,
   PARSE_AND_DIAGNOSE_SYSTEM_PROMPT,
+  PARSE_PROFILE_SYSTEM_PROMPT,
   REWRITE_PROFILE_SYSTEM_PROMPT,
 } from '../prompts.js';
 import {
-  parseAndDiagnoseSchema as geminiParseAndDiagnoseSchema,
-  interviewPlanSchema as geminiInterviewPlanSchema,
-  interviewProgressSchema as geminiInterviewProgressSchema,
-  rewrittenProfileSchema as geminiRewrittenProfileSchema,
+  geminiDiagnoseProfileSchema,
+  geminiInterviewPlanSchema,
+  geminiInterviewProgressSchema,
+  geminiParseAndDiagnoseSchema,
+  geminiParseProfileSchema,
+  geminiRewrittenProfileSchema,
 } from '../schemas.js';
 
-export function cleanBase64(data: string): string {
+export function enforceExperienceRecovery(
+  originalExperiences: Array<{ companyName: string; title?: string; description?: string }>,
+  rewrittenExperiences: Array<{ companyName: string; title: string; bullets: string[] }>,
+): Array<{ companyName: string; title: string; bullets: string[] }> {
+  const rewrittenCompanies = new Set(
+    rewrittenExperiences.map((e) => (e.companyName || '').trim().toLowerCase()),
+  );
+  const recovered = [...rewrittenExperiences];
+
+  for (const orig of originalExperiences) {
+    if (!orig || !orig.companyName || !orig.companyName.trim()) continue;
+    const key = orig.companyName.trim().toLowerCase();
+    if (!rewrittenCompanies.has(key)) {
+      const bullets = orig.description
+        ? orig.description
+            .split('\n')
+            .map((l) => l.trim())
+            .filter((l) => l.length > 0)
+        : [];
+      recovered.push({
+        companyName: orig.companyName.trim(),
+        title: orig.title || 'Senior Software Engineer',
+        bullets:
+          bullets.length > 0
+            ? bullets
+            : [`Delivered software engineering initiatives at ${orig.companyName.trim()}.`],
+      });
+      rewrittenCompanies.add(key);
+    }
+  }
+
+  return recovered;
+}
+
+export function cleanBase64(data?: string): string {
+  if (!data || typeof data !== 'string') return '';
   const commaIdx = data.indexOf(',');
   const raw =
     commaIdx !== -1 && data.slice(0, commaIdx).includes('base64')
@@ -131,7 +173,6 @@ export function deepScrubEmojis<T>(val: T): T {
   return val;
 }
 
-
 export function sanitizeReviewBenchmarks(review: ProfileReview): ProfileReview {
   const artifactRegex =
     /artefato.*pdf|quebra.*par[aá]grafo|linha.*corrida|falta de quebra|espa[çc]amento.*resumo|poucas compet[êe]ncias|poucas skills|apenas \d+ skills|expandir.*compet[êe]ncias formais|basta documentar forma[çc][õo]es acad[êe]micas|cursos formais na se[çc][ãa]o/i;
@@ -186,7 +227,6 @@ export function sanitizeReviewBenchmarks(review: ProfileReview): ProfileReview {
     }),
   };
 }
-
 
 export function extractJsonFromResponse<T = unknown>(text: string): T {
   let cleaned = text.trim();
@@ -274,11 +314,35 @@ export function getFallbackModels(primaryModel: string): string[] {
   return Array.from(new Set(list));
 }
 
+export function ensureFormattedSummary(summary: string): string {
+  if (!summary) return summary;
+  let text = summary.trim();
+
+  // If already formatted with double newlines, return as is
+  if (text.includes('\n\n')) {
+    return text;
+  }
+
+  // If formatted with single newlines, expand to double newlines for clear paragraph breathing
+  if (text.includes('\n')) {
+    return text.replace(/\n(?!\n)/g, '\n\n');
+  }
+
+  // If output as a single continuous block without any \n, insert paragraph breaks
+  // before common section headings and bullet patterns
+  text = text.replace(/(Core Languages|Languages & Frameworks|Technologies|Tech Stack|Architecture & Patterns|Distributed Systems|Cloud, DevOps|Cloud & Infrastructure|Databases & Queues|Key Competencies):/gi, '\n\n$1:');
+  text = text.replace(/([.!?])\s+(•|[-*]|\b(?:Architected|Engineered|Spearheaded|Leading|Currently|Available for|Open to)\b)/g, '$1\n\n$2');
+
+  return text;
+}
+
 export class GeminiAiProvider implements AiProvider {
   readonly id = 'gemini';
   private ai: GoogleGenAI;
   private model: string;
   private retryDelayMs: number;
+  private chat: Chat | null = null;
+  private chatHistory: Content[] = [];
 
   constructor(config: GeminiProviderOptions) {
     if (!config.apiKey) {
@@ -300,6 +364,133 @@ export class GeminiAiProvider implements AiProvider {
     return this.model;
   }
 
+  getChatHistory(): unknown[] {
+    if (this.chat && typeof this.chat.getHistory === 'function') {
+      return this.chat.getHistory();
+    }
+    return this.chatHistory;
+  }
+
+  restoreChatHistory(history: unknown[]): void {
+    if (Array.isArray(history)) {
+      this.chatHistory = history as Content[];
+      this.chat = this.ai.chats.create({
+        model: this.model,
+        history: this.chatHistory,
+        config: {
+          temperature: 0.1,
+          thinkingConfig: { thinkingBudget: 2048 },
+          ...( { thinkingBudget: 2048 } as any ),
+        },
+      });
+    }
+  }
+
+  private async executeChatMessage(params: {
+    message: string | Part | (string | Part)[];
+    config?: any;
+  }): Promise<any> {
+    const candidateModels = getFallbackModels(this.model);
+    const maxRetriesPerModel = 2; // Up to 3 attempts per model
+    let lastError: any = null;
+
+    const mergedConfig = {
+      temperature: 0.1,
+      thinkingConfig: {
+        thinkingBudget: 2048,
+      },
+      thinkingBudget: 2048 as any,
+      ...params.config,
+    };
+
+    for (let mIdx = 0; mIdx < candidateModels.length; mIdx++) {
+      const candidate = candidateModels[mIdx];
+
+      // If no active chat session or migrating to fallback model, re-instantiate chat with existing history
+      if (!this.chat || this.model !== candidate) {
+        const existingHistory = (this.getChatHistory() as Content[]) || [];
+        this.model = candidate;
+        this.chat = this.ai.chats.create({
+          model: candidate,
+          history: existingHistory.length > 0 ? existingHistory : undefined,
+          config: mergedConfig,
+        });
+      }
+
+      for (let attempt = 0; attempt <= maxRetriesPerModel; attempt++) {
+        try {
+          const response = await this.chat.sendMessage({
+            message: params.message,
+            config: mergedConfig,
+          });
+
+          // If a contingency model succeeded, keep it as active model for subsequent calls
+          if (candidate !== candidateModels[0]) {
+            console.info(
+              `[GeminiAiProvider] Modelo de contingência "${candidate}" respondeu com sucesso. Mantendo este modelo para os próximos passos.`,
+            );
+          }
+
+          return response;
+        } catch (err: any) {
+          lastError = err;
+
+          if (isAuthError(err)) {
+            throw new Error(
+              'Chave de API do Gemini inválida ou sem permissão. Verifique sua chave no Google AI Studio (aistudio.google.com).',
+            );
+          }
+
+          // Check if Google returned 404 / deprecated model error
+          const is404 =
+            err?.status === 404 ||
+            err?.code === 404 ||
+            Number(err?.error?.code) === 404 ||
+            String(err?.message || '').toLowerCase().includes('404') ||
+            String(err?.message || '').toLowerCase().includes('no longer available') ||
+            String(err?.message || '').toLowerCase().includes('not_found');
+
+          if (is404) {
+            console.warn(
+              `[GeminiAiProvider] Modelo "${candidate}" não está disponível ou foi descontinuado pela Google (404 Not Found). Alternando para o próximo modelo...`,
+            );
+            break;
+          }
+
+          if (!isTransientOrHighDemandError(err)) {
+            throw err;
+          }
+
+          console.warn(
+            `[GeminiAiProvider] Erro transitório / alta demanda no modelo "${candidate}" (tentativa ${attempt + 1}/${maxRetriesPerModel + 1}):`,
+            err?.message || err,
+          );
+
+          if (attempt < maxRetriesPerModel) {
+            const delay = this.retryDelayMs * Math.pow(2, attempt) + Math.random() * 300;
+            await new Promise((resolve) => setTimeout(resolve, delay));
+            continue;
+          }
+
+          if (mIdx < candidateModels.length - 1) {
+            const nextCandidate = candidateModels[mIdx + 1];
+            console.warn(
+              `[GeminiAiProvider] Modelo "${candidate}" sobrecarregado após tentativas. Alternando automaticamente para contingência "${nextCandidate}"...`,
+            );
+          }
+        }
+      }
+    }
+
+    const detailMsg = lastError?.message || lastError?.status || '503 Service Unavailable';
+    throw new Error(
+      `Os servidores do Google Gemini estão sob alta demanda temporária (erro 503/429).\n` +
+      `Tentamos automaticamente os modelos ${candidateModels.join(', ')}, mas todos relataram sobrecarga momentânea.\n` +
+      `Detalhe da Google: ${detailMsg}\n\n` +
+      `Por favor, aguarde alguns instantes e clique para tentar novamente.`
+    );
+  }
+
   private async executeGenerateContent(params: {
     contents: any;
     config?: any;
@@ -307,6 +498,14 @@ export class GeminiAiProvider implements AiProvider {
     const candidateModels = getFallbackModels(this.model);
     const maxRetriesPerModel = 2; // Up to 3 attempts per model
     let lastError: any = null;
+
+    const mergedConfig = {
+      ...params.config,
+      thinkingConfig: {
+        thinkingBudget: 2048,
+        ...params.config?.thinkingConfig,
+      },
+    };
 
     for (let mIdx = 0; mIdx < candidateModels.length; mIdx++) {
       const candidate = candidateModels[mIdx];
@@ -316,7 +515,7 @@ export class GeminiAiProvider implements AiProvider {
           const response = await this.ai.models.generateContent({
             model: candidate,
             contents: params.contents,
-            config: params.config,
+            config: mergedConfig,
           });
 
           // If a contingency model succeeded, keep it as active model for subsequent calls
@@ -350,7 +549,6 @@ export class GeminiAiProvider implements AiProvider {
             console.warn(
               `[GeminiAiProvider] Modelo "${candidate}" não está disponível ou foi descontinuado pela Google (404 Not Found). Alternando para o próximo modelo...`,
             );
-            // Skip retrying this model, break inner loop to try next candidate model!
             break;
           }
 
@@ -400,26 +598,34 @@ export class GeminiAiProvider implements AiProvider {
     }
   }
 
-  async parseAndDiagnose(input: {
-    pdfBase64?: string;
-    pdfText?: string;
-    cvPdfBase64?: string;
-    targetRole?: string;
-    currentDate?: string;
-  }): Promise<ParseAndDiagnoseResult> {
-    const parts: any[] = [];
+  async parseAndDiagnose(input: ParseAndDiagnoseInput): Promise<ParseAndDiagnoseResult> {
+    const initialConfig = {
+      thinkingBudget: 2048 as any,
+      thinkingConfig: { thinkingBudget: 2048 },
+      temperature: 0.1,
+      responseSchema: geminiParseAndDiagnoseSchema,
+      responseMimeType: 'application/json',
+      systemInstruction: PARSE_AND_DIAGNOSE_SYSTEM_PROMPT,
+    };
 
+    // Initialize chat session using specified configuration
+    this.chat = this.ai.chats.create({
+      model: this.model,
+      history: (input.chatHistory as any) || [],
+      config: initialConfig,
+    });
+
+    const messageParts: (string | Part)[] = [];
     if (input.pdfBase64) {
-      parts.push({
+      messageParts.push({
         inlineData: {
           mimeType: 'application/pdf',
           data: cleanBase64(input.pdfBase64),
         },
       });
     }
-
     if (input.cvPdfBase64) {
-      parts.push({
+      messageParts.push({
         inlineData: {
           mimeType: 'application/pdf',
           data: cleanBase64(input.cvPdfBase64),
@@ -427,27 +633,87 @@ export class GeminiAiProvider implements AiProvider {
       });
     }
 
-    parts.push({
-      text: buildParseAndDiagnosePrompt(input.pdfText, input.currentDate, input.targetRole),
+    const promptText = buildParseAndDiagnosePrompt(input.pdfText, input.currentDate, input.targetRole);
+    messageParts.push({ text: promptText });
+
+    const response = await this.executeChatMessage({
+      message: messageParts,
+      config: initialConfig,
     });
 
+    const rawJson = extractJsonFromResponse<{ reasoning?: unknown; profile?: unknown; review?: unknown }>(
+      response.text || '{}',
+    );
+    const profilePayload = rawJson.profile ?? rawJson;
+    const reviewPayload = rawJson.review ?? rawJson;
+
+    const scrubbedProfile = deepScrubEmojis(profilePayload);
+    const parsedProfile = profileSchema.parse(scrubbedProfile);
+
+    const scrubbedReview = deepScrubEmojis(reviewPayload);
+    const parsedReview = profileReviewSchema.parse(scrubbedReview);
+    const sanitizedReview = sanitizeReviewBenchmarks(parsedReview);
+
+    return {
+      profile: parsedProfile,
+      review: sanitizedReview,
+    };
+  }
+
+  async parseProfile(input: {
+    pdfText: string;
+    currentDate?: string;
+  }): Promise<Profile> {
+    const prompt = buildParseProfilePrompt(input.pdfText, input.currentDate);
+
     const response = await this.executeGenerateContent({
-      contents: parts,
+      contents: prompt,
       config: {
-        systemInstruction: PARSE_AND_DIAGNOSE_SYSTEM_PROMPT,
+        systemInstruction: PARSE_PROFILE_SYSTEM_PROMPT,
         responseMimeType: 'application/json',
-        responseSchema: geminiParseAndDiagnoseSchema,
+        responseSchema: geminiParseProfileSchema,
         temperature: 0.1,
+        thinkingConfig: {
+          thinkingBudget: 2048,
+        },
       },
     });
 
-    const rawJson = extractJsonFromResponse<{ profile: unknown; review: unknown }>(response.text || '{}');
-    const scrubbedJson = deepScrubEmojis(rawJson);
-    const profile = profileSchema.parse(scrubbedJson.profile);
-    const rawReview = profileReviewSchema.parse(scrubbedJson.review);
-    const review = sanitizeReviewBenchmarks(rawReview);
+    const rawJson = extractJsonFromResponse<{ reasoning?: unknown; profile?: unknown }>(
+      response.text || '{}',
+    );
+    const profilePayload = rawJson.profile ?? rawJson;
+    const scrubbedJson = deepScrubEmojis(profilePayload);
+    return profileSchema.parse(scrubbedJson);
+  }
 
-    return { profile, review };
+  async diagnoseProfile(input: {
+    profile: Profile;
+    targetRole?: string;
+    currentDate?: string;
+  }): Promise<ProfileReview> {
+    const prompt = buildDiagnoseProfilePrompt(input.profile, input.currentDate, input.targetRole);
+
+    const response = await this.executeGenerateContent({
+      contents: prompt,
+      config: {
+        systemInstruction: DIAGNOSE_PROFILE_SYSTEM_PROMPT,
+        responseMimeType: 'application/json',
+        responseSchema: geminiDiagnoseProfileSchema,
+        temperature: 0.1,
+        thinkingConfig: {
+          thinkingBudget: 2048,
+        },
+      },
+    });
+
+    const rawJson = extractJsonFromResponse<{ reasoning?: unknown; review?: unknown }>(
+      response.text || '{}',
+    );
+    const reviewPayload = rawJson.review ?? rawJson;
+    const scrubbedJson = deepScrubEmojis(reviewPayload);
+    const rawReview = profileReviewSchema.parse(scrubbedJson);
+    return sanitizeReviewBenchmarks(rawReview);
   }
 
   async generateInterview(input: {
@@ -457,18 +723,23 @@ export class GeminiAiProvider implements AiProvider {
     currentDate?: string;
   }): Promise<InterviewPlan> {
     const prompt = buildInterviewPrompt(input.profile, input.objective, input.currentDate, input.review);
-    const response = await this.executeGenerateContent({
-      contents: prompt,
+    const response = await this.executeChatMessage({
+      message: prompt,
       config: {
         systemInstruction: INTERVIEW_SYSTEM_PROMPT,
         responseMimeType: 'application/json',
         responseSchema: geminiInterviewPlanSchema,
         temperature: 0.1,
+        thinkingConfig: {
+          thinkingBudget: 2048,
+        },
+        thinkingBudget: 2048 as any,
       },
     });
 
-    const rawJson = extractJsonFromResponse<unknown>(response.text || '{}');
-    const scrubbedJson = deepScrubEmojis(rawJson);
+    const rawJson = extractJsonFromResponse<any>(response.text || '{}');
+    const questions = rawJson.questions ?? (Array.isArray(rawJson) ? rawJson : []);
+    const scrubbedJson = deepScrubEmojis({ questions });
     return interviewPlanSchema.parse(scrubbedJson);
   }
 
@@ -491,18 +762,23 @@ export class GeminiAiProvider implements AiProvider {
       input.currentDate,
     );
 
-    const response = await this.executeGenerateContent({
-      contents: prompt,
+    const response = await this.executeChatMessage({
+      message: prompt,
       config: {
         systemInstruction: INTERVIEW_PROGRESS_SYSTEM_PROMPT,
         responseMimeType: 'application/json',
         responseSchema: geminiInterviewProgressSchema,
         temperature: 0.1,
+        thinkingConfig: {
+          thinkingBudget: 2048,
+        },
+        thinkingBudget: 2048 as any,
       },
     });
 
-    const rawJson = extractJsonFromResponse<unknown>(response.text || '{}');
-    const scrubbedJson = deepScrubEmojis(rawJson);
+    const rawJson = extractJsonFromResponse<any>(response.text || '{}');
+    const progressPayload = rawJson.progress ?? rawJson;
+    const scrubbedJson = deepScrubEmojis(progressPayload);
     return interviewProgressSchema.parse(scrubbedJson);
   }
 
@@ -512,6 +788,7 @@ export class GeminiAiProvider implements AiProvider {
     confirmedFacts: ConfirmedFact[];
     initialReview?: ProfileReview;
     currentDate?: string;
+    interviewAnswers?: InterviewAnswer[];
   }): Promise<ProfileAnalysis> {
     const prompt = buildRewriteProfilePrompt(
       input.profile,
@@ -519,25 +796,67 @@ export class GeminiAiProvider implements AiProvider {
       input.confirmedFacts,
       input.initialReview,
       input.currentDate,
+      input.interviewAnswers,
     );
 
-    const response = await this.executeGenerateContent({
-      contents: prompt,
+    const response = await this.executeChatMessage({
+      message: prompt,
       config: {
         systemInstruction: REWRITE_PROFILE_SYSTEM_PROMPT,
         responseMimeType: 'application/json',
         responseSchema: geminiRewrittenProfileSchema,
         temperature: 0.1,
+        thinkingConfig: {
+          thinkingBudget: 2048,
+        },
+        thinkingBudget: 2048 as any,
       },
     });
 
     let rawJson = extractJsonFromResponse<any>(response.text || '{}');
+    const analysisPayload = rawJson.analysis ?? rawJson;
 
     // Strictly sanitize all em-dashes and en-dashes across all rewritten content, critique, and summaries
-    rawJson = deepSanitizeDashes(rawJson);
+    let sanitized = deepSanitizeDashes(analysisPayload);
     // Strictly scrub any emoji artifacts across all rewritten content
-    rawJson = deepScrubEmojis(rawJson);
+    sanitized = deepScrubEmojis(sanitized);
 
-    return profileAnalysisSchema.parse(rawJson);
+    // Format summary paragraphs with clean line breaks
+    if (sanitized?.rewritten?.summary) {
+      sanitized.rewritten.summary = ensureFormattedSummary(sanitized.rewritten.summary);
+    }
+
+    // Non-Regression Guard 1: Invariant N -> N (preserve and recover any missing original companies)
+    if (input.profile?.experiences && Array.isArray(sanitized?.rewritten?.experiences)) {
+      sanitized.rewritten.experiences = enforceExperienceRecovery(
+        input.profile.experiences,
+        sanitized.rewritten.experiences,
+      );
+    }
+
+    // Non-Regression Guard 2: Score Monotonicity (Scores_final >= Scores_initial)
+    if (input.initialReview?.scores && sanitized?.scores) {
+      const initScores = input.initialReview.scores;
+      sanitized.scores = {
+        searchRelevance: Math.max(sanitized.scores.searchRelevance ?? 0, initScores.searchRelevance ?? 0),
+        humanVoice: Math.max(sanitized.scores.humanVoice ?? 0, initScores.humanVoice ?? 0),
+        credibility: Math.max(sanitized.scores.credibility ?? 0, initScores.credibility ?? 0),
+        positioningClarity: Math.max(sanitized.scores.positioningClarity ?? 0, initScores.positioningClarity ?? 0),
+        evidenceCoverage: Math.max(sanitized.scores.evidenceCoverage ?? 0, initScores.evidenceCoverage ?? 0),
+      };
+
+      if (typeof input.initialReview.overallScore === 'number') {
+        sanitized.overallScore = Math.max(sanitized.overallScore ?? 0, input.initialReview.overallScore);
+      }
+    }
+
+    // Preserve triageBottlenecks from initial review if not populated
+    if (!sanitized.triageBottlenecks || sanitized.triageBottlenecks.length === 0) {
+      if (input.initialReview?.triageBottlenecks) {
+        sanitized.triageBottlenecks = [...input.initialReview.triageBottlenecks];
+      }
+    }
+
+    return profileAnalysisSchema.parse(sanitized);
   }
 }

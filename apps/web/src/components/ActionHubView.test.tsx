@@ -31,6 +31,7 @@ describe('ActionHubView Component', () => {
       rationale: 'Foco em sistemas distribuídos',
     },
     critique: [],
+    triageBottlenecks: [],
     rewritten: {
       headline: 'Senior Distributed Systems & Backend Engineer | Java & Kafka',
       summary: 'Senior Backend Engineer with 6+ years designing scalable systems.',
@@ -61,9 +62,10 @@ describe('ActionHubView Component', () => {
     expect(screen.getByText('94')).toBeDefined();
     expect(screen.getByText('+52 pontos')).toBeDefined();
 
-    // Verify CandidateAvatar rendering
+    // Verify CandidateAvatar rendering with fictional demo avatar
     const avatarImg = screen.getByRole('img');
-    expect(avatarImg.getAttribute('src')).toBe('https://unavatar.io/linkedin/lucas-silveira');
+    expect(avatarImg.getAttribute('src')).toBe('/demo-avatar.svg');
+    expect(avatarImg.getAttribute('alt')).toBe('Foto de perfil de Alexandre Rocha');
   });
 
   it('renders the 5-minute interactive LinkedIn checklist with 6 LinkedIn Recruiter actions and working checkboxes', () => {

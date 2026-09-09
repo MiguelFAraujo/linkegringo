@@ -56,6 +56,7 @@ export const interviewQuestionSchema = z.object({
   category: interviewCategorySchema,
   question: z.string().min(1),
   reason: z.string().min(1),
+  placeholderExample: z.string().optional(),
   relatedExperience: z.string().optional(),
   answerType: interviewAnswerTypeSchema,
   options: z.array(z.string()).optional(),

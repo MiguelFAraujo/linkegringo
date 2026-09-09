@@ -12,8 +12,14 @@ import {
 } from './analysis.js';
 import {
   interviewPlanSchema,
+  interviewQuestionSchema,
   confirmedFactSchema,
 } from './interview.js';
+import type {
+  ParseAndDiagnoseInput,
+  ParseAndDiagnoseResult,
+  AiProvider,
+} from './provider.js';
 
 describe('Domain Schemas Robustness', () => {
   it('accepts skills as either strings or objects', () => {
@@ -180,4 +186,239 @@ describe('Domain Schemas Robustness', () => {
     });
     expect(fact2.source).toBe('linkedin-profile');
   });
+
+  it('supports optional placeholderExample on interviewQuestionSchema and in interview plans', () => {
+    const questionWithPlaceholder = interviewQuestionSchema.parse({
+      id: 'q-scale',
+      category: 'scale',
+      question: 'Qual foi a volumetria de requisições?',
+      reason: 'Avaliar compreensão de volume em produção.',
+      placeholderExample: 'Ex: Sustentamos 15k req/s na Black Friday com latência p99 de 180ms.',
+      answerType: 'long-text',
+    });
+    expect(questionWithPlaceholder.placeholderExample).toBe(
+      'Ex: Sustentamos 15k req/s na Black Friday com latência p99 de 180ms.',
+    );
+
+    const questionWithoutPlaceholder = interviewQuestionSchema.parse({
+      id: 'q-impact',
+      category: 'impact',
+      question: 'Qual foi o impacto do projeto?',
+      reason: 'Avaliar impacto comercial.',
+      answerType: 'short-text',
+    });
+    expect(questionWithoutPlaceholder.placeholderExample).toBeUndefined();
+
+    const plan = interviewPlanSchema.parse({
+      questions: [questionWithPlaceholder, questionWithoutPlaceholder],
+    });
+    expect(plan.questions[0].placeholderExample).toBe(
+      'Ex: Sustentamos 15k req/s na Black Friday com latência p99 de 180ms.',
+    );
+    expect(plan.questions[1].placeholderExample).toBeUndefined();
+  });
 });
+
+describe('profileReviewSchema triageBottlenecks', () => {
+  it('defaults triageBottlenecks to an empty array when omitted', () => {
+    const raw = {
+      targetMarket: 'United States',
+      language: 'en',
+      overallScore: 75,
+      scores: {
+        searchRelevance: 75,
+        humanVoice: 75,
+        credibility: 75,
+        positioningClarity: 75,
+        evidenceCoverage: 75,
+      },
+      executiveSummary: 'Strong profile with minor gaps.',
+      profileDirection: {
+        positioning: 'Senior Backend Engineer',
+        primaryRole: 'Senior Backend Engineer',
+        rationale: 'Solid experience.',
+      },
+      critique: [],
+    };
+
+    const parsed = profileReviewSchema.parse(raw);
+    expect(parsed.triageBottlenecks).toBeDefined();
+    expect(Array.isArray(parsed.triageBottlenecks)).toBe(true);
+    expect(parsed.triageBottlenecks).toEqual([]);
+  });
+
+  it('accepts and preserves triageBottlenecks array', () => {
+    const bottlenecks = [
+      'Unquantified impact metrics across senior experience bullets',
+      'Headline lacks target role anchor and core technology keywords',
+      'Portuguese profile prevents indexing by US recruiters',
+    ];
+
+    const raw = {
+      targetMarket: 'United States',
+      language: 'en',
+      overallScore: 42,
+      scores: {
+        searchRelevance: 48,
+        humanVoice: 52,
+        credibility: 38,
+        positioningClarity: 35,
+        evidenceCoverage: 37,
+      },
+      executiveSummary: 'Needs significant overhaul for US recruiter 6-second scan.',
+      profileDirection: {
+        positioning: 'Senior Backend Engineer',
+        primaryRole: 'Senior Backend Engineer',
+        rationale: 'High technical baseline obscured by formatting.',
+      },
+      critique: [],
+      triageBottlenecks: bottlenecks,
+    };
+
+    const parsed = profileReviewSchema.parse(raw);
+    expect(parsed.triageBottlenecks).toEqual(bottlenecks);
+    expect(parsed.triageBottlenecks).toHaveLength(3);
+  });
+
+  it('normalizes single string triageBottlenecks into an array', () => {
+    const raw = {
+      targetMarket: 'United States',
+      language: 'en',
+      overallScore: 50,
+      scores: {
+        searchRelevance: 50,
+        humanVoice: 50,
+        credibility: 50,
+        positioningClarity: 50,
+        evidenceCoverage: 50,
+      },
+      executiveSummary: 'Summary text',
+      profileDirection: {
+        positioning: 'Platform Engineer',
+        primaryRole: 'Platform Engineer',
+        rationale: 'Rationale',
+      },
+      critique: [],
+      triageBottlenecks: 'Single bottleneck string from model',
+    };
+
+    const parsed = profileReviewSchema.parse(raw);
+    expect(parsed.triageBottlenecks).toEqual(['Single bottleneck string from model']);
+  });
+});
+
+describe('parseAndDiagnose domain contracts', () => {
+  it('instantiates ParseAndDiagnoseInput and ParseAndDiagnoseResult correctly', () => {
+    const input: ParseAndDiagnoseInput = {
+      pdfBase64: 'JVBERi0xLjQKJeLjz9MKNyAwIG9ia...',
+      pdfText: 'Alexandre Rocha - Backend Developer',
+      cvPdfBase64: 'JVBERi0xLjQK...',
+      targetRole: 'Senior Distributed Systems Engineer',
+      currentDate: '2026-09-08',
+      chatHistory: [{ role: 'user', content: 'Turn 0' }],
+    };
+
+    expect(input.pdfBase64).toContain('JVBERi');
+    expect(input.targetRole).toBe('Senior Distributed Systems Engineer');
+    expect(input.chatHistory).toHaveLength(1);
+
+    const parsedReview = profileReviewSchema.parse({
+      overallScore: 45,
+      scores: {
+        searchRelevance: 45,
+        humanVoice: 45,
+        credibility: 45,
+        positioningClarity: 45,
+        evidenceCoverage: 45,
+      },
+      executiveSummary: 'Summary text',
+      profileDirection: {
+        positioning: 'Staff Engineer',
+        primaryRole: 'Staff Backend Engineer',
+        rationale: 'Rationale text',
+      },
+    });
+
+    const parsedProfile = profileSchema.parse({
+      firstName: 'Alexandre',
+      lastName: 'Rocha',
+      experiences: [],
+    });
+
+    const result: ParseAndDiagnoseResult = {
+      profile: parsedProfile,
+      review: parsedReview,
+    };
+
+    expect(result.profile.firstName).toBe('Alexandre');
+    expect(result.review.overallScore).toBe(45);
+    expect(result.review.triageBottlenecks).toEqual([]);
+  });
+
+  it('validates AiProvider interface compatibility with parseAndDiagnose and chat session hooks', async () => {
+    const mockProvider: AiProvider = {
+      id: 'test-provider',
+      name: 'Test Provider',
+      testConnection: async () => true,
+      parseAndDiagnose: async (input: ParseAndDiagnoseInput): Promise<ParseAndDiagnoseResult> => {
+        expect(input.pdfBase64).toBe('dGVzdC1iYXNlNjQ=');
+        expect(input.targetRole).toBe('Senior Platform Engineer');
+        expect(input.currentDate).toBe('2026-09-08');
+
+        return {
+          profile: profileSchema.parse({ firstName: 'Alex' }),
+          review: profileReviewSchema.parse({
+            targetMarket: 'United States',
+            language: 'en',
+            overallScore: 60,
+            scores: {
+              searchRelevance: 60,
+              humanVoice: 60,
+              credibility: 60,
+              positioningClarity: 60,
+              evidenceCoverage: 60,
+            },
+            executiveSummary: 'Contract test summary',
+            profileDirection: {
+              positioning: 'Senior Platform Engineer',
+              primaryRole: 'Senior Platform Engineer',
+              rationale: 'Contract test',
+            },
+            critique: [],
+            triageBottlenecks: ['Lack of production scale metrics'],
+          }),
+        };
+      },
+      parseProfile: async () => {
+        throw new Error('Deprecated method');
+      },
+      diagnoseProfile: async () => {
+        throw new Error('Deprecated method');
+      },
+      generateInterview: async () => {
+        throw new Error('Not implemented in contract test');
+      },
+      evaluateProgress: async () => {
+        throw new Error('Not implemented in contract test');
+      },
+      generateRewrittenProfile: async () => {
+        throw new Error('Not implemented in contract test');
+      },
+      getChatHistory: () => [{ role: 'user', parts: [{ text: 'Hello' }] }],
+      restoreChatHistory: (_history: unknown[]) => {},
+    };
+
+    const input: ParseAndDiagnoseInput = {
+      pdfBase64: 'dGVzdC1iYXNlNjQ=',
+      targetRole: 'Senior Platform Engineer',
+      currentDate: '2026-09-08',
+    };
+
+    expect(typeof mockProvider.parseAndDiagnose).toBe('function');
+    const result = await mockProvider.parseAndDiagnose!(input);
+    expect(result.profile.firstName).toBe('Alex');
+    expect(result.review.triageBottlenecks).toEqual(['Lack of production scale metrics']);
+    expect(mockProvider.getChatHistory?.()).toEqual([{ role: 'user', parts: [{ text: 'Hello' }] }]);
+  });
+});
+

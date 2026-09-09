@@ -251,9 +251,10 @@ describe('DiagnosticView Component', () => {
       />,
     );
 
-    // Verify CandidateAvatar rendered with Lucas Silveira's avatar
+    // Verify CandidateAvatar rendered with fictional demo avatar
     const img = screen.getByRole('img');
-    expect(img.getAttribute('src')).toBe('https://unavatar.io/linkedin/lucas-silveira');
+    expect(img.getAttribute('src')).toBe('/demo-avatar.svg');
+    expect(img.getAttribute('alt')).toBe('Foto de perfil de Alexandre Rocha');
 
     // Verify score explanations
     expect(screen.getByText('Boa densidade de palavras-chave, mas faltam termos de Cloud.')).toBeDefined();
@@ -330,6 +331,47 @@ describe('DiagnosticView Component', () => {
 
     // 70% should render "Faltam 30% para o padrão internacional"
     expect(screen.getByText('Faltam 30% para o padrão internacional')).toBeDefined();
+  });
+
+  it('renders dedicated US recruiter triage bottlenecks card when triageBottlenecks are present', () => {
+    const reviewWithBottlenecks = {
+      ...MOCK_REVIEW,
+      triageBottlenecks: [
+        'Perfil em português inviabiliza triagem nos EUA.',
+        'Falta de métricas com framework XYZ.',
+      ],
+    };
+
+    render(
+      <DiagnosticView
+        profile={MOCK_PROFILE}
+        review={reviewWithBottlenecks}
+        onProceedToInterview={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText(/Gargalos de Triagem \(Filtro Recrutadores EUA\)/i)).toBeDefined();
+    expect(screen.getByText(/Pontos que causam descarte imediato na triagem de 6 segundos/i)).toBeDefined();
+    expect(screen.getByText('Perfil em português inviabiliza triagem nos EUA.')).toBeDefined();
+    expect(screen.getByText('Falta de métricas com framework XYZ.')).toBeDefined();
+    expect(screen.getByText('2')).toBeDefined(); // count badge
+  });
+
+  it('does NOT render triage bottlenecks card when triageBottlenecks is empty or absent', () => {
+    const reviewWithoutBottlenecks = {
+      ...MOCK_REVIEW,
+      triageBottlenecks: [],
+    };
+
+    render(
+      <DiagnosticView
+        profile={MOCK_PROFILE}
+        review={reviewWithoutBottlenecks}
+        onProceedToInterview={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByText(/Gargalos de Triagem \(Filtro Recrutadores EUA\)/i)).toBeNull();
   });
 });
 

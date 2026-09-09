@@ -173,6 +173,7 @@ describe('Prompts & Deterministic Rubric', () => {
           severity: 'medium' as const, // Should be normalized to 'low' because issues is []
         },
       ],
+      triageBottlenecks: [],
     };
 
     const sanitized = sanitizeReviewBenchmarks(fakeReview);
@@ -195,9 +196,9 @@ describe('Prompts & Deterministic Rubric', () => {
     expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('Save to PDF');
     expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('expandir a lista de competências formais do LinkedIn');
 
-    // Strict 100% rule & zero phantom deductions
+    // Calibrated scoring & zero phantom deductions
     expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('ZERO PHANTOM DEDUCTIONS');
-    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('NOT 94, 95, or 96');
+    expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('REALISTIC CALIBRATION');
 
     // Self-taught senior engineers merit
     expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('SENIOR ENGINEERS WITHOUT FORMAL DEGREES (SELF-TAUGHT)');
@@ -243,6 +244,7 @@ describe('Prompts & Deterministic Rubric', () => {
         rationale: 'Forte background em sistemas distribuídos.',
       },
       critique: [],
+      triageBottlenecks: [],
     };
 
     const result = sanitizeReviewBenchmarks(reviewWithFlawlessExplanations);

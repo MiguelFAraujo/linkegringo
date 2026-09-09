@@ -218,5 +218,42 @@ describe('InterviewView Component', () => {
       },
     ]);
   });
+
+  it('renders question.placeholderExample as textarea placeholder and in helper callout', () => {
+    const planWithExample: InterviewPlan = {
+      questions: [
+        {
+          id: 'q-example',
+          category: 'scale',
+          question: 'Qual o volume de processamento de dados?',
+          reason: 'Avaliação de escalabilidade.',
+          placeholderExample: 'Ex: Processamos 30M transações diárias reduzindo o consumo de memória em 40%.',
+          answerType: 'long-text',
+          required: false,
+        },
+      ],
+    };
+
+    render(
+      <InterviewView
+        plan={planWithExample}
+        onSubmitAnswers={vi.fn()}
+        isLoading={false}
+        roundNumber={1}
+      />,
+    );
+
+    // Should render in textarea placeholder
+    const textarea = screen.getByPlaceholderText(
+      /Ex: Processamos 30M transações diárias reduzindo o consumo de memória em 40%\./i,
+    );
+    expect(textarea).toBeDefined();
+
+    // Should render helper tip callout
+    expect(screen.getByText(/Exemplo de resposta prática:/i)).toBeDefined();
+    expect(
+      screen.getByText(/Processamos 30M transações diárias reduzindo o consumo de memória em 40%\./i),
+    ).toBeDefined();
+  });
 });
 

@@ -279,13 +279,28 @@ export function InterviewView({
               ))}
             </div>
           ) : (
-            <Textarea
-              rows={5}
-              value={currentAnswer.value}
-              onChange={(e) => handleTextChange(e.target.value)}
-              placeholder="Ex: Na migração, sustentamos ~2M req/dia e reduzimos a latência de 350ms para 80ms configurando pool de conexões e particionamento..."
-              className="text-sm leading-relaxed bg-[#090D14]/90 border-white/[0.08] focus:border-blue-500 rounded-xl p-4 text-slate-200 placeholder:text-slate-500"
-            />
+            <div className="space-y-2.5">
+              <Textarea
+                rows={5}
+                value={currentAnswer.value}
+                onChange={(e) => handleTextChange(e.target.value)}
+                placeholder={
+                  currentQ.placeholderExample ||
+                  'Ex: Na migração, sustentamos ~2M req/dia e reduzimos a latência de 350ms para 80ms configurando pool de conexões e particionamento...'
+                }
+                className="text-sm leading-relaxed bg-[#090D14]/90 border-white/[0.08] focus:border-blue-500 rounded-xl p-4 text-slate-200 placeholder:text-slate-500"
+              />
+
+              {currentQ.placeholderExample && (
+                <div className="p-3.5 rounded-xl bg-blue-950/25 border border-blue-500/25 text-xs text-blue-200 flex items-start gap-2.5 shadow-sm animate-in fade-in">
+                  <Sparkles className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
+                  <div className="leading-relaxed">
+                    <span className="font-semibold text-white">Exemplo de resposta prática: </span>
+                    <span className="text-slate-300">{currentQ.placeholderExample}</span>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
 
           <p className="text-xs text-slate-500">
