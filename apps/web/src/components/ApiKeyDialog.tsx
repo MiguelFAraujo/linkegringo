@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -75,6 +75,14 @@ export function ApiKeyDialog({
     return [];
   });
 
+  const isMountedRef = useRef(true);
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
   const loadModels = React.useCallback(async (key: string, forceFresh: boolean = false) => {
     const trimmed = key.trim();
     if (!trimmed) {
@@ -109,6 +117,7 @@ export function ApiKeyDialog({
 
     try {
       const fetched = await fetchGeminiModels(trimmed);
+      if (!isMountedRef.current) return;
       if (fetched && fetched.length > 0) {
         setCachedGeminiModels(trimmed, fetched);
         const mapped: ModelOption[] = fetched.map((m) => ({
@@ -129,6 +138,7 @@ export function ApiKeyDialog({
         });
       }
     } catch (err: any) {
+      if (!isMountedRef.current) return;
       console.warn('[ApiKeyDialog] Failed to fetch remote models:', err);
       const isAuth =
         isAuthError(err) ||
@@ -155,7 +165,9 @@ export function ApiKeyDialog({
         );
       }
     } finally {
-      setIsFetchingModels(false);
+      if (isMountedRef.current) {
+        setIsFetchingModels(false);
+      }
     }
   }, []);
 
@@ -228,18 +240,22 @@ export function ApiKeyDialog({
           await loadModels(currentKey.trim(), false);
         }
       } else {
+        if (!isMountedRef.current) return;
         setTestResult({
           ok: false,
           message: 'Falha ao validar a chave. Verifique se a chave foi copiada corretamente.',
         });
       }
     } catch (err: any) {
+      if (!isMountedRef.current) return;
       setTestResult({
         ok: false,
         message: `Erro na validação: ${err?.message || 'Falha de rede'}`,
       });
     } finally {
-      setTesting(false);
+      if (isMountedRef.current) {
+        setTesting(false);
+      }
     }
   };
 

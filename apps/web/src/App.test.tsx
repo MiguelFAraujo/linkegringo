@@ -27,7 +27,7 @@ describe('App Component', () => {
     const gringoElements = screen.getAllByText(/Gringo/i);
     expect(gringoElements.length).toBeGreaterThanOrEqual(1);
 
-    expect(screen.getByText(/Destrave seu Perfil do LinkedIn/i)).toBeDefined();
+    expect(screen.getByText(/Pare de aplicar. Comece a ser encontrado./i)).toBeDefined();
   });
 
   it('runs demo mode through diagnostic, directly to interview, and allows skipping interview to facts with populated baseline facts', async () => {
@@ -103,7 +103,7 @@ startxref
       expect(screen.getByText('candidato-profile.pdf')).toBeDefined();
     });
 
-    const analyzeBtn = screen.getByText('Analisar Perfil').closest('button') as HTMLButtonElement;
+    const analyzeBtn = screen.getByText(/Descobrir minha visibilidade/i).closest('button') as HTMLButtonElement;
     fireEvent.click(analyzeBtn);
 
     await waitFor(() => {

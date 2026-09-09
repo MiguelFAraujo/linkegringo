@@ -16,8 +16,8 @@ describe('FileUploadDropzone Component', () => {
   it('renders target role selector and quick chips', () => {
     render(<FileUploadDropzone {...defaultProps} />);
 
-    expect(screen.getByLabelText(/Cargo Alvo nos EUA/i)).toBeDefined();
-    const input = screen.getByRole('textbox', { name: /Cargo Alvo nos EUA/i }) as HTMLInputElement;
+    expect(screen.getByLabelText(/What should recruiters find you for\?/i)).toBeDefined();
+    const input = screen.getByRole('textbox', { name: /What should recruiters find you for\?/i }) as HTMLInputElement;
     expect(input.value).toBe('Senior Backend Engineer');
 
     // All quick suggestions should be rendered
@@ -32,7 +32,7 @@ describe('FileUploadDropzone Component', () => {
     const staffChip = screen.getByRole('button', { name: 'Staff Engineer' });
     fireEvent.click(staffChip);
 
-    const input = screen.getByRole('textbox', { name: /Cargo Alvo nos EUA/i }) as HTMLInputElement;
+    const input = screen.getByRole('textbox', { name: /What should recruiters find you for\?/i }) as HTMLInputElement;
     expect(input.value).toBe('Staff Engineer');
   });
 
@@ -43,7 +43,7 @@ describe('FileUploadDropzone Component', () => {
     const fullStackChip = screen.getByRole('button', { name: 'Senior Full Stack Engineer' });
     fireEvent.click(fullStackChip);
 
-    const demoBtn = screen.getByText(/Testar com Perfil de Demonstração/i);
+    const demoBtn = screen.getAllByText(/Testar com Perfil de Demonstração/i)[0];
     fireEvent.click(demoBtn);
 
     expect(handleLoadDemo).toHaveBeenCalledWith('Senior Full Stack Engineer');
@@ -52,7 +52,7 @@ describe('FileUploadDropzone Component', () => {
   it('disables primary CTA until a valid PDF file is selected', () => {
     render(<FileUploadDropzone {...defaultProps} />);
 
-    const analyzeBtn = screen.getByText('Analisar Perfil').closest('button');
+    const analyzeBtn = screen.getByText(/Descobrir minha visibilidade/i).closest('button');
     expect(analyzeBtn?.hasAttribute('disabled')).toBe(true);
   });
 
@@ -77,7 +77,7 @@ describe('FileUploadDropzone Component', () => {
     // File name should be displayed
     expect(screen.getByText('perfil_linkedin.pdf')).toBeDefined();
 
-    const analyzeBtn = screen.getByText('Analisar Perfil').closest('button') as HTMLButtonElement;
+    const analyzeBtn = screen.getByText(/Descobrir minha visibilidade/i).closest('button') as HTMLButtonElement;
     expect(analyzeBtn.hasAttribute('disabled')).toBe(false);
 
     fireEvent.click(analyzeBtn);
@@ -111,5 +111,28 @@ describe('FileUploadDropzone Component', () => {
     expect(screen.getByText(/1\. Perfil/i)).toBeDefined();
     expect(screen.getByText(/2\. Botão "Mais"/i)).toBeDefined();
     expect(screen.getByText(/3\. Salvar como PDF/i)).toBeDefined();
+  });
+
+  it('renders the new Recruiter Visibility Optimizer headline, example report preview, trust bar, and 4-step logic footer', () => {
+    render(<FileUploadDropzone {...defaultProps} />);
+
+    // New headline & subheadline
+    expect(screen.getByText('Pare de aplicar. Comece a ser encontrado.')).toBeDefined();
+    expect(screen.getByText(/Descubra como recrutadores internacionais encontram seu perfil/i)).toBeDefined();
+
+    // Example visual report preview
+    expect(screen.getByText('Exemplo')).toBeDefined();
+    expect(screen.getByText('Recruiter Visibility')).toBeDefined();
+    expect(screen.getByText('74')).toBeDefined();
+    expect(screen.getByText('Headline positioning')).toBeDefined();
+
+    // Trust bar
+    expect(screen.getByText(/100% Client-Side · Chave Própria \(BYOK\) · Sem armazenamento em servidor/i)).toBeDefined();
+
+    // 4-step footer
+    expect(screen.getByText('01 BUSCA')).toBeDefined();
+    expect(screen.getByText('02 RECRUITER CARD')).toBeDefined();
+    expect(screen.getByText('03 PERFIL')).toBeDefined();
+    expect(screen.getByText('04 OUTREACH')).toBeDefined();
   });
 });
