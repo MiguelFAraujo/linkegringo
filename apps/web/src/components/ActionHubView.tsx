@@ -471,8 +471,19 @@ export function ActionHubView({
                 <Card id="profile-section-headline" className="p-5 sm:p-6 border-[#1E293B] bg-[#0F1623]/80 space-y-4 shadow-lg">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-semibold text-white text-sm sm:text-base">Headline otimizada</h3>
-                      <p className="text-xs text-slate-400">Título estratégico indexável com palavras-chave de alto valor.</p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="font-semibold text-white text-sm sm:text-base">Headline otimizada</h3>
+                        <span className={`text-[11px] font-mono px-2 py-0.5 rounded-full border ${
+                          analysis.rewritten.headline.length <= 160
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                            : analysis.rewritten.headline.length <= 220
+                            ? 'bg-blue-500/10 text-blue-400 border-blue-500/30'
+                            : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+                        }`}>
+                          {analysis.rewritten.headline.length} / 220 caracteres {analysis.rewritten.headline.length <= 160 ? '✓ (ideal sem cortes no mobile)' : ''}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-400">Título estratégico indexável pelo LinkedIn Recruiter. Cole diretamente no campo Título/Headline.</p>
                     </div>
                     <Button
                       size="sm"
@@ -521,8 +532,13 @@ export function ActionHubView({
                 <Card id="profile-section-about" className="p-5 sm:p-6 border-[#1E293B] bg-[#0F1623]/80 space-y-4 shadow-lg">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-semibold text-white text-sm sm:text-base">About / Summary otimizado</h3>
-                      <p className="text-xs text-slate-400">Resumo estruturado com proposição de valor executivo.</p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="font-semibold text-white text-sm sm:text-base">About / Summary otimizado</h3>
+                        <span className="text-[11px] font-mono px-2 py-0.5 rounded-full border bg-slate-800 text-slate-300 border-slate-700">
+                          {analysis.rewritten.summary.length} caracteres (ideal: 1.200 a 1.600)
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-400">Resumo estruturado para leitura F-shape em 6s. Quebras de linha e bullets são 100% preservados ao colar no LinkedIn.</p>
                     </div>
                     <Button
                       size="sm"

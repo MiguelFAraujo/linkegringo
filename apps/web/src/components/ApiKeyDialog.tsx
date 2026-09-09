@@ -265,8 +265,8 @@ export function ApiKeyDialog({
             <Key className="w-5 h-5 text-emerald-400" />
             Configuração de Provedor & Chave de IA
           </DialogTitle>
-          <DialogDescription className="text-slate-400">
-            LinkeGringo é 100% client-side (BYOK). Sua chave não é enviada para nossos servidores — ela fica armazenada apenas no seu navegador.
+          <DialogDescription className="text-slate-400 text-xs sm:text-sm leading-relaxed">
+            LinkeGringo é 100% client-side (BYOK). Seus dados vão direto do seu navegador para a API do Google Gemini via sua chave. O LinkeGringo não possui backend nem armazena seu perfil. Se você usa o plano gratuito do Google AI Studio, evite submeter dados confidenciais ou sob NDA (conforme os termos do Google).
           </DialogDescription>
         </DialogHeader>
 

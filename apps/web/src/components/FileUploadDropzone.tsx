@@ -148,9 +148,9 @@ export function FileUploadDropzone({
             <div className="flex items-start gap-3.5">
               <ShieldCheck className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
               <div className="space-y-0.5">
-                <h3 className="text-sm font-semibold text-slate-200">Processamento local</h3>
+                <h3 className="text-sm font-semibold text-slate-200">Zero backend intermediário</h3>
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  Executa diretamente no seu navegador, sem trafegar dados privados por servidores de aplicação externos.
+                  Executa diretamente no seu navegador. Seus dados nunca são recebidos, intermediados ou salvos em servidores do LinkeGringo.
                 </p>
               </div>
             </div>
@@ -160,7 +160,7 @@ export function FileUploadDropzone({
               <div className="space-y-0.5">
                 <h3 className="text-sm font-semibold text-slate-200">Chave própria (BYOK)</h3>
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  Utilize a cota gratuita do Google AI Studio com controle absoluto e privacidade auditável.
+                  Comunicação direta do seu browser com a API do Google Gemini. Se usar a cota gratuita, evite dados confidenciais sob NDA.
                 </p>
               </div>
             </div>
