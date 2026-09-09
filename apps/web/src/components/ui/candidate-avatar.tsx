@@ -5,6 +5,7 @@ interface CandidateAvatarProps {
   name?: string;
   className?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
+  decorative?: boolean;
 }
 
 const sizeClasses: Record<'sm' | 'md' | 'lg' | 'xl', { container: string; text: string }> = {
@@ -25,44 +26,15 @@ const DEMO_PLACEHOLDERS = new Set([
   'fictional-candidate',
 ]);
 
-/**
- * Extracts and cleans a LinkedIn username/slug from a raw publicId or full URL.
- * Returns null if the value is missing, empty, or a LinkeGringo fallback/demo sentinel.
- */
-export function extractLinkedInSlug(raw?: string): string | null {
-  if (!raw || typeof raw !== 'string') return null;
-  let slug = raw.trim();
-  if (!slug) return null;
-
-  // Strip query parameters and URL fragments
-  slug = slug.replace(/[?#].*$/, '');
-
-  // Strip full URL protocols and localized LinkedIn domains (e.g., https://br.linkedin.com/in/)
-  slug = slug.replace(/^(?:https?:\/\/)?(?:[a-z]{2,3}\.)?linkedin\.com\/in\//i, '');
-  slug = slug.replace(/^\/?in\//i, '');
-  slug = slug.replace(/^@/, '');
-  slug = slug.replace(/\/+$/, '').trim();
-
-  const lower = slug.toLowerCase();
-  if (
-    !slug ||
-    INVALID_PLACEHOLDERS.has(lower) ||
-    DEMO_PLACEHOLDERS.has(lower) ||
-    lower.startsWith('demo-') ||
-    lower.startsWith('mock-') ||
-    lower.startsWith('fictional-')
-  ) {
-    return null;
-  }
-
-  return slug;
-}
+import { extractLinkedInSlug } from '@linkegringo/core';
+export { extractLinkedInSlug };
 
 export function CandidateAvatar({
   publicId,
   name,
   className = '',
   size = 'md',
+  decorative,
 }: CandidateAvatarProps) {
   const [imgError, setImgError] = useState(false);
 
@@ -102,10 +74,12 @@ export function CandidateAvatar({
     return (
       <div
         className={`relative overflow-hidden flex-shrink-0 border border-slate-700/60 bg-slate-800 ${sizing.container} ${className}`}
+        {...(decorative ? { 'aria-hidden': 'true' } : {})}
       >
         <img
           src={avatarUrl}
-          alt={name ? `Foto de perfil de ${name}` : 'Foto de perfil'}
+          alt={decorative ? '' : name ? `Foto de perfil de ${name}` : 'Foto de perfil'}
+          role={decorative ? 'presentation' : undefined}
           className="h-full w-full object-cover"
           loading="lazy"
           onError={() => setImgError(true)}

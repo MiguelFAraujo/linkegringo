@@ -245,6 +245,11 @@ export const profileDirectionResponseSchema: Schema = {
       type: Type.ARRAY,
       items: { type: Type.STRING },
     },
+    openToWorkTitles: {
+      type: Type.ARRAY,
+      items: { type: Type.STRING },
+      description: '5 high-conversion target titles for the LinkedIn Open to Work spotlight filter',
+    },
     rationale: { type: Type.STRING },
   },
   required: ['positioning', 'primaryRole', 'rationale'],
@@ -723,6 +728,21 @@ export const rewrittenContentResponseSchema: Schema = {
     skills: {
       type: Type.ARRAY,
       items: { type: Type.STRING },
+    },
+    openToWorkTitles: {
+      type: Type.ARRAY,
+      items: { type: Type.STRING },
+      description: '5 high-conversion target titles for the LinkedIn Open to Work spotlight filter',
+    },
+    cardConversionBadges: {
+      type: Type.ARRAY,
+      items: { type: Type.STRING },
+      description: '3 conversion badges (e.g., Cargo semântico, Stack de alta busca, Senioridade clara)',
+    },
+    cardConversionReasons: {
+      type: Type.ARRAY,
+      items: { type: Type.STRING },
+      description: 'Reasons explaining why the rewritten card converts US technical recruiters',
     },
   },
   required: ['headline', 'summary', 'experiences', 'skills'],

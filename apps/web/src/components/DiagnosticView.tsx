@@ -20,6 +20,7 @@ import {
 import type { Profile, ProfileReview } from '@linkegringo/core';
 import { FormattedText } from './ui/formatted-text';
 import { CandidateAvatar } from './ui/candidate-avatar';
+import { InboundFunnelView } from './InboundFunnelView';
 
 const isTriageInquiry = (issue: string) =>
   issue.startsWith('Ponto de atenção') ||
@@ -181,6 +182,13 @@ export function DiagnosticView({
           <span>{isApprovedUSLevel ? 'Lapidar Perfil' : 'Otimizar Perfil'}</span>
         </Button>
       </div>
+ 
+      {/* Inbound Recruiter Funnel Hero */}
+      <InboundFunnelView
+        review={review}
+        targetRole={selectedRole}
+        onProceed={handleProceed}
+      />
 
       {/* Main Executive Dossier Grid (12 Columns) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">

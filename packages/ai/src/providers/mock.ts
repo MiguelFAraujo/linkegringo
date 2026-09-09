@@ -88,6 +88,13 @@ export const MOCK_REVIEW: ProfileReview = {
     positioning: 'Senior Distributed Systems & Backend Engineer',
     primaryRole: 'Senior Backend Engineer',
     alternativeRoles: ['Senior Systems Engineer', 'Platform Engineer'],
+    openToWorkTitles: [
+      'Senior Backend Engineer',
+      'Senior Software Engineer',
+      'Distributed Systems Engineer',
+      'Backend Tech Lead',
+      'Senior Systems Engineer',
+    ],
     rationale:
       'Sua vivência real com Java/Spring, mensageria distribuída com Kafka e migração para microsserviços em fintech te qualifica para posições sênior nos EUA, mas o perfil atual não comunica sua real envergadura técnica.',
   },
@@ -455,6 +462,23 @@ export class DemoAiProvider implements AiProvider {
           'Observability & Distributed Tracing',
           'System Design',
           'CI/CD Pipelines',
+        ],
+        openToWorkTitles: [
+          'Senior Backend Engineer',
+          'Senior Software Engineer',
+          'Distributed Systems Engineer',
+          'Backend Tech Lead',
+          'Senior Systems Engineer',
+        ],
+        cardConversionBadges: [
+          'Cargo semântico',
+          'Stack de alta busca',
+          'Senioridade clara',
+        ],
+        cardConversionReasons: [
+          'Alinhado 100% com filtro de "Current Job Title" mais utilizado por tech recruiters dos EUA.',
+          '3-4 tecnologias centrais dispostas nos primeiros 60 caracteres sem truncamento no snippet de busca.',
+          'Sinal sênior inequívoco e escopo de sistemas distribuídos que elimina o descarte na triagem de 6 segundos.',
         ],
       },
     };

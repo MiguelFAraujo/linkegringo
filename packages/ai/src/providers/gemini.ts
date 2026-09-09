@@ -18,6 +18,9 @@ import {
   profileAnalysisSchema,
   profileReviewSchema,
   profileSchema,
+  evaluateScoreTransition,
+  deriveOpenToWorkTitles,
+  deriveCardConversionBadges,
 } from '@linkegringo/core';
 import {
   buildDiagnoseProfilePrompt,
@@ -654,6 +657,13 @@ export class GeminiAiProvider implements AiProvider {
     const parsedReview = profileReviewSchema.parse(scrubbedReview);
     const sanitizedReview = sanitizeReviewBenchmarks(parsedReview);
 
+    if (!sanitizedReview.profileDirection.openToWorkTitles || sanitizedReview.profileDirection.openToWorkTitles.length < 5) {
+      sanitizedReview.profileDirection.openToWorkTitles = deriveOpenToWorkTitles(
+        sanitizedReview.profileDirection.primaryRole,
+        sanitizedReview.profileDirection.alternativeRoles,
+      );
+    }
+
     return {
       profile: parsedProfile,
       review: sanitizedReview,
@@ -713,7 +723,16 @@ export class GeminiAiProvider implements AiProvider {
     const reviewPayload = rawJson.review ?? rawJson;
     const scrubbedJson = deepScrubEmojis(reviewPayload);
     const rawReview = profileReviewSchema.parse(scrubbedJson);
-    return sanitizeReviewBenchmarks(rawReview);
+    const sanitizedReview = sanitizeReviewBenchmarks(rawReview);
+
+    if (!sanitizedReview.profileDirection.openToWorkTitles || sanitizedReview.profileDirection.openToWorkTitles.length < 5) {
+      sanitizedReview.profileDirection.openToWorkTitles = deriveOpenToWorkTitles(
+        sanitizedReview.profileDirection.primaryRole,
+        sanitizedReview.profileDirection.alternativeRoles,
+      );
+    }
+
+    return sanitizedReview;
   }
 
   async generateInterview(input: {
@@ -834,20 +853,37 @@ export class GeminiAiProvider implements AiProvider {
       );
     }
 
-    // Non-Regression Guard 2: Score Monotonicity (Scores_final >= Scores_initial)
+    // Non-Regression Guard 2: Score Monotonicity with Hysteresis (evaluateScoreTransition)
     if (input.initialReview?.scores && sanitized?.scores) {
       const initScores = input.initialReview.scores;
       sanitized.scores = {
-        searchRelevance: Math.max(sanitized.scores.searchRelevance ?? 0, initScores.searchRelevance ?? 0),
-        humanVoice: Math.max(sanitized.scores.humanVoice ?? 0, initScores.humanVoice ?? 0),
-        credibility: Math.max(sanitized.scores.credibility ?? 0, initScores.credibility ?? 0),
-        positioningClarity: Math.max(sanitized.scores.positioningClarity ?? 0, initScores.positioningClarity ?? 0),
-        evidenceCoverage: Math.max(sanitized.scores.evidenceCoverage ?? 0, initScores.evidenceCoverage ?? 0),
+        searchRelevance: evaluateScoreTransition(initScores.searchRelevance ?? 0, sanitized.scores.searchRelevance ?? 0),
+        humanVoice: evaluateScoreTransition(initScores.humanVoice ?? 0, sanitized.scores.humanVoice ?? 0),
+        credibility: evaluateScoreTransition(initScores.credibility ?? 0, sanitized.scores.credibility ?? 0),
+        positioningClarity: evaluateScoreTransition(initScores.positioningClarity ?? 0, sanitized.scores.positioningClarity ?? 0),
+        evidenceCoverage: evaluateScoreTransition(initScores.evidenceCoverage ?? 0, sanitized.scores.evidenceCoverage ?? 0),
       };
 
       if (typeof input.initialReview.overallScore === 'number') {
-        sanitized.overallScore = Math.max(sanitized.overallScore ?? 0, input.initialReview.overallScore);
+        sanitized.overallScore = evaluateScoreTransition(
+          input.initialReview.overallScore,
+          sanitized.overallScore ?? 0,
+        );
       }
+    }
+
+    // Inbound Data Guard: Ensure 5 Open to Work titles and conversion badges
+    if (!sanitized?.rewritten?.openToWorkTitles || sanitized.rewritten.openToWorkTitles.length < 5) {
+      if (!sanitized.rewritten) sanitized.rewritten = {} as any;
+      sanitized.rewritten.openToWorkTitles = deriveOpenToWorkTitles(
+        input.objective.primaryRole,
+        input.initialReview?.profileDirection?.alternativeRoles,
+      );
+    }
+    if (!sanitized?.rewritten?.cardConversionBadges || sanitized.rewritten.cardConversionBadges.length === 0) {
+      const derived = deriveCardConversionBadges(input.profile, sanitized?.rewritten?.headline);
+      sanitized.rewritten.cardConversionBadges = derived.badges;
+      sanitized.rewritten.cardConversionReasons = derived.reasons;
     }
 
     // Preserve triageBottlenecks from initial review if not populated

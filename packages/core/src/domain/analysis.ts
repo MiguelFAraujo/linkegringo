@@ -55,7 +55,16 @@ export type ScoreExplanations = z.infer<typeof scoreExplanationsSchema>;
 export const profileDirectionSchema = z.object({
   positioning: z.string(),
   primaryRole: z.string(),
-  alternativeRoles: z.array(z.string()).default([]),
+  alternativeRoles: z.preprocess((val) => {
+    if (Array.isArray(val)) return val.map(String);
+    if (typeof val === 'string' && val.trim()) return [val.trim()];
+    return [];
+  }, z.array(z.string()).default([])),
+  openToWorkTitles: z.preprocess((val) => {
+    if (Array.isArray(val)) return val.map(String);
+    if (typeof val === 'string' && val.trim()) return [val.trim()];
+    return undefined;
+  }, z.array(z.string()).optional()),
   rationale: z.string(),
 });
 export type ProfileDirection = z.infer<typeof profileDirectionSchema>;
@@ -99,6 +108,21 @@ export const rewrittenProfileSchema = z.object({
     }
     return [];
   }, z.array(z.string()).default([])),
+  openToWorkTitles: z.preprocess((val) => {
+    if (Array.isArray(val)) return val.map(String);
+    if (typeof val === 'string' && val.trim()) return [val.trim()];
+    return undefined;
+  }, z.array(z.string()).optional()),
+  cardConversionBadges: z.preprocess((val) => {
+    if (Array.isArray(val)) return val.map(String);
+    if (typeof val === 'string' && val.trim()) return [val.trim()];
+    return undefined;
+  }, z.array(z.string()).optional()),
+  cardConversionReasons: z.preprocess((val) => {
+    if (Array.isArray(val)) return val.map(String);
+    if (typeof val === 'string' && val.trim()) return [val.trim()];
+    return undefined;
+  }, z.array(z.string()).optional()),
 });
 export type RewrittenProfile = z.infer<typeof rewrittenProfileSchema>;
 

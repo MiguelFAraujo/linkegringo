@@ -8,12 +8,9 @@ import {
   Sparkles,
   Copy,
   Check,
-  TrendingUp,
-  ListChecks,
   FileText,
   Briefcase,
   Layers,
-  ExternalLink,
   BarChart3,
   ShieldCheck,
   Target,
@@ -24,19 +21,15 @@ import { copyToClipboard } from '@/lib/file-utils';
 import { InterviewGuideCard } from './InterviewGuideCard';
 import { FormattedText } from './ui/formatted-text';
 import { CandidateAvatar } from './ui/candidate-avatar';
+import { RecruiterSearchCard } from './RecruiterSearchCard';
+import { LinkedInLaunchChecklist } from './LinkedInLaunchChecklist';
+import { RecruiterSearchSimulator } from './RecruiterSearchSimulator';
 
 interface ActionHubViewProps {
   originalProfile: Profile;
   initialReview?: ProfileReview;
   analysis: ProfileAnalysis;
   onStartNew: () => void;
-}
-
-interface ChecklistItem {
-  id: string;
-  label: string;
-  detail: string;
-  completed: boolean;
 }
 
 export function ActionHubView({
@@ -96,52 +89,6 @@ export function ActionHubView({
   // Copy states
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
-  // 5-Minute Checklist State (6 Critical LinkedIn Recruiter Actions)
-  const [checklist, setChecklist] = useState<ChecklistItem[]>([
-    {
-      id: 'step-headline-about',
-      label: '1. Atualize Headline e About no LinkedIn',
-      detail: 'Cole o novo título estratégico e o About em inglês americano com hook direto de 2 linhas.',
-      completed: false,
-    },
-    {
-      id: 'step-experience',
-      label: '2. Atualize os Bullets das Experiências',
-      detail: 'Substitua descrições passivas pelos novos bullet points orientados a impacto (Framework XYZ).',
-      completed: false,
-    },
-    {
-      id: 'step-opentowork',
-      label: '3. Ative "Open to Work" Invisível ("Apenas Recrutadores")',
-      detail: 'Configure a visibilidade para recrutadores, modelo Remoto e localidade Estados Unidos (Spotlight).',
-      completed: false,
-    },
-    {
-      id: 'step-secondary-profile',
-      label: '4. Crie o Perfil Secundário em Inglês',
-      detail: 'Use a opção "Adicionar perfil em outro idioma" para indexação nativa no algoritmo de busca dos EUA.',
-      completed: false,
-    },
-    {
-      id: 'step-company-pages',
-      label: '5. Vincule experiências às Páginas Oficiais',
-      detail: 'Conecte cada cargo à Company Page oficial no LinkedIn, eliminando os logotipos cinzas não verificados.',
-      completed: false,
-    },
-    {
-      id: 'step-featured-skills',
-      label: '6. Configure Seção em Destaque & Top Skills',
-      detail: 'Fixe GitHub e artigos técnicos no Featured, e ordene as 3 a 5 principais competências do seu cargo.',
-      completed: false,
-    },
-  ]);
-
-  const handleToggleChecklist = (id: string) => {
-    setChecklist((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, completed: !item.completed } : item)),
-    );
-  };
-
   const handleCopy = async (text: string, key: string) => {
     const ok = await copyToClipboard(text);
     if (ok) {
@@ -166,8 +113,6 @@ export function ActionHubView({
     lines.push(analysis.rewritten.skills.join(', '));
     return lines.join('\n');
   };
-
-  const completedChecklistCount = checklist.filter((i) => i.completed).length;
 
   return (
     <div className="max-w-[1600px] mx-auto w-full space-y-8 animate-in fade-in duration-300 pb-16">
@@ -275,6 +220,15 @@ export function ActionHubView({
           </Button>
         </div>
       </Card>
+
+      {/* Recruiter Search Card Hero (Antes vs Depois) */}
+      <RecruiterSearchCard
+        originalProfile={originalProfile}
+        rewrittenHeadline={analysis.rewritten.headline}
+        primaryRole={analysis.profileDirection.primaryRole}
+        badges={analysis.rewritten.cardConversionBadges}
+        reasons={analysis.rewritten.cardConversionReasons}
+      />
 
       {/* Level 1: 5 Technical Criteria Horizontal Ruler */}
       <Card className="border-[#1E293B] bg-[#0F1623]/80 shadow-xl">
@@ -644,93 +598,21 @@ export function ActionHubView({
         </Tabs>
       </div>
 
-      {/* Level 3: 5-Minute Interactive Checklist in Full Width (Consecutive Row) */}
-      <Card className="border-[#1E293B] bg-[#0F1623]/80 shadow-xl w-full">
-        <CardHeader className="p-5 sm:p-6 pb-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <ListChecks className="w-4 h-4 text-blue-400" />
-                <CardTitle className="text-base sm:text-lg font-bold text-white tracking-tight">
-                  Passos para atualizar o LinkedIn
-                </CardTitle>
-              </div>
-              <CardDescription className="text-xs text-slate-400">
-                Abra o LinkedIn em outra aba e marque os itens conforme atualizar seu perfil.
-              </CardDescription>
-            </div>
+      {/* Recruiter Search Simulator (Boolean & Natural Language) */}
+      <RecruiterSearchSimulator
+        primaryRole={analysis.profileDirection.primaryRole || 'Senior Software Engineer'}
+        rewrittenHeadline={analysis.rewritten.headline}
+        rewrittenSummary={analysis.rewritten.summary}
+        rewrittenSkills={analysis.rewritten.skills}
+        rewrittenExperiences={analysis.rewritten.experiences}
+      />
 
-            <div className="flex items-center gap-3 self-start sm:self-auto">
-              <Badge variant="outline" className="text-xs text-slate-300 border-[#1E293B] bg-[#090D14] font-mono">
-                {completedChecklistCount} / {checklist.length} concluídos
-              </Badge>
-
-              <a
-                href="https://www.linkedin.com/in/me/"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 font-semibold"
-              >
-                <span>Abrir perfil no LinkedIn</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            </div>
-          </div>
-        </CardHeader>
-
-        <CardContent className="p-5 sm:p-6 pt-0">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-            {checklist.map((item) => (
-              <div
-                key={item.id}
-                role="checkbox"
-                aria-checked={item.completed}
-                tabIndex={0}
-                onClick={() => handleToggleChecklist(item.id)}
-                onKeyDown={(e) => {
-                  if (e.key === ' ' || e.key === 'Enter') {
-                    e.preventDefault();
-                    handleToggleChecklist(item.id);
-                  }
-                }}
-                className={`flex flex-col justify-between p-4 rounded-xl border transition-all cursor-pointer select-none focus:outline-none focus:ring-1 focus:ring-blue-500/50 ${
-                  item.completed
-                    ? 'border-emerald-500/30 bg-emerald-950/15 text-slate-400'
-                    : 'border-[#1E293B] bg-[#090D14]/60 text-slate-200 hover:border-slate-700 hover:bg-[#090D14]/90'
-                }`}
-              >
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <div
-                      className={`h-5 w-5 rounded flex items-center justify-center transition-colors flex-shrink-0 ${
-                        item.completed
-                          ? 'bg-emerald-500 text-white'
-                          : 'border border-slate-700 bg-slate-900/80'
-                      }`}
-                    >
-                      {item.completed && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-                    </div>
-
-                    <span className="text-[10px] font-mono text-slate-500">
-                      {item.completed ? 'Concluído' : 'Pendente'}
-                    </span>
-                  </div>
-
-                  <p
-                    className={`text-xs sm:text-sm font-semibold leading-tight ${
-                      item.completed ? 'line-through text-slate-500' : 'text-white'
-                    }`}
-                  >
-                    {item.label}
-                  </p>
-
-                  <FormattedText text={item.detail} as="p" className="text-xs text-slate-400 mt-1 leading-relaxed line-clamp-3" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Level 3: LinkedIn Launch Checklist */}
+      <LinkedInLaunchChecklist
+        primaryRole={analysis.profileDirection.primaryRole}
+        alternativeRoles={analysis.profileDirection.alternativeRoles}
+        openToWorkTitles={analysis.rewritten.openToWorkTitles || analysis.profileDirection.openToWorkTitles}
+      />
 
       {/* Level 4: Interview Preparation Guide in Full Width (Consecutive Row) */}
       <div className="w-full">

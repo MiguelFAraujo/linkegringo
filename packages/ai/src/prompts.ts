@@ -74,6 +74,11 @@ A senior US technical recruiter looks beyond basic disqualifiers to spot nuances
 4. Summary Density (> 2.000 characters): While technically rich, dense summaries of 2.000+ chars compete with experience bullets in the 6-second F-pattern scan. Flag as: "Ponto de atenção na triagem: O resumo é denso e concorre com as experiências na triagem rápida de 6 segundos. Recomendamos condensar para 1.200–1.600 caracteres com parágrafos curtos de 2-3 linhas e bullets."
 5. Stack Asymmetry & Backend-Leaning Full Stack: When a candidate targets "Senior Full Stack" and demonstrates heavy backend depth alongside supporting frontend work (React, Vue, TS, etc.), treat this as a high-value competitive advantage ("Backend-Leaning Full Stack"). Do NOT penalize positioning clarity or suggest abandoning Full Stack; instead, flag the opportunity to surface quantifiable frontend metrics (rendering speed, component libraries, state management) during the interview. Only flag a critical triage bottleneck if a candidate claims Full Stack but has literally ZERO frontend or client-side evidence anywhere in their profile.
 
+BRAZILIAN CAREER NORMALIZATION & PJ CONTRACT RECOGNITION:
+1. PJ & Project Consulting Normalization: In the Brazilian tech ecosystem, working as PJ (Pessoa Jurídica / B2B consulting contractor) or short-term project engagements (< 12 months) is standard industry practice. Stints < 12 months under consulting or PJ contracts are legitimate consulting engagements, NOT job-hopping or instability. Do NOT penalize PJ contracts as red flags.
+2. Demonstrated Scope (L3-L6): Evaluate candidates strictly by demonstrated technical scope, architectural judgment, and ownership (L3 Junior, L4 Mid-level, L5 Senior, L6 Staff/Principal), NOT tenure length or corporate job titles.
+3. Decouple Evidence Score from Seniority Level: Evidence score (0-100) measures how rigorously, credibly, and measurably the candidate's actual work is communicated. An L3 or L4 engineer with authentic technical mechanisms and clear impact CAN and SHOULD score 95-100 relative to their target role. Perfection is relative to target seniority, decoupled from hierarchical level.
+
 LINKEDIN RECRUITER ESSENTIAL SIGNALS (CRITICAL SEARCH BEHAVIORS):
 1. Language Settings: Ensure candidate has an official secondary profile in English ("Add profile in another language") so US recruiters filtering by English find the profile directly.
 2. Open to Work Spotlight: Recommend activating "Open to Work" in invisible mode ("Recruiters only") with Target Location "United States" and Job Type "Remote" (prioritizes profile in the LinkedIn Recruiter Spotlight filter without the public green badge).
@@ -129,7 +134,7 @@ NDA, PROXY METRICS & STRICT TECHNICAL DEPTH:
 - US Tech Recruiters and hiring managers explicitly respect non-disclosure agreements (NDAs) and confidentiality. Engineers frequently cannot disclose internal revenue, billing volume, or dollar ($) figures.
 - OPERATIONAL & BUSINESS PROXY METRICS ARE FIRST-CLASS CITIZENS: Metrics such as "% of compliance/reliability", "zero unbilled leakage across N accounts", "number of business accounts/tenants served", "p99 latency in ms", "RPS/QPS", "error rate reduction (%)", and "SLAs/uptime (99.99%)" carry 100% EQUAL WEIGHT to dollar ($) figures.
 - ZERO PHANTOM DEDUCTIONS FOR MISSING CURRENCY: If an experience bullet provides quantified operational impact, scale, or compliance (e.g. "Guaranteed 100% financial transaction processing reliability for 200+ multi-number business accounts by engineering an asynchronous BullMQ queue layer with Redis and PostgreSQL idempotency key persistence"), calibrate Evidence Coverage in the high senior tier (93–97 pts). NEVER deduct points, cap scores below 90, or demand dollar ($) figures when strong operational or proxy metrics are present.
-- ZERO HALLUCINATED NUMBERS: You must NEVER invent, fabricate, or hallucinate arbitrary numbers, percentages, or metrics that the candidate did not state. If numbers are not present, prompt the candidate to estimate order of magnitude, but NEVER invent figures.
+- ZERO HALLUCINATED NUMBERS & METRIC CONTRADICTION ELIMINATION: You must NEVER invent, fabricate, or hallucinate arbitrary numbers, percentages, or metrics that the candidate did not state. Never introduce a metric unless explicitly supported by candidate evidence or confirmed facts. When no metric exists, preserve the factual claim with its authentic technical mechanism or leave the outcome qualitative.
 - HIGH RIGOR AGAINST SHALLOW OR SUPERFICIAL BULLETS (STRICT DEPTH ENFORCEMENT): Accepting proxy metrics does NOT mean accepting low standards. If a description is shallow or generic (e.g. "corrigi o problema de pagamento", "otimizei o banco de dados"), it MUST be penalized in Evidence Coverage and flagged in critique. To score in the elite tier (95+), every bullet must present the complete engineering triad:
   1) The specific operational challenge/bottleneck.
   2) The technical/architectural mechanism (e.g., BullMQ async queue layer, Redis caching, PostgreSQL idempotency keys).
@@ -254,7 +259,7 @@ You MUST deliberate systematically in the top-level "reasoning" field before pro
 
 FEW-SHOT CALIBRATION DEMONSTRATIONS:
 
---- DEMO 1: UNOPTIMIZED PROFILE (Portuguese, Passive Duties, Missing Metrics) ---
+--- DEMO A: UNOPTIMIZED PROFILE (35-50) (Portuguese, Passive Duties, Missing Metrics) ---
 Input Profile:
 - Headline: "Desenvolvedor Backend | Java | Spring Boot | Microserviços | Buscando desafios"
 - Summary: "Desenvolvedor com mais de 6 anos de experiência em tecnologia. Apaixonado por código limpo e boas práticas..."
@@ -276,7 +281,7 @@ CoT Reasoning & Deductions:
 - calculatedScores:
   * searchRelevance: 48, humanVoice: 52, credibility: 38, positioningClarity: 35, evidenceCoverage: 37, overallScore: 42
 
---- DEMO 2: ALREADY OPTIMIZED PROFILE (Natural English, Strong XYZ Metrics, Senior Focus) ---
+--- DEMO B: ALREADY OPTIMIZED / ELITE PROFILE (96-98) (Natural English, Strong XYZ Metrics, Senior Focus) ---
 Input Profile:
 - Headline: "Senior Backend Engineer | Distributed Systems & High-Throughput APIs | Java, Spring Boot, Kafka | AWS"
 - Summary: "Senior Backend Engineer with 7+ years architecting fault-tolerant distributed systems. Handled 20M+ daily transactions..."
@@ -296,7 +301,29 @@ CoT Reasoning & Deductions:
   * positioningClarity: startingScore 100, deductions 0. Rationale: Arquétipo sênior inequívoco e alinhamento impecável entre todas as seções.
   * credibility: startingScore 100, deductions 8. Rationale: Permanência de 10 meses na última empresa exige narrativa assertiva de transição de escopo.
 - calculatedScores:
-  * searchRelevance: 100, humanVoice: 94, credibility: 92, positioningClarity: 100, evidenceCoverage: 100, overallScore: 96`;
+  * searchRelevance: 100, humanVoice: 94, credibility: 92, positioningClarity: 100, evidenceCoverage: 100, overallScore: 96
+
+--- DEMO C: BRAZILIAN CAREER NORMALIZATION & NDA PROXY METRICS (93-95) ---
+Input Profile:
+- Headline: "Senior Backend Engineer | Java, Spring Boot, Kafka | Distributed Systems & High-Throughput APIs | AWS"
+- Summary: "Senior Backend Engineer with 6+ years designing scalable distributed architectures. Delivered event-driven microservices handling 15M daily messages..."
+- Experience: "Fintech Pagamentos Brasil (Senior Backend Engineer, 2 anos) - Guaranteed 100% financial transaction processing reliability for 200+ business accounts with BullMQ queue layer and Redis/PostgreSQL idempotency keys... | Tech Consulting (Consultor PJ, 8 meses) - Concluded project contract delivering event-driven Kafka pipeline with zero downtime."
+CoT Reasoning & Deductions:
+- evidenceInventory:
+  * detectedLanguage: 100% natural American English across all sections.
+  * headlineAnalysis: Senior role anchor with high-signal keywords and system scale.
+  * quantifiableMetricsCount: 6
+  * qualitativeClaims: 'monitoring and observability dashboards' descrita com mecanismo Datadog claro mas métrica qualitativa.
+  * recentStintsUnderOneYear: Tech Consulting (8 meses, contrato PJ legítimo de consultoria por escopo concluído).
+  * pdfSkillsLimitationNoticed: true
+- rubricAuditAndDeductions:
+  * humanVoice: startingScore 100, deductions 5. Rationale: Tom executivo sóbrio e natural em inglês americano.
+  * evidenceCoverage: startingScore 100, deductions 7. Rationale: Robustas métricas sob NDA (100% conformidade em 200+ contas) na experiência principal; ponto de atenção consultivo em 1 bullet qualitativo.
+  * searchRelevance: startingScore 100, deductions 2. Rationale: Headline de alto sinal com stack central devidamente indexável para boolean search.
+  * positioningClarity: startingScore 100, deductions 3. Rationale: Arquétipo sênior claro e alinhado entre headline e experiências.
+  * credibility: startingScore 100, deductions 7. Rationale: Contrato PJ de 8 meses normalizado como consultoria legítima; requer preparo de narrativa assertiva na entrevista.
+- calculatedScores:
+  * searchRelevance: 98, humanVoice: 95, credibility: 93, positioningClarity: 97, evidenceCoverage: 93, overallScore: 94`;
 
 export function buildDiagnoseProfilePrompt(
   profile: Profile,
@@ -654,8 +681,9 @@ Key Principles for US Tech Positioning:
      * ELEVATE ORIGINAL SCOPE, NEVER DISCARD: Do NOT delete original responsibilities just because the original text was qualitative or passive. Instead, transform EVERY distinct responsibility from the candidate's original description into an elevated Google XYZ bullet by pairing the real engineering mechanism (tools, languages, architectures) with realistic production outcomes (e.g. 99.9% uptime, zero-downtime deployments, sub-100ms response times, automated CI/CD throughput).
      * SEAMLESS INTEGRATION OF INTERVIEW DISCOVERIES: Every confirmed fact and discovery from the interview (e.g., subscription billing loophole fix with BullMQ + Redis + PostgreSQL idempotency keys across 200+ accounts, database indexing with EXPLAIN ANALYZE, Datadog observability dashboards, incident post-mortems) MUST be explicitly materialized as a high-impact bullet under the relevant company (or woven into the About summary). Adding interview facts must ENRICH the experience, NEVER replace or wipe out the candidate's other daily responsibilities!
    - 100% GOOGLE XYZ BULLETS INVARIANT: Every single bullet point in every experience MUST strictly adhere to the Google XYZ formula: "Accomplished [X], measured by [Y], by doing [Z]".
-   - Lead with strong past-tense action verbs (Architected, Engineered, Optimized, Spearheaded, Reduced, Designed, Instituted).
-   - Preserve all authentic technologies: Ensure all languages, frameworks, databases, and message brokers mentioned (e.g. Java, Spring Boot, BullMQ, Redis, PostgreSQL, Kafka, AWS, Docker) remain clearly stated.
+    - Lead with strong past-tense action verbs (Architected, Engineered, Optimized, Spearheaded, Reduced, Designed, Instituted).
+    - Preserve all authentic technologies: Ensure all languages, frameworks, databases, and message brokers mentioned (e.g. Java, Spring Boot, BullMQ, Redis, PostgreSQL, Kafka, AWS, Docker) remain clearly stated.
+    - METRIC CONTRADICTION ELIMINATION: Never introduce a metric unless explicitly supported by candidate evidence or confirmed facts. When no metric exists, preserve the factual claim with its authentic technical mechanism or leave the outcome qualitative.
 4. SKILLS:
    - Curate and order the top 15-25 skills prioritized for semantic search and ATS matching in the target role.
 5. EVOLUTION OF SCORE & STRICT NON-REGRESSION RULE:
@@ -679,7 +707,11 @@ Key Principles for US Tech Positioning:
      \n\n
      5. Paragraph 5: 1-line closing bridge for international US remote opportunities.
 7. HARD GRAMMATICAL RULE:
-   - NEVER use em dash (—) or en dash (–) anywhere in rewritten content. Use commas, colons, hyphens (-), or parentheses instead.`;
+   - NEVER use em dash (—) or en dash (–) anywhere in rewritten content. Use commas, colons, hyphens (-), or parentheses instead.
+8. STRUCTURED INBOUND RECRUITER DATA:
+   - openToWorkTitles: You MUST emit an array of exactly 5 high-converting job titles optimized for the LinkedIn Open to Work spotlight filter (e.g. ["Senior Backend Engineer", "Senior Software Engineer", "Distributed Systems Engineer", "Backend Tech Lead", "Senior Cloud Engineer"]).
+   - cardConversionBadges: Emit 3 conversion badges ("Cargo semântico", "Stack de alta busca", "Senioridade clara").
+   - cardConversionReasons: Provide concise Portuguese explanations of why the candidate's rewritten headline and search card snippet will convert US recruiters in search results.`;
 
 export function buildRewriteProfilePrompt(
   profile: Profile,
@@ -730,10 +762,15 @@ PROFILE REWRITE ATS RULES & HARD CONSTRAINTS:
    - Current / Recent Senior Roles: Strictly 3 to 5 exhaustive Google XYZ bullets ("Accomplished [X], measured by [Y], by doing [Z]"). Allow up to 5 to 7 bullets for broad-scope roles where the candidate owned multiple disciplines: frontend, backend, databases, infrastructure, CI/CD.
    - Earlier Roles: Strictly 2 to 4 robust Google XYZ bullets.
    - Zero information loss: Elevate EVERY original responsibility into Google XYZ format. If candidate did both frontend and backend, represent both with high-impact bullets. Never discard original candidate work when integrating interview facts.
+   - Metric Contradiction Elimination: Never introduce a metric unless explicitly supported by candidate evidence or confirmed facts. When no metric exists, preserve the factual claim with its authentic technical mechanism or leave the outcome qualitative.
 4. Invariant N -> N (Company Preservation):
    Preserve every single company from the original profile (all N original companies in profile.experiences) in rewritten.experiences without omitting any.
 5. Exhaustive Integration of Discovered Achievements:
    - Ensure every confirmed fact and interview detail (e.g. BullMQ subscription loophole fix, database query tuning, observability, incident post-mortems) is explicitly represented in the appropriate experience or About section.
+6. Structured Inbound Recruiter Data:
+   - Emit exactly 5 target titles for Open to Work in "openToWorkTitles".
+   - Emit 3 conversion badges in "cardConversionBadges" ("Cargo semântico", "Stack de alta busca", "Senioridade clara").
+   - Emit recruiter conversion rationale in "cardConversionReasons".
 
 Target Objective:
 ${JSON.stringify(objective, null, 2)}

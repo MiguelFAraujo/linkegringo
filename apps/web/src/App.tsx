@@ -26,20 +26,23 @@ import {
   clearStoredChatHistory,
 } from './lib/storage';
 import { createAiProvider, formatCurrentDate } from '@linkegringo/ai';
-import type {
-  AiProvider,
-  CareerObjective,
-  ConfirmedFact,
-  InterviewAnswer,
-  InterviewPlan,
-  Profile,
-  ProfileAnalysis,
-  ProfileReview,
+import {
+  type AiProvider,
+  type CareerObjective,
+  type ConfirmedFact,
+  type InterviewAnswer,
+  type InterviewPlan,
+  type Profile,
+  type ProfileAnalysis,
+  type ProfileReview,
+  getCandidateIdentityKey,
+  evaluateScoreTransition,
 } from '@linkegringo/core';
 
 export type FlowStep = 'upload' | 'diagnostic' | 'interview' | 'facts' | 'action-hub';
 
 interface SessionState {
+  candidateKey?: string;
   step: FlowStep;
   profile?: Profile;
   review?: ProfileReview;
@@ -168,6 +171,7 @@ export function App() {
       }
 
       const stateToSave: SessionState = {
+        candidateKey: getCandidateIdentityKey(profile),
         step,
         profile,
         review,
@@ -204,6 +208,24 @@ export function App() {
         targetRole: uploadData.targetRole,
         currentDate,
       });
+
+      const newCandidateKey = getCandidateIdentityKey(parsedProfile);
+      const storedSession = getStoredSession<SessionState>();
+      const prevCandidateKey = profile
+        ? getCandidateIdentityKey(profile)
+        : (storedSession?.candidateKey || null);
+
+      // Candidate isolation: if a different candidate or new profile is uploaded, reset interview/facts/analysis
+      if (prevCandidateKey && prevCandidateKey !== newCandidateKey) {
+        setInterviewPlan(null);
+        setInterviewAnswers([]);
+        setInterviewRound(1);
+        setFacts([]);
+        setAnalysis(null);
+        clearStoredChatHistory();
+        clearStoredSession();
+        providerRef.current = null;
+      }
 
       const history = provider.getChatHistory?.();
       if (history && history.length > 0) {
@@ -250,6 +272,21 @@ export function App() {
         targetRole,
         currentDate,
       });
+
+      const demoCandidateKey = getCandidateIdentityKey(demoProfile);
+      const storedSession = getStoredSession<SessionState>();
+      const prevCandidateKey = profile
+        ? getCandidateIdentityKey(profile)
+        : (storedSession?.candidateKey || null);
+      if (prevCandidateKey && prevCandidateKey !== demoCandidateKey) {
+        setInterviewPlan(null);
+        setInterviewAnswers([]);
+        setInterviewRound(1);
+        setFacts([]);
+        setAnalysis(null);
+        clearStoredChatHistory();
+        clearStoredSession();
+      }
 
       const history = provider.getChatHistory?.();
       if (history && history.length > 0) {
@@ -432,12 +469,27 @@ export function App() {
         interviewAnswers,
       });
 
+      const initialScore = review?.overallScore ?? finalAnalysis.initialScore ?? 42;
+      const initialScores = review?.scores;
+
+      const stabilizedScores = evaluateScoreTransition(
+        { overallScore: initialScore, scores: initialScores },
+        { overallScore: finalAnalysis.overallScore, scores: finalAnalysis.scores },
+        { noiseBand: 2, monotonic: true },
+      );
+
+      const stabilizedAnalysis: ProfileAnalysis = {
+        ...finalAnalysis,
+        overallScore: stabilizedScores.overallScore,
+        scores: stabilizedScores.scores || finalAnalysis.scores,
+      };
+
       const history = provider.getChatHistory?.();
       if (history && history.length > 0) {
         setStoredChatHistory(history);
       }
 
-      setAnalysis(finalAnalysis);
+      setAnalysis(stabilizedAnalysis);
       setStep('action-hub');
     } catch (err: any) {
       console.error('Erro ao gerar perfil final:', err);
