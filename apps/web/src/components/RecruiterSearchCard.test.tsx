@@ -36,7 +36,7 @@ describe('RecruiterSearchCard Component', () => {
     expect(screen.getByText('Stack de alta busca')).toBeDefined();
     expect(screen.getByText('Senioridade clara')).toBeDefined();
 
-    expect(screen.getByText(/✨ Por que isso converte em InMail:/i)).toBeDefined();
+    expect(screen.getByText(/Por que isso converte em InMail:/i)).toBeDefined();
     expect(
       screen.getByText(/Alinhado diretamente com o filtro de "Current Job Title" mais utilizado por tech recruiters dos EUA/i),
     ).toBeDefined();

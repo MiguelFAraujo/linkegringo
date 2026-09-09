@@ -1,14 +1,14 @@
-# Guia de Contribuição — LinkeGringo 🤝
+# Guia de Contribuição — LinkeGringo
 
 Obrigado por se interessar em contribuir com o **LinkeGringo**! Este é um projeto open source mantido pela comunidade com o objetivo de abrir as portas do mercado internacional para profissionais de tecnologia brasileiros.
 
 ---
 
-## 💻 Ambiente de Desenvolvimento
+## Ambiente de Desenvolvimento
 
 ### Requisitos
 - **Node.js**: v22 ou superior
-- **pnpm**: v9 ou superior (recomendamos v11)
+- **pnpm**: v11 ou superior
 - Chave de API do **Google AI Studio** (opcional, já que você pode utilizar o **Modo Demo** local para desenvolvimento sem consumir cotas de API).
 
 ### Configuração Inicial
@@ -27,7 +27,7 @@ Acesse `http://localhost:5173` no seu navegador.
 
 ---
 
-## 🧩 Adicionando Novos Provedores de IA
+## Adicionando Novos Provedores de IA
 
 O LinkeGringo possui uma arquitetura desacoplada via Factory pattern em `packages/ai`:
 
@@ -42,16 +42,16 @@ O LinkeGringo possui uma arquitetura desacoplada via Factory pattern em `package
 
 ---
 
-## 🎨 Padrões de Código e UI
+## Padrões de Código e UI
 
 - **TypeScript**: Modo estrito (`strict: true`) em todos os pacotes. Não utilize `any` sem justificativa sólida.
 - **Validação com Zod**: Toda entrada de dados de LLMs e storage local deve ser validada por schemas Zod.
-- **Estilização**: Tailwind CSS v4 com padrão de design inspirado no shadcn/ui. Priorize acessibilidade, contraste visual e responsividade móvel.
+- **Estilização**: Tailwind CSS v4 com padrão de design limpo e acessível. Priorize contraste visual e responsividade móvel.
 - **Sem Segredos**: Nunca inclua chaves de teste ou tokens reais em PRs.
 
 ---
 
-## 🧪 Validação Antes de Abrir PR
+## Validação Antes de Abrir PR
 
 Antes de submeter seu Pull Request, certifique-se de que todos os checks passam:
 
@@ -68,7 +68,7 @@ pnpm --filter @linkegringo/web build
 
 ---
 
-## 🚀 Processo de Pull Request
+## Processo de Pull Request
 
 1. Crie uma branch a partir da `main`:
    ```bash

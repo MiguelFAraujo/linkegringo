@@ -202,7 +202,7 @@ export function RecruiterSearchCard({
             <div className="pt-3 border-t border-emerald-500/20 space-y-2">
               <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-300 uppercase tracking-wider">
                 <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-                <span>✨ Por que isso converte em InMail:</span>
+                <span>Por que isso converte em InMail:</span>
               </div>
               <ul className="space-y-1 text-[11px] text-slate-300 leading-relaxed">
                 {activeReasons.map((reason, idx) => (

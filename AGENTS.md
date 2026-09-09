@@ -4,7 +4,7 @@ Este documento contém o manual operacional e diretrizes arquiteturais para agen
 
 ---
 
-## 🧭 Princípios & Regra de Ouro Inegociável
+## Princípios & Regra de Ouro Inegociável
 
 1. **100% Client-Side (Zero Backend)**:
    - Este projeto **NUNCA** deve introduzir um servidor backend proprietário (Node/Express/Fastify/Go/Python) para intermediar requisições entre o usuário e as APIs de IA.
@@ -23,7 +23,7 @@ Este documento contém o manual operacional e diretrizes arquiteturais para agen
 
 ---
 
-## 🏛️ Padrão `AiProvider` em `packages/ai`
+## Padrão `AiProvider` em `packages/ai`
 
 Todo provedor de IA implementa o contrato definido em `packages/core/src/domain/provider.ts`:
 
@@ -74,7 +74,7 @@ Ao adicionar um novo provedor (ex: OpenAI, Anthropic, Ollama local):
 
 ---
 
-## 📋 Comandos de Validação Obrigatórios
+## Comandos de Validação Obrigatórios
 
 Sempre execute e valide estes comandos antes de concluir qualquer tarefa:
 
@@ -94,7 +94,7 @@ pnpm -r test
 
 ---
 
-## 🏷️ Padrão de Commits
+## Padrão de Commits
 
 Utilize **Conventional Commits**:
 - `feat:` Nova funcionalidade no produto
