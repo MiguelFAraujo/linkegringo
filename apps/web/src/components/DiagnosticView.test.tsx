@@ -26,6 +26,7 @@ describe('DiagnosticView Component', () => {
     const score89Review = {
       ...MOCK_REVIEW,
       overallScore: 89,
+      inboundReadiness: { score: 89 },
     };
 
     render(

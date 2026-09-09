@@ -9,6 +9,9 @@ import {
   profileReviewSchema,
   profileAnalysisSchema,
   critiqueSeveritySchema,
+  profileGapSchema,
+  inboundStageSchema,
+  inboundJourneySchema,
 } from './analysis.js';
 import {
   interviewPlanSchema,
@@ -419,6 +422,45 @@ describe('parseAndDiagnose domain contracts', () => {
     expect(result.profile.firstName).toBe('Alex');
     expect(result.review.triageBottlenecks).toEqual(['Lack of production scale metrics']);
     expect(mockProvider.getChatHistory?.()).toEqual([{ role: 'user', parts: [{ text: 'Hello' }] }]);
+  });
+
+  it('validates ProfileGap rigid typing and required fields', () => {
+    const validGap = {
+      id: 'gap-headline-1',
+      label: 'Alinhar título ao cargo de contratação',
+      targetSection: 'headline',
+      suggestedUnlock: 'Remover termos passivos',
+    };
+    expect(profileGapSchema.parse(validGap)).toEqual(validGap);
+
+    // Invalid targetSection throws
+    expect(() =>
+      profileGapSchema.parse({
+        id: 'gap-invalid',
+        label: 'Invalid section',
+        targetSection: 'education',
+      }),
+    ).toThrow();
+  });
+
+  it('validates InboundStage and InboundJourney runtime Zod schemas', () => {
+    const stage = {
+      id: 'search',
+      name: 'Busca',
+      score: 85,
+      status: 'ready',
+      description: 'Indexação no Recruiter',
+    };
+    expect(inboundStageSchema.parse(stage)).toEqual(stage);
+
+    const journey = {
+      search: stage,
+      card: { ...stage, id: 'card', name: 'Card', status: 'needs_attention' },
+      profile: { ...stage, id: 'profile', name: 'Perfil', status: 'needs_attention' },
+      inmail: { id: 'inmail', name: 'InMail', status: 'not_measurable' },
+      stages: [stage],
+    };
+    expect(inboundJourneySchema.parse(journey).inmail.status).toBe('not_measurable');
   });
 });
 

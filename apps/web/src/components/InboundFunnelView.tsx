@@ -13,7 +13,11 @@ import {
   CheckCircle2,
   Sparkles,
 } from 'lucide-react';
-import type { ProfileReview } from '@linkegringo/core';
+import {
+  type ProfileReview,
+  calculateInboundReadiness,
+  calculateInboundJourney,
+} from '@linkegringo/core';
 import { FormattedText } from './ui/formatted-text';
 
 export interface InboundFunnelViewProps {
@@ -27,15 +31,25 @@ export function InboundFunnelView({
   targetRole,
   onProceed,
 }: InboundFunnelViewProps) {
-  const isApproved = review.overallScore >= 90;
   const targetJob = targetRole || review.profileDirection?.primaryRole || 'Senior Software Engineer';
 
+  // Deterministic Inbound Readiness & Funnel
+  const inboundScore =
+    review.inboundReadiness?.score ??
+    review.overallScore ??
+    (review.scores ? calculateInboundReadiness(review.scores) : 0);
+  const journey = review.scores ? calculateInboundJourney(review.scores) : undefined;
+
+  const isApproved = inboundScore >= 90;
+
   // 4-stage funnel scores
-  const searchScore = review.scores?.searchRelevance ?? Math.min(100, Math.round(review.overallScore * 0.95));
-  const cardScore = review.scores?.positioningClarity ?? Math.min(100, Math.round(review.overallScore * 0.9));
-  const profileScore = Math.round(
-    ((review.scores?.credibility ?? review.overallScore) + (review.scores?.evidenceCoverage ?? review.overallScore)) / 2,
-  );
+  const searchScore = journey?.search.score ?? review.scores?.searchRelevance ?? Math.min(100, Math.round(review.overallScore * 0.95));
+  const cardScore = journey?.card.score ?? review.scores?.positioningClarity ?? Math.min(100, Math.round(review.overallScore * 0.9));
+  const profileScore =
+    journey?.profile.score ??
+    Math.round(
+      ((review.scores?.credibility ?? review.overallScore) + (review.scores?.evidenceCoverage ?? review.overallScore)) / 2,
+    );
 
   // InMail conversion estimation
   const getInmailTier = (score: number) => {
@@ -150,7 +164,7 @@ export function InboundFunnelView({
 
           <div className="flex items-center gap-2 bg-[#090D14]/80 px-3.5 py-2 rounded-xl border border-[#1E293B] self-stretch sm:self-auto justify-between sm:justify-start">
             <span className="text-xs text-slate-400 font-medium">Inbound Readiness:</span>
-            <span className="text-sm font-bold font-mono text-white">{review.overallScore}%</span>
+            <span className="text-sm font-bold font-mono text-white">{inboundScore}%</span>
           </div>
         </div>
 

@@ -13,6 +13,7 @@ import {
   Terminal,
 } from 'lucide-react';
 import { FormattedText } from './ui/formatted-text';
+import type { ProfileGap } from '@linkegringo/core';
 
 export interface RecruiterSearchSimulatorProps {
   primaryRole: string;
@@ -24,6 +25,7 @@ export interface RecruiterSearchSimulatorProps {
     companyName: string;
     bullets: string[];
   }>;
+  onFixGap?: (gap: ProfileGap) => void;
 }
 
 interface TermMatchResult {
@@ -88,6 +90,7 @@ export function RecruiterSearchSimulator({
   rewrittenSummary,
   rewrittenSkills,
   rewrittenExperiences,
+  onFixGap,
 }: RecruiterSearchSimulatorProps) {
   // Preset queries tailored to the candidate's profile
   const presetQueries = useMemo(() => {
@@ -288,6 +291,28 @@ export function RecruiterSearchSimulator({
                 <span className="text-[10px] text-slate-400 block">
                   {res.location}
                 </span>
+
+                {res.status === 'missing' && onFixGap && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const termLower = res.term.toLowerCase();
+                      const isRole = /senior|staff|lead|principal|architect|engineer|developer|manager/i.test(termLower);
+                      const isExp = /latency|throughput|scale|microservices|distributed|pipeline|cloud|aws/i.test(termLower);
+                      const targetSection = isRole ? 'headline' : isExp ? 'experience' : 'skills';
+                      onFixGap({
+                        id: `gap-${termLower.replace(/[^a-z0-9]/g, '-')}`,
+                        label: `Corrigir termo ausente: ${res.term}`,
+                        targetSection,
+                        targetBlockId: `profile-section-${targetSection}`,
+                        suggestedUnlock: `Adicionar "${res.term}" na seção de ${targetSection} para garantir indexação no LinkedIn Recruiter.`,
+                      });
+                    }}
+                    className="mt-1.5 inline-flex items-center justify-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-md bg-blue-600/20 text-blue-300 hover:bg-blue-600/30 border border-blue-500/40 cursor-pointer transition-colors"
+                  >
+                    <span>Corrigir no Perfil →</span>
+                  </button>
+                )}
               </div>
             ))}
           </div>

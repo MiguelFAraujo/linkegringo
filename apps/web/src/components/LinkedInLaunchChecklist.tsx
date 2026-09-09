@@ -9,6 +9,7 @@ import {
   ExternalLink,
   Target,
   Sparkles,
+  Info,
 } from 'lucide-react';
 import { copyToClipboard } from '@/lib/file-utils';
 import { deriveOpenToWorkTitles } from '@linkegringo/core';
@@ -20,10 +21,13 @@ export interface LinkedInLaunchChecklistProps {
   openToWorkTitles?: string[];
 }
 
+export type LaunchItemStatus = 'todo' | 'in_progress' | 'done';
+
 interface ChecklistItem {
   id: string;
   label: string;
   detail: string;
+  status: LaunchItemStatus;
   completed: boolean;
 }
 
@@ -45,43 +49,71 @@ export function LinkedInLaunchChecklist({
       id: 'step-headline-about',
       label: '1. Atualize Headline e About no LinkedIn',
       detail: 'Cole o novo título estratégico e o About em inglês americano com hook direto de 2 linhas.',
+      status: 'todo',
       completed: false,
     },
     {
       id: 'step-experience',
       label: '2. Atualize os Bullets das Experiências',
       detail: 'Substitua descrições passivas pelos novos bullet points orientados a impacto (Framework XYZ).',
+      status: 'todo',
       completed: false,
     },
     {
       id: 'step-opentowork',
       label: '3. Ative "Open to Work" Invisível ("Apenas Recrutadores")',
       detail: 'Configure a visibilidade para recrutadores, modelo Remoto e localidade Estados Unidos (Spotlight).',
+      status: 'todo',
       completed: false,
     },
     {
       id: 'step-secondary-profile',
       label: '4. Crie o Perfil Secundário em Inglês',
       detail: 'Use a opção "Adicionar perfil em outro idioma" para indexação nativa no algoritmo de busca dos EUA.',
+      status: 'todo',
       completed: false,
     },
     {
       id: 'step-company-pages',
       label: '5. Vincule experiências às Páginas Oficiais',
       detail: 'Conecte cada cargo à Company Page oficial no LinkedIn, eliminando os logotipos cinzas não verificados.',
+      status: 'todo',
       completed: false,
     },
     {
       id: 'step-featured-skills',
       label: '6. Configure Seção em Destaque & Top Skills',
       detail: 'Fixe GitHub e artigos técnicos no Featured, e ordene as 3 a 5 principais competências do seu cargo.',
+      status: 'todo',
       completed: false,
     },
   ]);
 
   const handleToggle = (id: string) => {
     setChecklist((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, completed: !item.completed } : item)),
+      prev.map((item) => {
+        if (item.id !== id) return item;
+        const nextCompleted = !item.completed;
+        return {
+          ...item,
+          completed: nextCompleted,
+          status: nextCompleted ? 'done' : 'todo',
+        };
+      }),
+    );
+  };
+
+  const handleSetStatus = (id: string, newStatus: LaunchItemStatus, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setChecklist((prev) =>
+      prev.map((item) => {
+        if (item.id !== id) return item;
+        return {
+          ...item,
+          status: newStatus,
+          completed: newStatus === 'done',
+        };
+      }),
     );
   };
 
@@ -109,7 +141,7 @@ export function LinkedInLaunchChecklist({
               </CardTitle>
             </div>
             <CardDescription className="text-xs text-slate-400">
-              Abra o LinkedIn em outra aba e marque os itens conforme atualizar seu perfil.
+              Faça as mudanças que acontecem fora do LinkeGringo. Abra o LinkedIn em outra aba e marque os itens conforme atualizar seu perfil.
             </CardDescription>
           </div>
 
@@ -182,6 +214,14 @@ export function LinkedInLaunchChecklist({
           </div>
         </div>
 
+        {/* Manual LinkedIn Requirement Notice */}
+        <div className="p-3.5 rounded-xl border border-amber-500/30 bg-amber-950/20 flex items-start gap-2.5 text-xs text-amber-200">
+          <Info className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+          <p className="leading-relaxed text-slate-300">
+            <strong className="text-amber-300">Atenção:</strong> Algumas configurações do LinkedIn precisam ser ativadas manualmente no site oficial.
+          </p>
+        </div>
+
         {/* 6 Checklist Grid Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
           {checklist.map((item) => (
@@ -215,9 +255,42 @@ export function LinkedInLaunchChecklist({
                     {item.completed && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                   </div>
 
-                  <span className="text-[10px] font-mono text-slate-500">
-                    {item.completed ? 'Concluído' : 'Pendente'}
-                  </span>
+                  {/* 3 Statuses: ○ To do, ◐ In progress, ✓ Done */}
+                  <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      onClick={(e) => handleSetStatus(item.id, 'todo', e)}
+                      className={`text-[10px] px-1.5 py-0.5 rounded font-mono transition-colors cursor-pointer ${
+                        item.status === 'todo'
+                          ? 'bg-slate-800 text-slate-200 border border-slate-700 font-semibold'
+                          : 'text-slate-500 hover:text-slate-300'
+                      }`}
+                    >
+                      ○ To do
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => handleSetStatus(item.id, 'in_progress', e)}
+                      className={`text-[10px] px-1.5 py-0.5 rounded font-mono transition-colors cursor-pointer ${
+                        item.status === 'in_progress'
+                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 font-semibold'
+                          : 'text-slate-500 hover:text-slate-300'
+                      }`}
+                    >
+                      ◐ In progress
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => handleSetStatus(item.id, 'done', e)}
+                      className={`text-[10px] px-1.5 py-0.5 rounded font-mono transition-colors cursor-pointer ${
+                        item.status === 'done'
+                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-semibold'
+                          : 'text-slate-500 hover:text-slate-300'
+                      }`}
+                    >
+                      ✓ Done
+                    </button>
+                  </div>
                 </div>
 
                 <p

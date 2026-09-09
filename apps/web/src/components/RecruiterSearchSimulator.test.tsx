@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 import { RecruiterSearchSimulator } from './RecruiterSearchSimulator';
@@ -102,5 +102,28 @@ describe('RecruiterSearchSimulator Component', () => {
     expect(screen.getByText('Kafka')).toBeDefined();
     expect(screen.getByText('AWS')).toBeDefined();
     expect(screen.getByText(/3 Match\(es\) • 0 Parcial\(is\)/i)).toBeDefined();
+  });
+
+  it('renders "Corrigir no Perfil →" button for MISSING terms and calls onFixGap with structured ProfileGap', () => {
+    const handleFixGap = vi.fn();
+    render(<RecruiterSearchSimulator {...defaultProps} onFixGap={handleFixGap} />);
+
+    const input = screen.getByPlaceholderText(/Ex: "Senior Backend Engineer"/i);
+    fireEvent.change(input, { target: { value: 'Java AND GraphQL' } });
+
+    // "GraphQL" is MISSING
+    expect(screen.getByText('GraphQL')).toBeDefined();
+    const fixButton = screen.getByRole('button', { name: /Corrigir no Perfil →/i });
+    expect(fixButton).toBeDefined();
+
+    fireEvent.click(fixButton);
+    expect(handleFixGap).toHaveBeenCalledTimes(1);
+    expect(handleFixGap).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'gap-graphql',
+        label: 'Corrigir termo ausente: GraphQL',
+        targetSection: 'skills',
+      }),
+    );
   });
 });

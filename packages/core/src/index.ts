@@ -6,3 +6,4 @@ export * from './domain/interview.js';
 export * from './domain/provider.js';
 export * from './domain/format.js';
 export * from './normalize.js';
+export * from './fixtures/profiles.js';

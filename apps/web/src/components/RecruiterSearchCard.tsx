@@ -34,7 +34,7 @@ export function RecruiterSearchCard({
     `${originalProfile.firstName || ''} ${originalProfile.lastName || ''}`.trim() || 'Candidato';
 
   const defaultBadgesAndReasons = deriveCardConversionBadges(originalProfile, rewrittenHeadline);
-  const activeBadges = badges && badges.length > 0 ? badges : defaultBadgesAndReasons.badges;
+  const activeBadges = (badges && badges.length > 0 ? badges : defaultBadgesAndReasons.badges).slice(0, 3);
   const activeReasons = reasons && reasons.length > 0 ? reasons : defaultBadgesAndReasons.reasons;
 
   const targetRole = primaryRole || 'Senior Software Engineer';
@@ -67,10 +67,10 @@ export function RecruiterSearchCard({
           </div>
         </div>
 
-        {/* Side-by-Side Recruiter Cards: Desktop 2 cols, Mobile stacked */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
-          {/* ANTES (Original) */}
-          <div className="p-5 rounded-2xl border border-rose-500/30 bg-rose-950/10 flex flex-col justify-between space-y-4">
+        {/* Side-by-Side Recruiter Cards: Desktop 12 cols (Before 4 cols ~30% vs After 8 cols ~70%) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+          {/* ANTES (Original - Muted & Compact) */}
+          <div className="lg:col-span-4 p-4 sm:p-5 rounded-2xl border border-rose-500/20 bg-rose-950/10 opacity-80 flex flex-col justify-between space-y-4">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-rose-400 flex items-center gap-1.5">
@@ -134,8 +134,8 @@ export function RecruiterSearchCard({
             </div>
           </div>
 
-          {/* DEPOIS (Otimizado) */}
-          <div className="p-5 rounded-2xl border border-emerald-500/40 bg-emerald-950/15 flex flex-col justify-between space-y-4">
+          {/* DEPOIS (Otimizado - Dominant 70% Emphasis) */}
+          <div className="lg:col-span-8 p-5 sm:p-6 rounded-2xl border border-emerald-500/40 bg-emerald-950/20 shadow-xl flex flex-col justify-between space-y-4">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-emerald-400 flex items-center gap-1.5">

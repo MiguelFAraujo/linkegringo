@@ -309,3 +309,65 @@ export function deriveCardConversionBadges(
     ],
   };
 }
+
+export interface StabilizeInboundReadinessInput {
+  candidateId?: string;
+  evidenceHash?: string;
+  previousScore?: number;
+  rawScore: number;
+  hasMaterialImprovement?: boolean;
+  noiseBand?: number;
+}
+
+const candidateScoreRegistry = new Map<string, { score: number; evidenceHash?: string }>();
+
+export function clearCandidateScoreRegistry(): void {
+  candidateScoreRegistry.clear();
+}
+
+/**
+ * Stabilizes candidate-scoped Inbound Readiness score against LLM jitter.
+ * Prevents non-deterministic regressions when candidate refines profile or adds evidence,
+ * applying hysteresis (±2 points default noise band) and conditional monotonicity.
+ */
+export function stabilizeInboundReadiness(input: StabilizeInboundReadinessInput): number {
+  const {
+    candidateId,
+    evidenceHash,
+    previousScore,
+    rawScore,
+    hasMaterialImprovement = false,
+    noiseBand = 2,
+  } = input;
+  const curr = Math.min(100, Math.max(0, Math.round(rawScore)));
+
+  const recorded = candidateId ? candidateScoreRegistry.get(candidateId) : undefined;
+  const effectivePrev = previousScore ?? recorded?.score;
+
+  if (effectivePrev === undefined || effectivePrev === null) {
+    if (candidateId) {
+      candidateScoreRegistry.set(candidateId, { score: curr, evidenceHash });
+    }
+    return curr;
+  }
+
+  const prev = Math.round(effectivePrev);
+  let finalScore = curr;
+
+  // If evidence is unchanged, pure LLM jitter regression is suppressed
+  const isUnchangedEvidence = Boolean(evidenceHash && recorded?.evidenceHash && evidenceHash === recorded.evidenceHash);
+
+  if (curr < prev) {
+    // If material improvement is declared, regression is within noise band, or evidence hash is unchanged: maintain previous score
+    if (hasMaterialImprovement || isUnchangedEvidence || prev - curr <= noiseBand) {
+      finalScore = prev;
+    }
+  }
+
+  if (candidateId) {
+    candidateScoreRegistry.set(candidateId, { score: finalScore, evidenceHash });
+  }
+
+  return finalScore;
+}
+

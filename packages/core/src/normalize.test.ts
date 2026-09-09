@@ -256,3 +256,60 @@ describe('deriveOpenToWorkTitles and deriveCardConversionBadges', () => {
     expect(reasons).toHaveLength(3);
   });
 });
+
+describe('calculateInboundReadiness, calculateInboundJourney and stabilizeInboundReadiness', () => {
+  it('calculates inbound readiness using the exact deterministic formula', async () => {
+    const { calculateInboundReadiness } = await import('./domain/analysis.js');
+    const { weakProfileScores, strongProfileScores, boundaryProfileScores } = await import('./fixtures/profiles.js');
+
+    // Formula: 0.35 * search + 0.25 * positioning + 0.20 * evidence + 0.10 * credibility + 0.10 * humanVoice
+    // Weak: 0.35*35 + 0.25*40 + 0.20*30 + 0.10*45 + 0.10*50 = 12.25 + 10 + 6 + 4.5 + 5 = 37.75 -> 38
+    expect(calculateInboundReadiness(weakProfileScores)).toBe(38);
+
+    // Strong: 0.35*95 + 0.25*90 + 0.20*88 + 0.10*92 + 0.10*90 = 33.25 + 22.5 + 17.6 + 9.2 + 9 = 91.55 -> 92
+    expect(calculateInboundReadiness(strongProfileScores)).toBe(92);
+
+    // Boundary: 0.35*80 + 0.25*65 + 0.20*75 + 0.10*60 + 0.10*70 = 28 + 16.25 + 15 + 6 + 7 = 72.25 -> 72
+    expect(calculateInboundReadiness(boundaryProfileScores)).toBe(72);
+  });
+
+  it('calculates inbound journey funnel with independent projections and statuses', async () => {
+    const { calculateInboundJourney } = await import('./domain/analysis.js');
+    const { weakProfileScores, strongProfileScores } = await import('./fixtures/profiles.js');
+
+    const weakJourney = calculateInboundJourney(weakProfileScores);
+    expect(weakJourney.search.status).toBe('blocked');
+    expect(weakJourney.card.status).toBe('blocked');
+    expect(weakJourney.profile.status).toBe('blocked');
+    expect(weakJourney.inmail.status).toBe('not_measurable');
+
+    const strongJourney = calculateInboundJourney(strongProfileScores);
+    expect(strongJourney.search.status).toBe('ready');
+    expect(strongJourney.card.status).toBe('ready');
+    expect(strongJourney.profile.status).toBe('ready');
+    expect(strongJourney.inmail.status).toBe('not_measurable');
+  });
+
+  it('stabilizes inbound readiness with hysteresis and conditional monotonicity', async () => {
+    const { stabilizeInboundReadiness } = await import('./normalize.js');
+
+    // Returns raw score when no previous score
+    expect(stabilizeInboundReadiness({ rawScore: 75 })).toBe(75);
+
+    // Drop of 1 point (85 -> 84): suppressed by noise band
+    expect(stabilizeInboundReadiness({ previousScore: 85, rawScore: 84 })).toBe(85);
+
+    // Drop of 2 points (85 -> 83): suppressed by noise band
+    expect(stabilizeInboundReadiness({ previousScore: 85, rawScore: 83 })).toBe(85);
+
+    // Drop of 5 points (85 -> 80) with material improvement: suppressed
+    expect(stabilizeInboundReadiness({ previousScore: 85, rawScore: 80, hasMaterialImprovement: true })).toBe(85);
+
+    // Drop of 5 points (85 -> 80) without material improvement: accepted
+    expect(stabilizeInboundReadiness({ previousScore: 85, rawScore: 80, hasMaterialImprovement: false })).toBe(80);
+
+    // Score improvement: 85 -> 92
+    expect(stabilizeInboundReadiness({ previousScore: 85, rawScore: 92 })).toBe(92);
+  });
+});
+
