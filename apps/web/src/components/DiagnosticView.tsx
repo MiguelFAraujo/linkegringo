@@ -20,6 +20,7 @@ import {
   ArrowRight,
   ChevronDown,
   AlertCircle,
+  Loader2,
 } from 'lucide-react';
 import {
   type Profile,
@@ -43,6 +44,7 @@ interface DiagnosticViewProps {
   onProceedToInterview?: (chosenRole?: string) => void;
   onProceedToObjective?: () => void;
   defaultExpanded?: boolean;
+  isProcessing?: boolean;
 }
 
 function deriveGaps(review: ProfileReview): ProfileGap[] {
@@ -125,6 +127,7 @@ export function DiagnosticView({
   onProceedToInterview,
   onProceedToObjective,
   defaultExpanded = false,
+  isProcessing = false,
 }: DiagnosticViewProps) {
   // Inbound score prioritization: review.inboundReadiness?.score ?? calculateInboundReadiness(review.scores) ?? review.overallScore
   const calculatedInboundScore = review.scores ? calculateInboundReadiness(review.scores) : undefined;
@@ -453,16 +456,26 @@ export function DiagnosticView({
             variant="default"
             size="lg"
             data-testid="primary-cta"
+            disabled={isProcessing}
             onClick={handleProceed}
-            className="w-full font-bold text-sm sm:text-base bg-blue-600 hover:bg-blue-500 text-white shadow-xl py-4 px-6 rounded-xl cursor-pointer flex items-center justify-center gap-2 group transition-all"
+            className="w-full font-bold text-sm sm:text-base bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800/60 disabled:cursor-not-allowed text-white shadow-xl py-4 px-6 rounded-xl cursor-pointer flex items-center justify-center gap-2 group transition-all"
           >
-            <span>Continuar para a Entrevista Técnica →</span>
-            <span className="sr-only">
-              {isApprovedUSLevel ? 'Lapidar Detalhes & Avançar' : 'Avançar para a entrevista'}
-            </span>
-            <span className="sr-only">
-              {isApprovedUSLevel ? 'Lapidar Perfil' : 'Otimizar Perfil'}
-            </span>
+            {isProcessing ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin text-white" />
+                <span>Gerando entrevista técnica...</span>
+              </>
+            ) : (
+              <>
+                <span>Continuar para a Entrevista Técnica →</span>
+                <span className="sr-only">
+                  {isApprovedUSLevel ? 'Lapidar Detalhes & Avançar' : 'Avançar para a entrevista'}
+                </span>
+                <span className="sr-only">
+                  {isApprovedUSLevel ? 'Lapidar Perfil' : 'Otimizar Perfil'}
+                </span>
+              </>
+            )}
           </Button>
         </div>
       </div>

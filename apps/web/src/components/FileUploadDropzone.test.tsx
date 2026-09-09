@@ -103,4 +103,13 @@ describe('FileUploadDropzone Component', () => {
 
     expect(screen.getByText('Extraindo perfil do LinkedIn...')).toBeDefined();
   });
+
+  it('renders the 3-step tutorial explaining how to export the PDF from LinkedIn', () => {
+    render(<FileUploadDropzone {...defaultProps} />);
+
+    expect(screen.getByText(/Como exportar o PDF correto do LinkedIn\?/i)).toBeDefined();
+    expect(screen.getByText(/1\. Perfil/i)).toBeDefined();
+    expect(screen.getByText(/2\. Botão "Mais"/i)).toBeDefined();
+    expect(screen.getByText(/3\. Salvar como PDF/i)).toBeDefined();
+  });
 });

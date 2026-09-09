@@ -602,6 +602,7 @@ export function App() {
             targetRole={objective?.primaryRole}
             onProceedToInterview={handleProceedToInterview}
             onProceedToObjective={handleProceedToInterview}
+            isProcessing={isLoading}
           />
         )}
 

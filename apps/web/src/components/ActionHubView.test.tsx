@@ -194,6 +194,65 @@ describe('ActionHubView Component', () => {
     expect(screen.getByText('-3 pts')).toBeDefined();
     expect(screen.queryByText('+-3 pts')).toBeNull();
   });
+
+  it('renders original experience description in the Antes column when present', () => {
+    const profileWithDescription = {
+      ...MOCK_PROFILE,
+      experiences: [
+        {
+          title: 'Senior Software Engineer',
+          companyName: 'Fintech Pagamentos Brasil',
+          description: 'Responsavel pela manutencao de microsservicos legados em Java e Spring.',
+          current: false,
+        },
+      ],
+    };
+
+    render(
+      <ActionHubView
+        originalProfile={profileWithDescription}
+        initialReview={MOCK_REVIEW}
+        analysis={sampleAnalysis}
+        onStartNew={vi.fn()}
+      />,
+    );
+
+    // Switch to experiences tab
+    const expTab = screen.getByRole('tab', { name: /Experiências/i });
+    fireEvent.click(expTab);
+
+    expect(screen.getByText('Responsavel pela manutencao de microsservicos legados em Java e Spring.')).toBeDefined();
+  });
+
+  it('renders informative message when original experience description is absent', () => {
+    const profileWithoutDescription = {
+      ...MOCK_PROFILE,
+      experiences: [
+        {
+          title: 'Senior Software Engineer',
+          companyName: 'Fintech Pagamentos Brasil',
+          description: '',
+          current: false,
+        },
+      ],
+    };
+
+    render(
+      <ActionHubView
+        originalProfile={profileWithoutDescription}
+        initialReview={MOCK_REVIEW}
+        analysis={sampleAnalysis}
+        onStartNew={vi.fn()}
+      />,
+    );
+
+    const expTab = screen.getByRole('tab', { name: /Experiências/i });
+    fireEvent.click(expTab);
+
+    expect(
+      screen.getByText(/Cargo cadastrado sem descrição ou bullets no perfil original do LinkedIn/i),
+    ).toBeDefined();
+  });
 });
 
 

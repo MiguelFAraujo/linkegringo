@@ -628,9 +628,15 @@ export function ActionHubView({
                             <span className="font-semibold text-rose-400 text-xs block">
                               Antes (LinkedIn Original)
                             </span>
-                            <p className="text-slate-400 whitespace-pre-line italic leading-relaxed text-xs sm:text-sm">
-                              {originalExp?.description || originalExp?.title || '(Descrição passiva ou não informada)'}
-                            </p>
+                            {originalExp?.description && originalExp.description.trim().length > 0 ? (
+                              <p className="text-slate-400 whitespace-pre-line italic leading-relaxed text-xs sm:text-sm">
+                                {originalExp.description.trim()}
+                              </p>
+                            ) : (
+                              <p className="text-slate-500 italic leading-relaxed text-xs sm:text-sm">
+                                (Cargo cadastrado sem descrição ou bullets no perfil original do LinkedIn)
+                              </p>
+                            )}
                           </div>
 
                           <div className="p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-950/15 space-y-1.5">

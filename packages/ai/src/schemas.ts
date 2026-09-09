@@ -33,9 +33,13 @@ export const experienceResponseSchema: Schema = {
     current: { type: Type.BOOLEAN },
     dateRangeText: { type: Type.STRING },
     durationText: { type: Type.STRING },
-    description: { type: Type.STRING },
+    description: {
+      type: Type.STRING,
+      description:
+        'Full verbatim original description and bullet points from the document for this position. Do NOT summarize or omit. If none exists, provide an empty string.',
+    },
   },
-  required: ['title', 'companyName'],
+  required: ['title', 'companyName', 'description'],
 };
 
 export const educationResponseSchema: Schema = {

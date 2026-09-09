@@ -374,5 +374,20 @@ describe('DiagnosticView Component', () => {
 
     expect(screen.queryByText(/Gargalos de Triagem \(Filtro Recrutadores EUA\)/i)).toBeNull();
   });
+
+  it('disables CTA button and shows loading spinner when isProcessing is true', () => {
+    render(
+      <DiagnosticView
+        profile={MOCK_PROFILE}
+        review={MOCK_REVIEW}
+        onProceedToInterview={vi.fn()}
+        isProcessing={true}
+      />,
+    );
+
+    const cta = screen.getByTestId('primary-cta');
+    expect(cta.hasAttribute('disabled')).toBe(true);
+    expect(cta.textContent).toContain('Gerando entrevista técnica...');
+  });
 });
 

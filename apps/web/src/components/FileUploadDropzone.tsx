@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   KeyRound,
   CheckCircle2,
+  HelpCircle,
 } from 'lucide-react';
 import { fileToBase64 } from '../lib/file-utils';
 
@@ -303,6 +304,31 @@ export function FileUploadDropzone({
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Mini-tutorial: Como exportar o PDF oficial do LinkedIn */}
+            <div className="rounded-xl border border-white/[0.08] bg-[#090D14]/70 p-3.5 space-y-2.5 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-slate-300 flex items-center gap-1.5 text-xs">
+                  <HelpCircle className="w-3.5 h-3.5 text-blue-400" />
+                  Como exportar o PDF correto do LinkedIn?
+                </span>
+                <span className="text-[10px] text-slate-500 uppercase font-mono tracking-wider">3 passos rápidos</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-0.5 text-slate-400 text-[11px] leading-relaxed">
+                <div className="p-2 rounded-lg bg-[#0F1623]/80 border border-white/[0.04] space-y-0.5">
+                  <span className="font-mono font-bold text-blue-400 block text-[10px]">1. Perfil</span>
+                  <p>Acesse seu perfil no LinkedIn pelo navegador no desktop.</p>
+                </div>
+                <div className="p-2 rounded-lg bg-[#0F1623]/80 border border-white/[0.04] space-y-0.5">
+                  <span className="font-mono font-bold text-blue-400 block text-[10px]">2. Botão &quot;Mais&quot;</span>
+                  <p>No cabeçalho do perfil, clique no botão <strong>Mais</strong> (ou <em>More</em>).</p>
+                </div>
+                <div className="p-2 rounded-lg bg-[#0F1623]/80 border border-white/[0.04] space-y-0.5">
+                  <span className="font-mono font-bold text-emerald-400 block text-[10px]">3. Salvar como PDF</span>
+                  <p>Selecione <strong>Salvar como PDF</strong> e arraste o arquivo aqui.</p>
+                </div>
+              </div>
             </div>
 
             {/* Mensagem de erro */}

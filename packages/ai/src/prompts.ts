@@ -375,6 +375,7 @@ Phase 1: Physical Inventory & Count N
 Phase 2: Spatial Separation & Column Stitching
 - Separate multi-column sidebar elements (contact info, skills, languages, certifications) from the primary chronological trajectory.
 - Detect page breaks across pages and stitch cross-page continuation of descriptions and bullets into their parent company.
+- 100% VERBATIM DESCRIPTIONS MANDATE: For each position in profile.experiences, transcribe the full verbatim "description" text (including all original bullet points, responsibilities, metrics, and technologies). Never summarize, never truncate, and never omit original text. If a role has no text description in the PDF, output an empty string "".
 
 Phase 3: Deterministic Rubric Deduction
 - For each of the 5 pillars (searchRelevance, humanVoice, credibility, positioningClarity, evidenceCoverage), start at 100 points.
@@ -384,6 +385,7 @@ Phase 3: Deterministic Rubric Deduction
 Phase 4: Output Invariant Check
 - Verify output invariant: assert that profile.experiences.length == N.
 - Confirm that every single company from the physical inventory (companyCountN) has a corresponding entry in profile.experiences with zero omissions.
+- Confirm that the "description" property is populated verbatim for each company that has descriptions in the document.
 
 Typical unoptimized profiles (Portuguese text, passive duties, missing metrics, buzzword headlines):
 - overallScore: Typically between 35 and 55.
@@ -393,6 +395,7 @@ Typical unoptimized profiles (Portuguese text, passive duties, missing metrics, 
 CRITICAL RULES:
 - Output MUST be valid JSON only conforming to the provided response schema.
 - Never invent past employers, dates, degrees, or certifications.
+- VERBATIM EXPERIENCE DESCRIPTIONS: The "description" property in profile.experiences MUST contain the full verbatim text/bullets for each role found in the document.
 - Clean up any PDF extraction artifacts (broken line breaks, repeated page headers).
 - Portuguese for coaching feedback, critiques, and rationale; English for role titles and technical terms.`;
 
