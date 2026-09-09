@@ -104,13 +104,26 @@ describe('FileUploadDropzone Component', () => {
     expect(screen.getByText('Extraindo perfil do LinkedIn...')).toBeDefined();
   });
 
-  it('renders the 3-step tutorial explaining how to export the PDF from LinkedIn', () => {
+  it('renders the 3-step tutorial explaining how to export the PDF from LinkedIn and allows collapsing it', () => {
+    localStorage.clear();
     render(<FileUploadDropzone {...defaultProps} />);
 
+    // Initially open
     expect(screen.getByText(/Como exportar o PDF correto do LinkedIn\?/i)).toBeDefined();
     expect(screen.getByText(/1\. Perfil/i)).toBeDefined();
     expect(screen.getByText(/2\. Botão "Mais"/i)).toBeDefined();
     expect(screen.getByText(/3\. Salvar como PDF/i)).toBeDefined();
+
+    // Collapse tutorial
+    const toggleBtn = screen.getByRole('button', { name: /Como exportar o PDF correto do LinkedIn\?/i });
+    fireEvent.click(toggleBtn);
+
+    // Steps should be hidden
+    expect(screen.queryByText(/1\. Perfil/i)).toBeNull();
+
+    // Reopen tutorial
+    fireEvent.click(toggleBtn);
+    expect(screen.getByText(/1\. Perfil/i)).toBeDefined();
   });
 
   it('renders the new Recruiter Visibility Optimizer headline, example report preview, trust bar, and 4-step logic footer', () => {
@@ -120,19 +133,23 @@ describe('FileUploadDropzone Component', () => {
     expect(screen.getByText('Pare de aplicar. Comece a ser encontrado.')).toBeDefined();
     expect(screen.getByText(/Descubra como recrutadores internacionais encontram seu perfil/i)).toBeDefined();
 
-    // Example visual report preview
+    // Example visual report preview with dominant score and Recruiter Card
     expect(screen.getByText('Exemplo')).toBeDefined();
     expect(screen.getByText('Recruiter Visibility')).toBeDefined();
     expect(screen.getByText('74')).toBeDefined();
     expect(screen.getByText('Headline positioning')).toBeDefined();
+    expect(screen.getAllByText('Recruiter Card').length).toBeGreaterThanOrEqual(1);
+
+    // Recruiter search simulation copy
+    expect(screen.getByText('Simulação de busca de recruiter')).toBeDefined();
 
     // Trust bar
-    expect(screen.getByText(/100% Client-Side · Chave Própria \(BYOK\) · Sem armazenamento em servidor/i)).toBeDefined();
+    expect(screen.getByText(/100% Client-Side · BYOK · Sem armazenamento pelo LinkeGringo/i)).toBeDefined();
 
     // 4-step footer
     expect(screen.getByText('01 BUSCA')).toBeDefined();
     expect(screen.getByText('02 RECRUITER CARD')).toBeDefined();
     expect(screen.getByText('03 PERFIL')).toBeDefined();
-    expect(screen.getByText('04 OUTREACH')).toBeDefined();
+    expect(screen.getByText('04 INMAIL')).toBeDefined();
   });
 });

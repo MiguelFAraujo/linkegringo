@@ -12,6 +12,7 @@ import {
   KeyRound,
   CheckCircle2,
   HelpCircle,
+  ChevronDown,
 } from 'lucide-react';
 import { fileToBase64 } from '../lib/file-utils';
 
@@ -53,6 +54,29 @@ export function FileUploadDropzone({
   const [targetRole, setTargetRole] = useState('Senior Backend Engineer');
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isTutorialOpen, setIsTutorialOpen] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('linkegringo_pdf_tutorial_closed') !== 'true';
+    } catch {
+      return true;
+    }
+  });
+
+  const toggleTutorial = () => {
+    setIsTutorialOpen((prev) => {
+      const next = !prev;
+      try {
+        if (!next) {
+          localStorage.setItem('linkegringo_pdf_tutorial_closed', 'true');
+        } else {
+          localStorage.removeItem('linkegringo_pdf_tutorial_closed');
+        }
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
 
   const linkedinInputRef = useRef<HTMLInputElement>(null);
 
@@ -145,7 +169,7 @@ export function FileUploadDropzone({
           </div>
 
           {/* Card de Exemplo Visual de Diagnóstico (Semanticamente isolado como EXEMPLO) */}
-          <div className="p-5 rounded-2xl bg-[#0F1623]/70 border border-white/[0.08] space-y-4 shadow-xl text-left">
+          <div className="p-5 sm:p-6 rounded-2xl bg-[#0F1623]/70 border border-white/[0.08] space-y-4 shadow-xl text-left">
             <div className="flex items-center justify-between">
               <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-semibold tracking-wider bg-slate-800 text-slate-300 border border-slate-700 uppercase">
                 Exemplo
@@ -153,53 +177,65 @@ export function FileUploadDropzone({
               <span className="text-[11px] text-slate-500 font-medium">Relatório visual prévio</span>
             </div>
 
-            <div className="flex items-baseline justify-between pt-1">
+            {/* Score Dominante */}
+            <div className="space-y-2 pt-1">
+              <span className="text-xs font-mono uppercase tracking-wider text-slate-400 font-medium block">
+                Recruiter Visibility
+              </span>
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight">
+                  74
+                </span>
+                <span className="text-base text-slate-500 font-normal">/ 100</span>
+              </div>
               <div>
-                <span className="text-xs text-slate-400 block font-medium">Recruiter Visibility</span>
-                <span className="text-2xl font-bold text-white tracking-tight">
-                  74 <span className="text-xs font-normal text-slate-500">/ 100</span>
+                <span className="inline-flex items-center text-[11px] font-medium text-amber-400/90 bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-md">
+                  Bom ponto de partida · 1 gargalo crítico
                 </span>
               </div>
-              <span className="text-[11px] font-medium text-amber-400/90 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md">
-                Bom ponto de partida · 1 gargalo crítico
-              </span>
             </div>
 
-            {/* Funil Compacto */}
-            <div className="space-y-2 pt-2 border-t border-white/[0.06] text-xs">
-              <div className="space-y-1">
-                <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-300 font-medium">Busca</span>
-                  <span className="font-mono text-emerald-400 font-semibold">82</span>
+            {/* Divisor */}
+            <div className="border-t border-white/[0.08]" />
+
+            {/* 3 Métricas */}
+            <div className="space-y-3 text-xs">
+              <div className="space-y-0.5">
+                <div className="flex justify-between items-center">
+                  <span className="font-mono text-xs font-semibold text-slate-300 uppercase tracking-wide">Busca</span>
+                  <span className="font-mono text-emerald-400 font-bold text-sm">82</span>
                 </div>
-                <p className="text-[11px] text-slate-400 leading-tight">
-                  Seu perfil cobre cargo, stack e contexto relevantes para buscas de recrutadores?
+                <p className="text-[11px] text-slate-400 leading-snug">
+                  Perfil encontrável para cargo, stack e contexto relevantes.
                 </p>
               </div>
 
-              <div className="space-y-1 pt-1.5 border-t border-white/[0.04]">
-                <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-300 font-medium">Card de Triagem</span>
-                  <span className="font-mono text-amber-400 font-semibold">68</span>
+              <div className="space-y-0.5 pt-2 border-t border-white/[0.04]">
+                <div className="flex justify-between items-center">
+                  <span className="font-mono text-xs font-semibold text-slate-300 uppercase tracking-wide">Recruiter Card</span>
+                  <span className="font-mono text-amber-400 font-bold text-sm">68</span>
                 </div>
-                <p className="text-[11px] text-slate-400 leading-tight">
-                  Entendem sua senioridade no card do LinkedIn Recruiter em 5 segundos?
+                <p className="text-[11px] text-slate-400 leading-snug">
+                  Seu posicionamento no card que um recruiter vê nos resultados.
                 </p>
               </div>
 
-              <div className="space-y-1 pt-1.5 border-t border-white/[0.04]">
-                <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-300 font-medium">Perfil Completo</span>
-                  <span className="font-mono text-blue-400 font-semibold">70</span>
+              <div className="space-y-0.5 pt-2 border-t border-white/[0.04]">
+                <div className="flex justify-between items-center">
+                  <span className="font-mono text-xs font-semibold text-slate-300 uppercase tracking-wide">Perfil</span>
+                  <span className="font-mono text-blue-400 font-bold text-sm">70</span>
                 </div>
-                <p className="text-[11px] text-slate-400 leading-tight">
-                  Suas evidências técnicas sustentam o escopo da posição pretendida?
+                <p className="text-[11px] text-slate-400 leading-snug">
+                  Evidências técnicas que sustentam o escopo da posição.
                 </p>
               </div>
             </div>
+
+            {/* Divisor */}
+            <div className="border-t border-white/[0.08]" />
 
             {/* Biggest Unlock (Estilo Operacional de Gap) */}
-            <div className="p-3 rounded-xl bg-[#090D14]/80 border border-amber-500/20 space-y-1">
+            <div className="p-3.5 rounded-xl bg-[#090D14]/80 border border-amber-500/20 space-y-1">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] uppercase font-mono tracking-wider text-amber-400/90 font-semibold">
                   Biggest Unlock
@@ -228,7 +264,7 @@ export function FileUploadDropzone({
           <div className="p-3.5 rounded-xl bg-[#090D14]/60 border border-white/[0.06] text-xs space-y-1 text-left">
             <div className="flex items-center gap-1.5 text-slate-300 font-medium">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-              <span>100% Client-Side · Chave Própria (BYOK) · Sem armazenamento em servidor</span>
+              <span>100% Client-Side · BYOK · Sem armazenamento pelo LinkeGringo</span>
             </div>
             <p className="text-[11px] text-slate-500 leading-normal">
               Seu perfil é enviado diretamente do seu navegador para a API de IA escolhida. O LinkeGringo não intercepta nem armazena seus dados.
@@ -246,7 +282,7 @@ export function FileUploadDropzone({
                   <Briefcase className="w-3.5 h-3.5 text-blue-400" />
                   What should recruiters find you for?
                 </label>
-                <span className="text-[11px] text-slate-500">Busca no LinkedIn Recruiter</span>
+                <span className="text-[11px] text-slate-500">Simulação de busca de recruiter</span>
               </div>
 
               <Input
@@ -363,29 +399,48 @@ export function FileUploadDropzone({
                 )}
               </div>
 
-              {/* Mini-tutorial: Como exportar o PDF oficial do LinkedIn */}
-              <div className="rounded-xl border border-white/[0.08] bg-[#090D14]/70 p-3.5 space-y-2.5 text-xs">
-                <div className="flex items-center justify-between">
+              {/* Mini-tutorial colapsável: Como exportar o PDF oficial do LinkedIn */}
+              <div className="rounded-xl border border-white/[0.08] bg-[#090D14]/70 overflow-hidden text-xs transition-all">
+                <button
+                  type="button"
+                  onClick={toggleTutorial}
+                  className="w-full flex items-center justify-between p-3 sm:p-3.5 text-left cursor-pointer hover:bg-white/[0.02] transition-colors"
+                  aria-expanded={isTutorialOpen}
+                >
                   <span className="font-semibold text-slate-300 flex items-center gap-1.5 text-xs">
-                    <HelpCircle className="w-3.5 h-3.5 text-blue-400" />
+                    <HelpCircle className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
                     Como exportar o PDF correto do LinkedIn?
                   </span>
-                  <span className="text-[10px] text-slate-500 uppercase font-mono tracking-wider">3 passos rápidos</span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-0.5 text-slate-400 text-[11px] leading-relaxed">
-                  <div className="p-2 rounded-lg bg-[#0F1623]/80 border border-white/[0.04] space-y-0.5">
-                    <span className="font-mono font-bold text-blue-400 block text-[10px]">1. Perfil</span>
-                    <p>Acesse seu perfil no LinkedIn pelo navegador no desktop.</p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-slate-500 uppercase font-mono tracking-wider hidden sm:inline">
+                      3 passos rápidos
+                    </span>
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
+                        isTutorialOpen ? 'rotate-180' : ''
+                      }`}
+                    />
                   </div>
-                  <div className="p-2 rounded-lg bg-[#0F1623]/80 border border-white/[0.04] space-y-0.5">
-                    <span className="font-mono font-bold text-blue-400 block text-[10px]">2. Botão &quot;Mais&quot;</span>
-                    <p>No cabeçalho do perfil, clique no botão <strong>Mais</strong> (ou <em>More</em>).</p>
+                </button>
+
+                {isTutorialOpen && (
+                  <div className="px-3.5 pb-3.5 pt-0 border-t border-white/[0.04]">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2.5 text-slate-400 text-[11px] leading-relaxed">
+                      <div className="p-2 rounded-lg bg-[#0F1623]/80 border border-white/[0.04] space-y-0.5">
+                        <span className="font-mono font-bold text-blue-400 block text-[10px]">1. Perfil</span>
+                        <p>Acesse seu perfil no LinkedIn pelo navegador no desktop.</p>
+                      </div>
+                      <div className="p-2 rounded-lg bg-[#0F1623]/80 border border-white/[0.04] space-y-0.5">
+                        <span className="font-mono font-bold text-blue-400 block text-[10px]">2. Botão &quot;Mais&quot;</span>
+                        <p>No cabeçalho do perfil, clique no botão <strong>Mais</strong> (ou <em>More</em>).</p>
+                      </div>
+                      <div className="p-2 rounded-lg bg-[#0F1623]/80 border border-white/[0.04] space-y-0.5">
+                        <span className="font-mono font-bold text-emerald-400 block text-[10px]">3. Salvar como PDF</span>
+                        <p>Selecione <strong>Salvar como PDF</strong> e arraste o arquivo aqui.</p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="p-2 rounded-lg bg-[#0F1623]/80 border border-white/[0.04] space-y-0.5">
-                    <span className="font-mono font-bold text-emerald-400 block text-[10px]">3. Salvar como PDF</span>
-                    <p>Selecione <strong>Salvar como PDF</strong> e arraste o arquivo aqui.</p>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
 
@@ -465,10 +520,10 @@ export function FileUploadDropzone({
             </p>
           </div>
           <div className="p-4 rounded-xl bg-[#0F1623]/60 border border-white/[0.06] space-y-1.5 text-left">
-            <span className="font-mono text-xs font-bold text-purple-400 block">04 OUTREACH</span>
+            <span className="font-mono text-xs font-bold text-purple-400 block">04 INMAIL</span>
             <h4 className="text-sm font-semibold text-slate-200">Seu perfil dá motivo para contato?</h4>
             <p className="text-xs text-slate-400 leading-relaxed">
-              Posicionamento internacional claro para justificar o envio de um convite qualificado.
+              Posicionamento e escopo internacional claros para justificar o envio de um InMail qualificado.
             </p>
           </div>
         </div>
