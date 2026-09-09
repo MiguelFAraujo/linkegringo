@@ -18,7 +18,15 @@ import {
   Rocket,
   ArrowRight,
 } from 'lucide-react';
-import type { Profile, ProfileAnalysis, ProfileReview, ProfileGap } from '@linkegringo/core';
+import type {
+  Profile,
+  ProfileAnalysis,
+  ProfileReview,
+  ProfileGap,
+  SearchGap,
+  AppliedMicroIntegration,
+  AiProvider,
+} from '@linkegringo/core';
 import { copyToClipboard } from '@/lib/file-utils';
 import { InterviewGuideCard } from './InterviewGuideCard';
 import { FormattedText } from './ui/formatted-text';
@@ -26,15 +34,18 @@ import { CandidateAvatar } from './ui/candidate-avatar';
 import { RecruiterSearchCard } from './RecruiterSearchCard';
 import { LinkedInLaunchChecklist } from './LinkedInLaunchChecklist';
 import { RecruiterSearchSimulator } from './RecruiterSearchSimulator';
+import { GapResolutionDrawer } from './GapResolutionDrawer';
 import { track } from '@/lib/telemetry';
 
 export type HubTab = 'profile' | 'search' | 'launch';
 
-interface ActionHubViewProps {
+export interface ActionHubViewProps {
   originalProfile: Profile;
   initialReview?: ProfileReview;
   analysis: ProfileAnalysis;
   onStartNew: () => void;
+  aiProvider?: AiProvider;
+  onUpdateAnalysis?: (analysis: ProfileAnalysis) => void;
 }
 
 const getInitialTab = (): HubTab => {
@@ -53,14 +64,32 @@ export function ActionHubView({
   initialReview,
   analysis,
   onStartNew,
+  aiProvider,
+  onUpdateAnalysis,
 }: ActionHubViewProps) {
-  const initialScore = initialReview?.overallScore ?? analysis.initialScore ?? 42;
-  const newScore = analysis.overallScore;
+  const [activeAnalysis, setActiveAnalysis] = useState<ProfileAnalysis>(analysis);
+
+  useEffect(() => {
+    setActiveAnalysis(analysis);
+  }, [analysis]);
+
+  const initialScore = initialReview?.overallScore ?? activeAnalysis.initialScore ?? 42;
+  const newScore = activeAnalysis.overallScore;
   const scoreDelta = newScore - initialScore;
 
   const [currentTab, setCurrentTab] = useState<HubTab>(getInitialTab);
   const [innerCopyTab, setInnerCopyTab] = useState<string>('headline');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  // Micro-integration drawer state
+  const [activeDrawerGap, setActiveDrawerGap] = useState<SearchGap | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerResolvedDiff, setDrawerResolvedDiff] = useState<
+    { before: string; after: string; evidenceText?: string; companyName?: string } | undefined
+  >(undefined);
+  const [resolvedGapMetadata, setResolvedGapMetadata] = useState<
+    Record<string, { before: string; after: string; evidenceText?: string; companyName?: string }>
+  >({});
 
   // Sync with URL parameters
   const handleTabChange = (tab: string) => {
@@ -111,6 +140,43 @@ export function ActionHubView({
     }, 150);
   };
 
+  const handleIntegrateGap = (gap: SearchGap) => {
+    track('integrate_gap_clicked', { term: gap.term });
+    setActiveDrawerGap(gap);
+    setDrawerResolvedDiff(undefined);
+    setDrawerOpen(true);
+  };
+
+  const handleViewResolvedGap = (gap: SearchGap) => {
+    track('view_resolved_gap_clicked', { term: gap.term });
+    const meta = resolvedGapMetadata[gap.term.toLowerCase()];
+    setActiveDrawerGap(gap);
+    setDrawerResolvedDiff(meta);
+    setDrawerOpen(true);
+  };
+
+  const handleApplyMicroIntegration = (applied: AppliedMicroIntegration) => {
+    setActiveAnalysis(applied.analysis);
+    onUpdateAnalysis?.(applied.analysis);
+
+    const termKey = activeDrawerGap?.term?.toLowerCase() || '';
+    if (termKey) {
+      setResolvedGapMetadata((prev) => ({
+        ...prev,
+        [termKey]: {
+          before: applied.diff.before,
+          after: applied.diff.after,
+          evidenceText: activeDrawerGap?.evidence?.evidenceText,
+          companyName: applied.diff.experienceId
+            ? applied.analysis.rewritten.experiences.find(
+                (e, idx) => (e.id || `exp-${idx}`) === applied.diff.experienceId,
+              )?.companyName
+            : undefined,
+        },
+      }));
+    }
+  };
+
   const handleCopy = async (text: string, key: string) => {
     const ok = await copyToClipboard(text);
     if (ok) {
@@ -123,17 +189,17 @@ export function ActionHubView({
   const generateFullMarkdown = () => {
     const lines: string[] = [];
     lines.push(`# ${originalProfile.firstName} ${originalProfile.lastName}`);
-    lines.push(`**${analysis.rewritten.headline}**`);
-    lines.push(`\n## Summary\n${analysis.rewritten.summary}`);
+    lines.push(`**${activeAnalysis.rewritten.headline}**`);
+    lines.push(`\n## Summary\n${activeAnalysis.rewritten.summary}`);
     lines.push('\n## Experience');
-    for (const exp of analysis.rewritten.experiences) {
+    for (const exp of activeAnalysis.rewritten.experiences) {
       lines.push(`\n### ${exp.title} | ${exp.companyName}`);
       for (const bullet of exp.bullets) {
         lines.push(`- ${bullet}`);
       }
     }
     lines.push('\n## Top Skills');
-    lines.push(analysis.rewritten.skills.join(', '));
+    lines.push(activeAnalysis.rewritten.skills.join(', '));
     return lines.join('\n');
   };
 
@@ -145,7 +211,7 @@ export function ActionHubView({
       description: 'Correspondência semântica e indexação booleana de palavras-chave técnicas do seu cargo.',
       icon: Search,
       before: initialReview?.scores?.searchRelevance ?? Math.max(30, Math.round(initialScore * 0.95)),
-      after: analysis.scores.searchRelevance,
+      after: activeAnalysis.scores.searchRelevance,
     },
     {
       id: 'humanVoice',
@@ -153,7 +219,7 @@ export function ActionHubView({
       description: 'Inglês americano nativo, naturalidade executiva e ausência de termos traduzidos ao pé da letra.',
       icon: Sparkles,
       before: initialReview?.scores?.humanVoice ?? Math.max(30, Math.round(initialScore * 1.05)),
-      after: analysis.scores.humanVoice,
+      after: activeAnalysis.scores.humanVoice,
     },
     {
       id: 'credibility',
@@ -161,7 +227,7 @@ export function ActionHubView({
       description: 'Sinal de senioridade inequívoca, decisões arquiteturais complexas e autonomia comprovada.',
       icon: ShieldCheck,
       before: initialReview?.scores?.credibility ?? Math.max(25, Math.round(initialScore * 0.9)),
-      after: analysis.scores.credibility,
+      after: activeAnalysis.scores.credibility,
     },
     {
       id: 'positioningClarity',
@@ -169,7 +235,7 @@ export function ActionHubView({
       description: 'Headline limpa e focada em sistemas de alta escala, sem nichos inventados ou clichês.',
       icon: Target,
       before: initialReview?.scores?.positioningClarity ?? Math.max(25, Math.round(initialScore * 0.85)),
-      after: analysis.scores.positioningClarity,
+      after: activeAnalysis.scores.positioningClarity,
     },
     {
       id: 'evidenceCoverage',
@@ -177,7 +243,7 @@ export function ActionHubView({
       description: 'Resultados comprovados com números, %, latência e escala no framework STAR/XYZ.',
       icon: BarChart3,
       before: initialReview?.scores?.evidenceCoverage ?? Math.max(25, Math.round(initialScore * 0.88)),
-      after: analysis.scores.evidenceCoverage,
+      after: activeAnalysis.scores.evidenceCoverage,
     },
   ];
 
@@ -238,7 +304,7 @@ export function ActionHubView({
                       </Badge>
                     </div>
                     <p className="text-xs text-blue-400 font-medium pt-0.5">
-                      {analysis.profileDirection.primaryRole || analysis.profileDirection.positioning}
+                      {activeAnalysis.profileDirection.primaryRole || activeAnalysis.profileDirection.positioning}
                     </p>
                   </div>
                 </div>
@@ -248,7 +314,7 @@ export function ActionHubView({
                     Perfil Otimizado
                   </h1>
                   <FormattedText
-                    text={analysis.executiveSummary}
+                    text={activeAnalysis.executiveSummary}
                     as="p"
                     className="text-xs sm:text-sm text-slate-300 leading-relaxed"
                   />
@@ -340,10 +406,10 @@ export function ActionHubView({
           {/* Recruiter Search Card Hero (Antes vs Depois) */}
           <RecruiterSearchCard
             originalProfile={originalProfile}
-            rewrittenHeadline={analysis.rewritten.headline}
-            primaryRole={analysis.profileDirection.primaryRole}
-            badges={analysis.rewritten.cardConversionBadges}
-            reasons={analysis.rewritten.cardConversionReasons}
+            rewrittenHeadline={activeAnalysis.rewritten.headline}
+            primaryRole={activeAnalysis.profileDirection.primaryRole}
+            badges={activeAnalysis.rewritten.cardConversionBadges}
+            reasons={activeAnalysis.rewritten.cardConversionReasons}
           />
 
           {/* 5 Technical Criteria Horizontal Ruler */}
@@ -459,10 +525,10 @@ export function ActionHubView({
                   <FileText className="w-4 h-4" /> About / Summary
                 </TabsTrigger>
                 <TabsTrigger value="experiences" className="text-xs sm:text-sm gap-2">
-                  <Briefcase className="w-4 h-4" /> Experiências ({analysis.rewritten.experiences.length})
+                  <Briefcase className="w-4 h-4" /> Experiências ({activeAnalysis.rewritten.experiences.length})
                 </TabsTrigger>
                 <TabsTrigger value="skills" className="text-xs sm:text-sm gap-2">
-                  <Layers className="w-4 h-4" /> Skills ({analysis.rewritten.skills.length})
+                  <Layers className="w-4 h-4" /> Skills ({activeAnalysis.rewritten.skills.length})
                 </TabsTrigger>
               </TabsList>
 
@@ -474,13 +540,13 @@ export function ActionHubView({
                       <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="font-semibold text-white text-sm sm:text-base">Headline otimizada</h3>
                         <span className={`text-[11px] font-mono px-2 py-0.5 rounded-full border ${
-                          analysis.rewritten.headline.length <= 160
+                          activeAnalysis.rewritten.headline.length <= 160
                             ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                            : analysis.rewritten.headline.length <= 220
+                            : activeAnalysis.rewritten.headline.length <= 220
                             ? 'bg-blue-500/10 text-blue-400 border-blue-500/30'
                             : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
                         }`}>
-                          {analysis.rewritten.headline.length} / 220 caracteres {analysis.rewritten.headline.length <= 160 ? '✓ (ideal sem cortes no mobile)' : ''}
+                          {activeAnalysis.rewritten.headline.length} / 220 caracteres {activeAnalysis.rewritten.headline.length <= 160 ? '✓ (ideal sem cortes no mobile)' : ''}
                         </span>
                       </div>
                       <p className="text-xs text-slate-400">Título estratégico indexável pelo LinkedIn Recruiter. Cole diretamente no campo Título/Headline.</p>
@@ -488,7 +554,7 @@ export function ActionHubView({
                     <Button
                       size="sm"
                       variant="default"
-                      onClick={() => handleCopy(analysis.rewritten.headline, 'headline')}
+                      onClick={() => handleCopy(activeAnalysis.rewritten.headline, 'headline')}
                       className="text-xs gap-1.5 font-semibold bg-blue-600 hover:bg-blue-500 text-white cursor-pointer"
                     >
                       {copiedKey === 'headline' ? (
@@ -518,7 +584,7 @@ export function ActionHubView({
                         Depois (Versão dos EUA)
                       </span>
                       <FormattedText
-                        text={analysis.rewritten.headline}
+                        text={activeAnalysis.rewritten.headline}
                         as="p"
                         className="text-slate-100 font-medium text-xs sm:text-sm leading-relaxed"
                       />
@@ -535,7 +601,7 @@ export function ActionHubView({
                       <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="font-semibold text-white text-sm sm:text-base">About / Summary otimizado</h3>
                         <span className="text-[11px] font-mono px-2 py-0.5 rounded-full border bg-slate-800 text-slate-300 border-slate-700">
-                          {analysis.rewritten.summary.length} caracteres (ideal: 1.200 a 1.600)
+                          {activeAnalysis.rewritten.summary.length} caracteres (ideal: 1.200 a 1.600)
                         </span>
                       </div>
                       <p className="text-xs text-slate-400">Resumo estruturado para leitura F-shape em 6s. Quebras de linha e bullets são 100% preservados ao colar no LinkedIn.</p>
@@ -543,7 +609,7 @@ export function ActionHubView({
                     <Button
                       size="sm"
                       variant="default"
-                      onClick={() => handleCopy(analysis.rewritten.summary, 'summary')}
+                      onClick={() => handleCopy(activeAnalysis.rewritten.summary, 'summary')}
                       className="text-xs gap-1.5 font-semibold bg-blue-600 hover:bg-blue-500 text-white cursor-pointer"
                     >
                       {copiedKey === 'summary' ? (
@@ -573,7 +639,7 @@ export function ActionHubView({
                         Depois (Versão dos EUA)
                       </span>
                       <FormattedText
-                        text={analysis.rewritten.summary}
+                        text={activeAnalysis.rewritten.summary}
                         as="div"
                         className="text-slate-100 whitespace-pre-wrap leading-relaxed text-xs sm:text-sm font-normal max-h-80 overflow-y-auto"
                       />
@@ -585,7 +651,7 @@ export function ActionHubView({
               {/* Experiences Tab */}
               <TabsContent value="experiences" className="space-y-4">
                 <div id="profile-section-experience" className="space-y-4">
-                  {analysis.rewritten.experiences.map((exp, idx) => {
+                  {activeAnalysis.rewritten.experiences.map((exp, idx) => {
                     const expText = `${exp.title} | ${exp.companyName}\n${exp.bullets
                       .map((b) => `• ${b}`)
                       .join('\n')}`;
@@ -673,7 +739,7 @@ export function ActionHubView({
                     <Button
                       size="sm"
                       variant="default"
-                      onClick={() => handleCopy(analysis.rewritten.skills.join(', '), 'skills')}
+                      onClick={() => handleCopy(activeAnalysis.rewritten.skills.join(', '), 'skills')}
                       className="text-xs gap-1.5 font-semibold bg-blue-600 hover:bg-blue-500 text-white cursor-pointer"
                     >
                       {copiedKey === 'skills' ? (
@@ -715,7 +781,7 @@ export function ActionHubView({
                         Depois (Top Skills Priorizadas para Recrutadores dos EUA)
                       </span>
                       <div className="flex flex-wrap gap-1.5 pt-1">
-                        {analysis.rewritten.skills.map((skill, sIdx) => (
+                        {activeAnalysis.rewritten.skills.map((skill, sIdx) => (
                           <Badge
                             key={sIdx}
                             variant="outline"
@@ -742,24 +808,39 @@ export function ActionHubView({
         {/* Tab 2: Search (Dedicated RecruiterSearchSimulator exclusively) */}
         <TabsContent value="search" forceMount className="space-y-6 mt-4">
           <RecruiterSearchSimulator
-            primaryRole={analysis.profileDirection.primaryRole || 'Senior Software Engineer'}
-            rewrittenHeadline={analysis.rewritten.headline}
-            rewrittenSummary={analysis.rewritten.summary}
-            rewrittenSkills={analysis.rewritten.skills}
-            rewrittenExperiences={analysis.rewritten.experiences}
+            primaryRole={activeAnalysis.profileDirection.primaryRole || 'Senior Software Engineer'}
+            rewrittenHeadline={activeAnalysis.rewritten.headline}
+            rewrittenSummary={activeAnalysis.rewritten.summary}
+            rewrittenSkills={activeAnalysis.rewritten.skills}
+            rewrittenExperiences={activeAnalysis.rewritten.experiences}
             onFixGap={handleFixGap}
+            onIntegrateGap={handleIntegrateGap}
+            onViewResolvedGap={handleViewResolvedGap}
+            resolvedGapMetadata={resolvedGapMetadata}
           />
         </TabsContent>
 
         {/* Tab 3: Launch (Dedicated LinkedInLaunchChecklist exclusively) */}
         <TabsContent value="launch" forceMount className="space-y-6 mt-4">
           <LinkedInLaunchChecklist
-            primaryRole={analysis.profileDirection.primaryRole}
-            alternativeRoles={analysis.profileDirection.alternativeRoles}
-            openToWorkTitles={analysis.rewritten.openToWorkTitles || analysis.profileDirection.openToWorkTitles}
+            primaryRole={activeAnalysis.profileDirection.primaryRole}
+            alternativeRoles={activeAnalysis.profileDirection.alternativeRoles}
+            openToWorkTitles={activeAnalysis.rewritten.openToWorkTitles || activeAnalysis.profileDirection.openToWorkTitles}
           />
         </TabsContent>
       </Tabs>
+
+      {/* Contextual Gap Resolution Drawer */}
+      <GapResolutionDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        gap={activeDrawerGap}
+        analysis={activeAnalysis}
+        targetRole={activeAnalysis.profileDirection.primaryRole}
+        aiProvider={aiProvider}
+        onApplyPatch={handleApplyMicroIntegration}
+        resolvedDiff={drawerResolvedDiff}
+      />
 
       {/* Bottom Footer Actions */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-6 rounded-2xl bg-[#0F1623]/60 border border-[#1E293B] text-center sm:text-left">

@@ -237,18 +237,17 @@ describe('UX Invariants Verification', () => {
       const input = screen.getByPlaceholderText(/Ex: "Senior Backend Engineer"/i);
       fireEvent.change(input, { target: { value: 'Java AND GraphQL' } });
 
-      // Click Corrigir no Perfil
-      const fixBtn = screen.getByRole('button', { name: /Corrigir no Perfil →/i });
+      // Click Integrar no Perfil
+      const fixBtn = screen.getByRole('button', { name: /Integrar no Perfil →/i });
       fireEvent.click(fixBtn);
 
-      // Tab switches to profile in URL and UI
-      expect(window.location.search).toContain('tab=profile');
-      const profileTab = screen.getByRole('tab', { name: /my profile/i });
-      expect(profileTab.getAttribute('data-state')).toBe('active');
+      // Contextual drawer opens over Search Simulator
+      expect(screen.getByRole('dialog')).toBeDefined();
+      expect(screen.getByText(/Validação Factual Obrigatória/i)).toBeDefined();
 
       // Telemetry records the interaction locally with zero network leak
       const events = getRecentEvents();
-      expect(events.some((e) => e.event === 'fix_gap_clicked' && e.data?.gapType === 'skills')).toBe(true);
+      expect(events.some((e) => e.event === 'integrate_gap_clicked' && e.data?.term === 'GraphQL')).toBe(true);
     });
   });
 

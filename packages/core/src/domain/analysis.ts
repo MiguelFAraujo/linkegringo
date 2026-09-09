@@ -108,6 +108,7 @@ export const profileReviewSchema = z.object({
 export type ProfileReview = z.infer<typeof profileReviewSchema>;
 
 export const rewrittenExperienceSchema = z.object({
+  id: z.string().optional(),
   title: z.string(),
   companyName: z.string(),
   bullets: z.preprocess((val) => {

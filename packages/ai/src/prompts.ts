@@ -5,6 +5,7 @@ import type {
   InterviewPlan,
   Profile,
   ProfileReview,
+  MicroIntegrationInput,
 } from '@linkegringo/core';
 
 export const TARGET_MARKET = 'United States';
@@ -791,3 +792,56 @@ ${initialReview ? `Initial Diagnostic (Initial Score: ${initialReview.overallSco
 
 Deliberate systematically in the "reasoning" object ("positioningArchetype", "headlineFormulation", "aboutSectionBlueprint", "experienceFactMapping", "scoreImprovementAudit") before emitting the final "analysis" payload. All fields must strictly conform to the provided response schema and satisfy the non-regression invariant and ATS rewrite rules.`;
 }
+
+// ============================================================================
+// SURGICAL RECRUITER SEARCH TERM INTEGRATION (MICRO-REWRITE)
+// ============================================================================
+
+export const MICRO_INTEGRATION_SYSTEM_PROMPT = `You are a surgical LinkedIn profile optimization engine for US tech recruiters.
+Your goal is to integrate a specific search term naturally, truthfully, and elegantly into exactly ONE block of a profile.
+
+STRICT INVARIANTS & HARD RULES:
+1. ZERO HALLUCINATION / ZERO FABRICATION:
+   - Use ONLY the candidate evidence supplied in the prompt.
+   - NEVER invent technologies, responsibilities, metrics, employers, or outcomes.
+   - If the candidate explicitly denied using the term, or if no production evidence is provided, output status: "blocked" with a clear explanation in warnings.
+2. SURGICAL PATCH INTEGRITY:
+   - Modify ONLY the specific target block indicated in the prompt (headline, summary, specific bullet in an experience, or skills).
+   - Do NOT rewrite or touch any unrelated text.
+   - Preserve 100% of the factual meaning and existing context of the candidate's original work.
+3. EXECUTIVE AMERICAN ENGLISH & GOOGLE XYZ:
+   - Maintain natural US professional English without buzzwords or clichés.
+   - When rewriting an experience bullet, adhere to Google XYZ structure: Accomplished [X], measured by [Y], by doing [Z] (or Problem + Mechanism + Outcome).
+   - Strictly avoid keyword stuffing. The integrated term must read like an authentic engineering component of the system.
+4. EXACT BEFORE/AFTER SPECIFICATION:
+   - "before" MUST be the exact verbatim substring from the current block being updated.
+   - "after" MUST be the complete drop-in replacement substring containing the target term.
+   - "rationale" explains concisely why this converts recruiters while remaining factually honest.
+   - Strictly zero emojis in all output fields.`;
+
+export function buildMicroIntegrationPrompt(input: MicroIntegrationInput): string {
+  const { targetRole, gap, currentText, context, evidence } = input;
+
+  return `SURGICAL RECRUITER SEARCH TERM INTEGRATION:
+
+Target Role: ${targetRole}
+Target Term: "${gap.term}" (Category: ${gap.kind})
+Target Section: ${gap.targetSection}${gap.targetExperienceId ? ` (Experience ID: ${gap.targetExperienceId})` : ''}
+
+Current Block Text:
+"""
+${currentText}
+"""
+
+Candidate Confirmed Evidence:
+Status: ${evidence.status}
+Evidence Details: ${evidence.evidenceText || 'No specific evidence text provided.'}
+
+${context ? `Relevant Surrounding Context:
+${context.headline ? `Current Headline: ${context.headline}\n` : ''}${context.summary ? `Summary Context: ${context.summary.slice(0, 200)}...\n` : ''}${context.experience ? `Company: ${context.experience.companyName} | Title: ${context.experience.title}\n` : ''}${context.skills && context.skills.length > 0 ? `Core Skills: ${context.skills.slice(0, 10).join(', ')}\n` : ''}` : ''}
+
+Generate a surgical MicroIntegrationProposal.
+If candidate status is "denied" or lacks authentic production evidence, return status: "blocked" with rationale and warnings.
+Otherwise, return status: "ready" with exact "before" and "after" replacement text integrating "${gap.term}" naturally.`;
+}
+

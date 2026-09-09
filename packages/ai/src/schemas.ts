@@ -851,3 +851,52 @@ export const geminiRewrittenProfileSchema: Schema = {
 
 export const rewrittenProfileSchema: Schema = geminiRewrittenProfileSchema;
 export const profileAnalysisSchema: Schema = geminiRewrittenProfileSchema;
+
+export const geminiMicroIntegrationProposalSchema: Schema = {
+  type: Type.OBJECT,
+  properties: {
+    status: {
+      type: Type.STRING,
+      enum: ['ready', 'blocked'],
+      description: 'ready if the integration is safe and factual; blocked if candidate denied or lack of evidence.',
+    },
+    patchKind: {
+      type: Type.STRING,
+      enum: ['headline_replace', 'about_insert', 'experience_rewrite', 'skill_add', 'no_safe_change'],
+    },
+    term: { type: Type.STRING },
+    target: {
+      type: Type.OBJECT,
+      properties: {
+        section: {
+          type: Type.STRING,
+          enum: ['headline', 'about', 'experience', 'skills'],
+        },
+        experienceId: { type: Type.STRING },
+        bulletIndex: { type: Type.INTEGER },
+      },
+      required: ['section'],
+    },
+    before: {
+      type: Type.STRING,
+      description: 'Exact verbatim string being replaced from the current profile block.',
+    },
+    after: {
+      type: Type.STRING,
+      description: 'Exact replacement text incorporating the target term naturally without hallucination.',
+    },
+    rationale: {
+      type: Type.STRING,
+      description: 'Concise explanation of why this patch converts and adheres to Google XYZ standards.',
+    },
+    matchedEvidence: {
+      type: Type.ARRAY,
+      items: { type: Type.STRING },
+    },
+    warnings: {
+      type: Type.ARRAY,
+      items: { type: Type.STRING },
+    },
+  },
+  required: ['status', 'patchKind', 'term', 'target', 'before', 'rationale'],
+};

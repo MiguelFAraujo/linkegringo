@@ -104,16 +104,39 @@ describe('RecruiterSearchSimulator Component', () => {
     expect(screen.getByText(/3 Match\(es\) • 0 Parcial\(is\)/i)).toBeDefined();
   });
 
-  it('renders "Corrigir no Perfil →" button for MISSING terms and calls onFixGap with structured ProfileGap', () => {
-    const handleFixGap = vi.fn();
-    render(<RecruiterSearchSimulator {...defaultProps} onFixGap={handleFixGap} />);
+  it('renders "Integrar no Perfil →" button for MISSING terms and calls onIntegrateGap with structured SearchGap', () => {
+    const handleIntegrateGap = vi.fn();
+    render(<RecruiterSearchSimulator {...defaultProps} onIntegrateGap={handleIntegrateGap} />);
 
     const input = screen.getByPlaceholderText(/Ex: "Senior Backend Engineer"/i);
     fireEvent.change(input, { target: { value: 'Java AND GraphQL' } });
 
     // "GraphQL" is MISSING
     expect(screen.getByText('GraphQL')).toBeDefined();
-    const fixButton = screen.getByRole('button', { name: /Corrigir no Perfil →/i });
+    const integrateButton = screen.getByRole('button', { name: /Integrar no Perfil →/i });
+    expect(integrateButton).toBeDefined();
+
+    fireEvent.click(integrateButton);
+    expect(handleIntegrateGap).toHaveBeenCalledTimes(1);
+    expect(handleIntegrateGap).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'gap-graphql',
+        term: 'GraphQL',
+        status: 'missing',
+        kind: 'concept',
+        targetSection: 'experience',
+      }),
+    );
+  });
+
+  it('renders "Integrar no Perfil →" and falls back to onFixGap with structured ProfileGap when onIntegrateGap is not provided', () => {
+    const handleFixGap = vi.fn();
+    render(<RecruiterSearchSimulator {...defaultProps} onFixGap={handleFixGap} />);
+
+    const input = screen.getByPlaceholderText(/Ex: "Senior Backend Engineer"/i);
+    fireEvent.change(input, { target: { value: 'Java AND GraphQL' } });
+
+    const fixButton = screen.getByRole('button', { name: /Integrar no Perfil →/i });
     expect(fixButton).toBeDefined();
 
     fireEvent.click(fixButton);
@@ -122,7 +145,42 @@ describe('RecruiterSearchSimulator Component', () => {
       expect.objectContaining({
         id: 'gap-graphql',
         label: 'Corrigir termo ausente: GraphQL',
-        targetSection: 'skills',
+        targetSection: 'experience',
+      }),
+    );
+  });
+
+  it('renders "Ver alteração" button when a term is a MATCH and was resolved in the session', () => {
+    const handleViewResolvedGap = vi.fn();
+    const resolvedGapMetadata = {
+      kafka: {
+        before: 'Implemented messaging systems.',
+        after: 'Architected Apache Kafka event pipelines processing 20k msg/s.',
+        evidenceText: 'Used Kafka with schema registry in production',
+        companyName: 'Fintech Brasil',
+      },
+    };
+
+    render(
+      <RecruiterSearchSimulator
+        {...defaultProps}
+        onViewResolvedGap={handleViewResolvedGap}
+        resolvedGapMetadata={resolvedGapMetadata}
+      />,
+    );
+
+    const input = screen.getByPlaceholderText(/Ex: "Senior Backend Engineer"/i);
+    fireEvent.change(input, { target: { value: 'Kafka' } });
+
+    // Kafka is a MATCH and is in resolvedGapMetadata
+    const viewButton = screen.getByRole('button', { name: /Ver alteração/i });
+    expect(viewButton).toBeDefined();
+
+    fireEvent.click(viewButton);
+    expect(handleViewResolvedGap).toHaveBeenCalledTimes(1);
+    expect(handleViewResolvedGap).toHaveBeenCalledWith(
+      expect.objectContaining({
+        term: 'Kafka',
       }),
     );
   });

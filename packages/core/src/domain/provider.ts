@@ -7,6 +7,10 @@ import type {
   InterviewProgress,
 } from './interview.js';
 import type { ProfileAnalysis, ProfileReview } from './analysis.js';
+import type {
+  MicroIntegrationInput,
+  MicroIntegrationProposal,
+} from './micro-integration.js';
 
 export interface ParseAndDiagnoseInput {
   pdfBase64?: string;
@@ -81,6 +85,10 @@ export interface AiProvider {
     currentDate?: string;
     interviewAnswers?: InterviewAnswer[];
   }): Promise<ProfileAnalysis>;
+
+  generateMicroIntegration?(
+    input: MicroIntegrationInput
+  ): Promise<MicroIntegrationProposal>;
 
   getChatHistory?(): unknown[];
   restoreChatHistory?(history: unknown[]): void;

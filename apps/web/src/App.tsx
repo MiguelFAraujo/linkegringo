@@ -633,6 +633,8 @@ export function App() {
             initialReview={review || undefined}
             analysis={analysis}
             onStartNew={handleResetSession}
+            aiProvider={getActiveProvider()}
+            onUpdateAnalysis={setAnalysis}
           />
         )}
       </main>

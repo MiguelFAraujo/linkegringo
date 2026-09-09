@@ -10,6 +10,8 @@ import type {
   Profile,
   ProfileAnalysis,
   ProfileReview,
+  MicroIntegrationInput,
+  MicroIntegrationProposal,
 } from '@linkegringo/core';
 import { enforceExperienceRecovery } from './gemini.js';
 
@@ -489,6 +491,67 @@ export class DemoAiProvider implements AiProvider {
     );
 
     return analysis;
+  }
+
+  async generateMicroIntegration(input: MicroIntegrationInput): Promise<MicroIntegrationProposal> {
+    if (input.evidence.status === 'denied') {
+      return {
+        status: 'blocked',
+        patchKind: 'no_safe_change',
+        term: input.gap.term,
+        target: {
+          section: input.gap.targetSection,
+          experienceId: input.gap.targetExperienceId,
+        },
+        before: input.currentText,
+        rationale: 'O candidato confirmou que não possui experiência prática com este termo em produção.',
+        matchedEvidence: [],
+        warnings: [
+          `O termo "${input.gap.term}" não foi inserido no perfil porque o candidato declarou não tê-lo utilizado em produção.`,
+        ],
+      };
+    }
+
+    const term = input.gap.term;
+    const targetSection = input.gap.targetSection;
+    const evidenceText = input.evidence.evidenceText || '';
+
+    let after = input.currentText;
+    let patchKind: any = 'experience_rewrite';
+
+    if (targetSection === 'experience') {
+      patchKind = 'experience_rewrite';
+      if (after.includes('.')) {
+        const parts = after.split('.');
+        after = `${parts[0].trim()} leveraging ${term} to optimize ${evidenceText ? evidenceText.toLowerCase() : 'system reliability'}.${parts.slice(1).join('.')}`;
+      } else {
+        after = `${after.trim()} and integrated ${term} to ensure high throughput.`;
+      }
+    } else if (targetSection === 'headline') {
+      patchKind = 'headline_replace';
+      after = `${input.currentText} | ${term}`;
+    } else if (targetSection === 'skills') {
+      patchKind = 'skill_add';
+      after = term;
+    } else {
+      patchKind = 'about_insert';
+      after = `${input.currentText} Hands-on production expertise with ${term}.`;
+    }
+
+    return {
+      status: 'ready',
+      patchKind,
+      term,
+      target: {
+        section: targetSection,
+        experienceId: input.gap.targetExperienceId,
+      },
+      before: input.currentText,
+      after,
+      rationale: `Integração cirúrgica de "${term}" orientada a fatos confirmados pelo candidato com conformidade ao padrão Google XYZ.`,
+      matchedEvidence: evidenceText ? [evidenceText] : [`Experiência com ${term}`],
+      warnings: [],
+    };
   }
 }
 

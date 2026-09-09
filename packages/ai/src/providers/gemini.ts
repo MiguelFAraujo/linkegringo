@@ -21,6 +21,9 @@ import {
   evaluateScoreTransition,
   deriveOpenToWorkTitles,
   deriveCardConversionBadges,
+  microIntegrationProposalSchema,
+  type MicroIntegrationInput,
+  type MicroIntegrationProposal,
 } from '@linkegringo/core';
 import {
   buildDiagnoseProfilePrompt,
@@ -29,12 +32,14 @@ import {
   buildParseAndDiagnosePrompt,
   buildParseProfilePrompt,
   buildRewriteProfilePrompt,
+  buildMicroIntegrationPrompt,
   DIAGNOSE_PROFILE_SYSTEM_PROMPT,
   INTERVIEW_PROGRESS_SYSTEM_PROMPT,
   INTERVIEW_SYSTEM_PROMPT,
   PARSE_AND_DIAGNOSE_SYSTEM_PROMPT,
   PARSE_PROFILE_SYSTEM_PROMPT,
   REWRITE_PROFILE_SYSTEM_PROMPT,
+  MICRO_INTEGRATION_SYSTEM_PROMPT,
 } from '../prompts.js';
 import {
   geminiDiagnoseProfileSchema,
@@ -43,6 +48,7 @@ import {
   geminiParseAndDiagnoseSchema,
   geminiParseProfileSchema,
   geminiRewrittenProfileSchema,
+  geminiMicroIntegrationProposalSchema,
 } from '../schemas.js';
 
 export function enforceExperienceRecovery(
@@ -894,5 +900,49 @@ export class GeminiAiProvider implements AiProvider {
     }
 
     return profileAnalysisSchema.parse(sanitized);
+  }
+
+  async generateMicroIntegration(input: MicroIntegrationInput): Promise<MicroIntegrationProposal> {
+    // Zero-hallucination invariant: early exit if candidate denied using the term
+    if (input.evidence.status === 'denied') {
+      return {
+        status: 'blocked',
+        patchKind: 'no_safe_change',
+        term: input.gap.term,
+        target: {
+          section: input.gap.targetSection,
+          experienceId: input.gap.targetExperienceId,
+        },
+        before: input.currentText,
+        rationale: 'O candidato confirmou que não possui experiência prática com este termo em produção.',
+        matchedEvidence: [],
+        warnings: [
+          `O termo "${input.gap.term}" não foi inserido no perfil porque o candidato declarou não tê-lo utilizado em produção.`,
+        ],
+      };
+    }
+
+    const prompt = buildMicroIntegrationPrompt(input);
+
+    // Stateless call - isolated from multi-turn chat to avoid token bloat and history pollution
+    const response = await this.executeGenerateContent({
+      contents: prompt,
+      config: {
+        systemInstruction: MICRO_INTEGRATION_SYSTEM_PROMPT,
+        responseMimeType: 'application/json',
+        responseSchema: geminiMicroIntegrationProposalSchema,
+        temperature: 0.1,
+        thinkingConfig: {
+          thinkingBudget: 1024,
+        },
+        thinkingBudget: 1024 as any,
+      },
+    });
+
+    let rawJson = extractJsonFromResponse<any>(response.text || '{}');
+    let sanitized = deepSanitizeDashes(rawJson);
+    sanitized = deepScrubEmojis(sanitized);
+
+    return microIntegrationProposalSchema.parse(sanitized);
   }
 }
