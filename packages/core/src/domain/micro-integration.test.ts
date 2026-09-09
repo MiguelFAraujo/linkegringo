@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   classifyGapTerm,
+  termMatchesText,
   validateMicroIntegrationProposal,
   applyMicroIntegration,
   type MicroIntegrationInput,
@@ -295,6 +296,79 @@ describe('MicroIntegration Domain Logic', () => {
       expect(result.diff.section).toBe('skills');
       expect(result.analysis.rewritten.skills[0]).toBe('Kafka');
       expect(result.analysis.rewritten.skills).toHaveLength(mockAnalysis.rewritten.skills.length + 1);
+    });
+  });
+
+  describe('termMatchesText & Flexible Matching', () => {
+    it('matches compound terms with hyphens, spaces, and underscores', () => {
+      expect(termMatchesText('Engineered high-scale enterprise modules', 'High Scale')).toBe(true);
+      expect(termMatchesText('Engineered high scale enterprise modules', 'High Scale')).toBe(true);
+      expect(termMatchesText('Architected high_scale data pipelines', 'High Scale')).toBe(true);
+      expect(termMatchesText('Supported high-scaling transactional workloads', 'High Scale')).toBe(true);
+    });
+
+    it('matches compound joined words like Full Stack and Front End', () => {
+      expect(termMatchesText('Senior Full-Stack Engineer', 'Full Stack')).toBe(true);
+      expect(termMatchesText('Senior Fullstack Engineer', 'Full Stack')).toBe(true);
+      expect(termMatchesText('Frontend architecture and UI performance', 'Front End')).toBe(true);
+    });
+
+    it('matches technical terms with slashes and prefixes', () => {
+      expect(termMatchesText('Designed CI-CD automation pipelines', 'CI/CD')).toBe(true);
+      expect(termMatchesText('Automated CI/CD workflows with GitHub Actions', 'CI/CD')).toBe(true);
+      expect(termMatchesText('Migrated to micro-services architecture', 'Microservices')).toBe(true);
+      expect(termMatchesText('Decoupled microservices for resilience', 'Microservices')).toBe(true);
+    });
+
+    it('rejects completely unrelated content', () => {
+      expect(termMatchesText('Built standard CRUD endpoints', 'High Scale')).toBe(false);
+      expect(termMatchesText('Developed backend services', 'Kubernetes')).toBe(false);
+    });
+
+    it('validates proposal successfully when IA outputs hyphenated high-scale', () => {
+      const proposal: MicroIntegrationProposal = {
+        status: 'ready',
+        patchKind: 'experience_rewrite',
+        term: 'High Scale',
+        target: {
+          section: 'experience',
+          experienceId: 'exp-0',
+          bulletIndex: 0,
+        },
+        before: 'Architected distributed microservices in Node.js, reducing API response times by 35%.',
+        after: 'Architected high-scale distributed microservices in Node.js, reducing API response times by 35%.',
+        rationale: 'Integrates high-scale into bullet',
+        matchedEvidence: ['grande escala'],
+        warnings: [],
+      };
+
+      const input: MicroIntegrationInput = {
+        targetRole: 'Senior Backend Engineer',
+        gap: {
+          id: 'gap-scale',
+          term: 'High Scale',
+          status: 'missing',
+          kind: 'scale',
+          targetSection: 'experience',
+          targetExperienceId: 'exp-0',
+        },
+        currentText: proposal.before,
+        evidence: {
+          status: 'confirmed',
+          experienceId: 'exp-0',
+          evidenceText: 'grande escala',
+          source: 'candidate',
+        },
+      };
+
+      const validation = validateMicroIntegrationProposal({
+        proposal,
+        input,
+        currentAnalysis: mockAnalysis,
+      });
+
+      expect(validation.valid).toBe(true);
+      expect(validation.reasons).toEqual([]);
     });
   });
 });

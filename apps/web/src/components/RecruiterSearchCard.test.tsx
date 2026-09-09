@@ -61,4 +61,32 @@ describe('RecruiterSearchCard Component', () => {
     expect(screen.getByText('Stack Core 60 Chars')).toBeDefined();
     expect(screen.getByText(/Razão customizada: Termos estratégicos de alta prioridade/i)).toBeDefined();
   });
+
+  it('renders positive diagnostic feedback without contradictory negative critique when original headline is already optimized', () => {
+    const alreadyOptimizedHeadline =
+      'Senior Full Stack Engineer | Node.js, NestJS, TypeScript, React | 7M+ Req/Mo Scale | US Remote';
+    const profileWithOptimizedHeadline = {
+      ...MOCK_PROFILE,
+      headline: alreadyOptimizedHeadline,
+    };
+
+    render(
+      <RecruiterSearchCard
+        originalProfile={profileWithOptimizedHeadline}
+        rewrittenHeadline={alreadyOptimizedHeadline}
+        primaryRole="Senior Full Stack Engineer"
+      />,
+    );
+
+    // Should NOT show negative warning labels
+    expect(screen.queryByText(/Snippet Cortado/i)).toBeNull();
+    expect(screen.queryByText(/Antes \(LinkedIn Original • Baixo CTR\)/i)).toBeNull();
+    expect(screen.queryByText(/Por que o recrutador ignora:/i)).toBeNull();
+
+    // Should show positive recognition
+    expect(screen.getByText(/LinkedIn Original \(Já Otimizado • Alto CTR\)/i)).toBeDefined();
+    expect(screen.getByText(/Já Recruiter Ready/i)).toBeDefined();
+    expect(screen.getByText(/Diagnóstico da sua Headline Original:/i)).toBeDefined();
+    expect(screen.getByText(/Sua headline original já segue a fórmula de alta conversão/i)).toBeDefined();
+  });
 });

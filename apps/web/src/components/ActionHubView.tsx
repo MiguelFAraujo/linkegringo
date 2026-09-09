@@ -8,6 +8,7 @@ import {
   Sparkles,
   Copy,
   Check,
+  CheckCircle2,
   FileText,
   Briefcase,
   Layers,
@@ -18,14 +19,15 @@ import {
   Rocket,
   ArrowRight,
 } from 'lucide-react';
-import type {
-  Profile,
-  ProfileAnalysis,
-  ProfileReview,
-  ProfileGap,
-  SearchGap,
-  AppliedMicroIntegration,
-  AiProvider,
+import {
+  type Profile,
+  type ProfileAnalysis,
+  type ProfileReview,
+  type ProfileGap,
+  type SearchGap,
+  type AppliedMicroIntegration,
+  type AiProvider,
+  isHeadlineAlreadyOptimized,
 } from '@linkegringo/core';
 import { copyToClipboard } from '@/lib/file-utils';
 import { InterviewGuideCard } from './InterviewGuideCard';
@@ -570,14 +572,34 @@ export function ActionHubView({
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                    <div className="p-4 rounded-xl border border-rose-500/20 bg-rose-950/10 space-y-1.5">
-                      <span className="font-semibold text-rose-400 text-xs block">
-                        Antes (LinkedIn Original)
-                      </span>
-                      <p className="text-slate-400 italic text-xs sm:text-sm leading-relaxed">
-                        {originalProfile.headline || '(Vazio ou sem título estratégico)'}
-                      </p>
-                    </div>
+                    {isHeadlineAlreadyOptimized(originalProfile.headline, activeAnalysis.rewritten.headline) ? (
+                      <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-950/15 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-semibold text-emerald-400 text-xs flex items-center gap-1.5">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            LinkedIn Original (Já Recruiter Ready)
+                          </span>
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                            Alto CTR
+                          </span>
+                        </div>
+                        <p className="text-slate-200 font-medium text-xs sm:text-sm leading-relaxed">
+                          {originalProfile.headline}
+                        </p>
+                        <p className="text-[11px] text-emerald-300/80 pt-1 border-t border-emerald-500/20">
+                          ✓ Sua headline original já segue a estrutura recomendada para tech recruiters dos EUA e foi mantida como referência de alta conversão.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="p-4 rounded-xl border border-rose-500/20 bg-rose-950/10 space-y-1.5">
+                        <span className="font-semibold text-rose-400 text-xs block">
+                          Antes (LinkedIn Original)
+                        </span>
+                        <p className="text-slate-400 italic text-xs sm:text-sm leading-relaxed">
+                          {originalProfile.headline || '(Vazio ou sem título estratégico)'}
+                        </p>
+                      </div>
+                    )}
 
                     <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-950/15 space-y-1.5">
                       <span className="font-semibold text-emerald-400 text-xs block">

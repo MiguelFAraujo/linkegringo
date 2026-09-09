@@ -376,6 +376,7 @@ Phase 1: Physical Inventory & Count N
 Phase 2: Spatial Separation & Column Stitching
 - Separate multi-column sidebar elements (contact info, skills, languages, certifications) from the primary chronological trajectory.
 - Detect page breaks across pages and stitch cross-page continuation of descriptions and bullets into their parent company.
+- 100% VERBATIM HEADLINE MANDATE: Transcribe the candidate's exact, literal headline from the PDF into profile.headline without modifying, optimizing, or translating it. Even if it is in Portuguese, generic, or missing, record it exactly as written in the original document — do NOT pre-optimize the headline during parsing.
 - 100% VERBATIM DESCRIPTIONS MANDATE: For each position in profile.experiences, transcribe the full verbatim "description" text (including all original bullet points, responsibilities, metrics, and technologies). Never summarize, never truncate, and never omit original text. If a role has no text description in the PDF, output an empty string "".
 
 Phase 3: Deterministic Rubric Deduction

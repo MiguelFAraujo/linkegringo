@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { FormattedText } from './ui/formatted-text';
 import type { ProfileGap, SearchGap } from '@linkegringo/core';
-import { classifyGapTerm } from '@linkegringo/core';
+import { classifyGapTerm, termMatchesText } from '@linkegringo/core';
 
 export interface RecruiterSearchSimulatorProps {
   primaryRole: string;
@@ -87,14 +87,7 @@ const VALID_SHORT_TECH_TERMS = new Set([
 ]);
 
 export function matchesTerm(content: string, term: string): boolean {
-  if (!content || !term) return false;
-  const t = term.trim().toLowerCase();
-  if (t.length === 0) return false;
-  const c = content.toLowerCase();
-
-  const escaped = t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const rx = new RegExp(`(?:^|[^a-z0-9])${escaped}(?:[^a-z0-9]|$)`, 'i');
-  return rx.test(c);
+  return termMatchesText(content, term);
 }
 
 export function RecruiterSearchSimulator({

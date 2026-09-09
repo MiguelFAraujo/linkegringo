@@ -232,6 +232,77 @@ export function classifyGapTerm(term: string): GapTermKind {
   return 'technology';
 }
 
+/**
+ * Evaluates whether a text block contains a search term.
+ * Supports:
+ * - Direct case-insensitive substring matching
+ * - Punctuation/whitespace interchangeability (e.g. "High Scale" matches "high-scale", "high_scale", "high scale")
+ * - Morphological variations (e.g. "high scale" -> "high-scaling", "high-scaled")
+ * - Compound word joined forms (e.g. "Full Stack" matches "fullstack" and "full-stack", "Front End" matches "frontend")
+ * - Hyphenated prefix forms (e.g. "microservices" matches "micro-services")
+ */
+export function termMatchesText(content: string, term: string): boolean {
+  if (!content || !term) return false;
+  const cleanTerm = term.trim().toLowerCase().replace(/^["']|["']$/g, '');
+  if (cleanTerm.length === 0) return false;
+
+  const cleanContent = content.toLowerCase();
+
+  const words = cleanTerm.split(/[\s\-_/]+/).filter(Boolean);
+  if (words.length === 0) return false;
+
+  if (words.length > 1) {
+    const escapedWords = words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    const lastWord = words[words.length - 1];
+    const escapedLast = escapedWords[escapedWords.length - 1];
+    
+    // Support English inflection rules (e.g. scale -> scaling/scaled, test -> testing/tested)
+    let stemPattern = `${escapedLast}(?:s|es|d|ed|ing)?`;
+    if (lastWord.length > 3 && lastWord.endsWith('e')) {
+      const root = lastWord.slice(0, -1);
+      const escapedRoot = root.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      stemPattern = `(?:${escapedLast}(?:s|d)?|${escapedRoot}(?:ing|ed)?)`;
+    }
+
+    const flexiblePattern =
+      '(?:^|[^a-z0-9])' +
+      escapedWords.slice(0, -1).join('[\\s\\-_/]+') +
+      '[\\s\\-_/]+' +
+      stemPattern +
+      '(?:[^a-z0-9]|$)';
+    try {
+      const rx = new RegExp(flexiblePattern, 'i');
+      if (rx.test(cleanContent)) return true;
+    } catch {
+      // Fallback to substring
+    }
+
+    // Also check compound joined form (e.g. "full stack" -> "fullstack", "front end" -> "frontend")
+    const joined = words.join('');
+    const joinedRx = new RegExp(`(?:^|[^a-z0-9])${joined}(?:[^a-z0-9]|$)`, 'i');
+    if (joinedRx.test(cleanContent)) return true;
+  } else if (words.length === 1) {
+    // Single word: check with word boundaries, hyphenated splits, or common suffixes
+    const word = words[0];
+    const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    // Standard boundary match with plural/verb inflection
+    const rx = new RegExp(`(?:^|[^a-z0-9])${escaped}(?:s|es|d|ed|ing)?(?:[^a-z0-9]|$)`, 'i');
+    if (rx.test(cleanContent)) return true;
+
+    // Check if word appears hyphenated (e.g. "microservices" -> "micro-services")
+    if (word.length > 6) {
+      const prefixMatch = word.match(/^(micro|multi|cross|inter|sub|meta)(.*)$/);
+      if (prefixMatch) {
+        const hyphenated = `${prefixMatch[1]}-${prefixMatch[2]}`;
+        if (cleanContent.includes(hyphenated)) return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 // ---------------------------------------------------------------------------
 // 2. State-Verifiable Proposal Validation
 // ---------------------------------------------------------------------------
@@ -265,9 +336,8 @@ export function validateMicroIntegrationProposal({
     return { valid: false, reasons };
   }
 
-  // Rule 4: The new text must actually contain the target term (case-insensitive)
-  const normalizedTerm = proposal.term.toLowerCase().trim();
-  if (!proposal.after.toLowerCase().includes(normalizedTerm)) {
+  // Rule 4: The new text must actually contain the target term (case-insensitive & flexible hyphenation/spacing)
+  if (!termMatchesText(proposal.after, proposal.term)) {
     reasons.push(`O texto gerado pela IA não contém o termo-alvo "${proposal.term}".`);
   }
 

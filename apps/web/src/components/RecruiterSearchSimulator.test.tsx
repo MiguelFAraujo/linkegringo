@@ -184,4 +184,29 @@ describe('RecruiterSearchSimulator Component', () => {
       }),
     );
   });
+
+  it('matches hyphenated "high-scale" in experience when recruiter searches for "High Scale"', () => {
+    const propsWithHyphenated = {
+      ...defaultProps,
+      rewrittenExperiences: [
+        {
+          id: 'exp-0',
+          title: 'Senior Backend Engineer',
+          companyName: 'Fintech Corp',
+          bullets: [
+            'Engineered high-scale enterprise modules for financial reconciliation.',
+          ],
+        },
+      ],
+    };
+
+    render(<RecruiterSearchSimulator {...propsWithHyphenated} />);
+    const input = screen.getByPlaceholderText(/Ex: "Senior Backend Engineer"/i);
+    fireEvent.change(input, { target: { value: '"High Scale"' } });
+
+    expect(screen.getByText('High Scale')).toBeDefined();
+    expect(screen.getByText(/0 Match\(es\) • 1 Parcial\(is\)/i)).toBeDefined();
+    expect(screen.getByText('WEAK')).toBeDefined();
+    expect(screen.getByText('Summary / Bullets')).toBeDefined();
+  });
 });

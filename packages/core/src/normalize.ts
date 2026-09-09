@@ -310,6 +310,128 @@ export function deriveCardConversionBadges(
   };
 }
 
+/**
+ * Detects whether the candidate's original headline is already optimized for US tech recruiters.
+ * Returns true if:
+ * - The original headline matches the rewritten headline (exact or case-normalized)
+ * - The original headline already implements the high-converting US recruiter formula:
+ *   [Role Anchor] | [Core Techs] | [Scale / US Remote / Seniority]
+ */
+export function isHeadlineAlreadyOptimized(
+  originalHeadline?: string,
+  rewrittenHeadline?: string,
+): boolean {
+  if (!originalHeadline || !originalHeadline.trim()) return false;
+
+  const origClean = originalHeadline.trim().toLowerCase().replace(/\s+/g, ' ');
+
+  // 1. If rewrittenHeadline is provided, check for identical or near-identical text
+  if (rewrittenHeadline && rewrittenHeadline.trim()) {
+    const rewClean = rewrittenHeadline.trim().toLowerCase().replace(/\s+/g, ' ');
+    if (origClean === rewClean) return true;
+    if (origClean.includes(rewClean) || rewClean.includes(origClean)) return true;
+  }
+
+  // 2. Check if original headline already has the high-conversion recruiter structure:
+  // - Starts with senior/staff/lead/principal or clear role anchor
+  // - Has at least 2 pipe (|) delimiters
+  // - Explicitly mentions scale, remote, or high-throughput keywords
+  const pipeCount = (originalHeadline.match(/\|/g) || []).length;
+  const hasSeniorityAnchor = /^(?:senior|staff|lead|principal|software architect|solutions architect)\b/i.test(
+    originalHeadline.trim(),
+  );
+  const hasUsRemoteOrScale =
+    /\b(?:us remote|remote|scale|req\/mo|distributed|high-throughput|latency|qps|rps|p99)\b/i.test(
+      originalHeadline,
+    );
+
+  return pipeCount >= 2 && hasSeniorityAnchor && hasUsRemoteOrScale;
+}
+
+export interface OriginalHeadlineCritique {
+  isAlreadyOptimized: boolean;
+  statusBadge: string;
+  reasons: string[];
+}
+
+/**
+ * Derives dynamic critique and diagnostic reasons for the candidate's original headline.
+ * Prevents contradictory negative feedback when the original headline is already optimized or identical to the US version.
+ */
+export function deriveOriginalHeadlineCritique(
+  originalHeadline?: string,
+  rewrittenHeadline?: string,
+  _latestExp?: { title?: string; companyName?: string },
+): OriginalHeadlineCritique {
+  const isOptimized = isHeadlineAlreadyOptimized(originalHeadline, rewrittenHeadline);
+
+  if (isOptimized) {
+    return {
+      isAlreadyOptimized: true,
+      statusBadge: 'Já Recruiter Ready',
+      reasons: [
+        'Sua headline original já segue a fórmula de alta conversão de tech recruiters dos EUA.',
+        'Ancoragem sênior, stack de alta busca e escopo de sistemas já visíveis nos primeiros 60 caracteres.',
+        'Nenhuma reformulação drástica necessária: mantido o excelente alinhamento com buscas diretas.',
+      ],
+    };
+  }
+
+  if (!originalHeadline || !originalHeadline.trim() || originalHeadline === '(Sem headline cadastrada)') {
+    return {
+      isAlreadyOptimized: false,
+      statusBadge: 'Sem Headline',
+      reasons: [
+        'Ausência de título estratégico configurado no perfil.',
+        'Recrutadores dos EUA filtram por cargo e tecnologias que não aparecem no card de busca.',
+      ],
+    };
+  }
+
+  // Detect specific deficiencies in unoptimized original headline
+  const reasons: string[] = [];
+  const text = originalHeadline.toLowerCase();
+
+  const isPortuguese =
+    /\b(?:desenvolvedor|desenvolvedora|engenheiro|engenheira|pleno|sênior|estágio|estagiário|tecnologia|sistemas|na |no |em busca)\b/i.test(
+      text,
+    );
+  const hasCliches =
+    /\b(?:buscando|desafios|novos desafios|open to work|looking for|passionate|entusiasta|ninja|guru|rockstar|problem solver)\b/i.test(
+      text,
+    );
+  const pipeCount = (originalHeadline.match(/\|/g) || []).length;
+  const isVeryShort = originalHeadline.trim().length < 35 && pipeCount === 0;
+  const isOverloaded = pipeCount >= 4 || (originalHeadline.match(/,/g) || []).length >= 5;
+
+  if (isPortuguese) {
+    reasons.push('Título em português reduz severamente a indexação nos filtros de busca de recrutadores dos EUA.');
+  }
+
+  if (hasCliches) {
+    reasons.push('Termos genéricos ou clichês de busca ativa diluem a autoridade técnica e a percepção de senioridade.');
+  }
+
+  if (isVeryShort) {
+    reasons.push('Título genérico sem especificação da stack técnica principal nem do escopo de escala.');
+  }
+
+  if (isOverloaded) {
+    reasons.push('Excesso de termos concorrendo por atenção corta antes de evidenciar o foco nos 60 caracteres.');
+  }
+
+  if (reasons.length === 0) {
+    reasons.push('Título longo ou genérico corta antes de evidenciar a senioridade nos 60 caracteres.');
+    reasons.push('Sem alinhamento com a taxonomia de busca de "Job Title" dos EUA.');
+  }
+
+  return {
+    isAlreadyOptimized: false,
+    statusBadge: 'Snippet Cortado',
+    reasons: reasons.slice(0, 3),
+  };
+}
+
 export interface StabilizeInboundReadinessInput {
   candidateId?: string;
   evidenceHash?: string;

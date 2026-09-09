@@ -111,7 +111,11 @@ export const profileResponseSchema: Schema = {
     publicId: { type: Type.STRING },
     firstName: { type: Type.STRING },
     lastName: { type: Type.STRING },
-    headline: { type: Type.STRING },
+    headline: {
+      type: Type.STRING,
+      description:
+        'Exact verbatim original headline extracted from the document. Do NOT optimize, translate, or rewrite.',
+    },
     location: { type: Type.STRING },
     summary: { type: Type.STRING },
     experiences: {

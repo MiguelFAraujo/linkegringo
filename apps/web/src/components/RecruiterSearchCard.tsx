@@ -11,7 +11,7 @@ import {
   Check,
 } from 'lucide-react';
 import type { Profile } from '@linkegringo/core';
-import { deriveCardConversionBadges } from '@linkegringo/core';
+import { deriveCardConversionBadges, deriveOriginalHeadlineCritique } from '@linkegringo/core';
 import { CandidateAvatar } from './ui/candidate-avatar';
 import { FormattedText } from './ui/formatted-text';
 
@@ -40,6 +40,12 @@ export function RecruiterSearchCard({
   const targetRole = primaryRole || 'Senior Software Engineer';
   const latestExp = originalProfile.experiences?.[0];
   const originalHeadline = originalProfile.headline || '(Sem headline cadastrada)';
+  const originalCritique = deriveOriginalHeadlineCritique(
+    originalProfile.headline,
+    rewrittenHeadline,
+    latestExp,
+  );
+  const isAlreadyOptimized = originalCritique.isAlreadyOptimized;
 
   return (
     <Card className="border-[#1E293B] bg-[#0F1623]/80 shadow-2xl p-5 sm:p-7 rounded-2xl space-y-6">
@@ -69,32 +75,64 @@ export function RecruiterSearchCard({
 
         {/* Side-by-Side Recruiter Cards: Desktop 12 cols (Before 4 cols ~30% vs After 8 cols ~70%) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-          {/* ANTES (Original - Muted & Compact) */}
-          <div className="lg:col-span-4 p-4 sm:p-5 rounded-2xl border border-rose-500/20 bg-rose-950/10 opacity-80 flex flex-col justify-between space-y-4">
+          {/* ANTES (Original - Adaptivo: alerta quando não otimizado; positivo/afirmativo quando já otimizado) */}
+          <div
+            className={`lg:col-span-4 p-4 sm:p-5 rounded-2xl border flex flex-col justify-between space-y-4 ${
+              isAlreadyOptimized
+                ? 'border-emerald-500/30 bg-emerald-950/10'
+                : 'border-rose-500/20 bg-rose-950/10 opacity-80'
+            }`}
+          >
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-rose-400 flex items-center gap-1.5">
-                  <AlertTriangle className="w-3.5 h-3.5" />
-                  Antes (LinkedIn Original • Baixo CTR)
+                <span
+                  className={`text-xs font-semibold flex items-center gap-1.5 ${
+                    isAlreadyOptimized ? 'text-emerald-400' : 'text-rose-400'
+                  }`}
+                >
+                  {isAlreadyOptimized ? (
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                  ) : (
+                    <AlertTriangle className="w-3.5 h-3.5" />
+                  )}
+                  {isAlreadyOptimized
+                    ? 'LinkedIn Original (Já Otimizado • Alto CTR)'
+                    : 'Antes (LinkedIn Original • Baixo CTR)'}
                 </span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                  Snippet Cortado
+                <span
+                  className={`text-[10px] font-mono px-2 py-0.5 rounded border ${
+                    isAlreadyOptimized
+                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                      : 'bg-rose-500/20 text-rose-300 border-rose-500/30'
+                  }`}
+                >
+                  {originalCritique.statusBadge}
                 </span>
               </div>
 
               {/* Mock LinkedIn Recruiter Item */}
-              <div className="p-4 rounded-xl border border-[#1E293B] bg-[#090D14]/90 space-y-3">
+              <div
+                className={`p-4 rounded-xl border bg-[#090D14]/90 space-y-3 ${
+                  isAlreadyOptimized ? 'border-emerald-500/20' : 'border-[#1E293B]'
+                }`}
+              >
                 <div className="flex items-start gap-3.5">
                   <CandidateAvatar
                     publicId={originalProfile.publicId}
                     name={candidateFullName}
                     size="md"
-                    className="ring-1 ring-rose-500/30"
+                    className={isAlreadyOptimized ? 'ring-1 ring-emerald-500/30' : 'ring-1 ring-rose-500/30'}
                     decorative={true}
                   />
                   <div className="space-y-1 min-w-0 flex-1">
                     <h4 className="text-sm font-bold text-slate-200 truncate">{candidateFullName}</h4>
-                    <p className="text-xs text-slate-400 line-clamp-2 italic leading-relaxed">
+                    <p
+                      className={`text-xs leading-relaxed ${
+                        isAlreadyOptimized
+                          ? 'text-slate-200 font-medium'
+                          : 'text-slate-400 line-clamp-2 italic'
+                      }`}
+                    >
                       {originalHeadline}
                     </p>
                     <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-500 pt-1">
@@ -116,20 +154,36 @@ export function RecruiterSearchCard({
               </div>
             </div>
 
-            {/* Why it fails */}
-            <div className="pt-3 border-t border-rose-500/20 space-y-1.5 text-xs text-slate-400">
-              <span className="text-[11px] font-semibold text-rose-300 uppercase tracking-wider block">
-                Por que o recrutador ignora:
+            {/* Diagnostic feedback */}
+            <div
+              className={`pt-3 border-t space-y-1.5 text-xs ${
+                isAlreadyOptimized
+                  ? 'border-emerald-500/20 text-slate-300'
+                  : 'border-rose-500/20 text-slate-400'
+              }`}
+            >
+              <span
+                className={`text-[11px] font-semibold uppercase tracking-wider block ${
+                  isAlreadyOptimized ? 'text-emerald-300' : 'text-rose-300'
+                }`}
+              >
+                {isAlreadyOptimized
+                  ? 'Diagnóstico da sua Headline Original:'
+                  : 'Por que o recrutador ignora:'}
               </span>
               <ul className="space-y-1 text-[11px] text-slate-300">
-                <li className="flex items-start gap-1.5">
-                  <span className="text-rose-400 font-bold">✕</span>
-                  <span>Título longo ou genérico corta antes de evidenciar a senioridade nos 60 caracteres.</span>
-                </li>
-                <li className="flex items-start gap-1.5">
-                  <span className="text-rose-400 font-bold">✕</span>
-                  <span>Sem alinhamento com a taxonomia de busca de "Job Title" dos EUA.</span>
-                </li>
+                {originalCritique.reasons.map((reason, idx) => (
+                  <li key={idx} className="flex items-start gap-1.5">
+                    <span
+                      className={`font-bold ${
+                        isAlreadyOptimized ? 'text-emerald-400' : 'text-rose-400'
+                      }`}
+                    >
+                      {isAlreadyOptimized ? '✓' : '✕'}
+                    </span>
+                    <span>{reason}</span>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>

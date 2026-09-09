@@ -6,6 +6,8 @@ import {
   evaluateScoreTransition,
   deriveOpenToWorkTitles,
   deriveCardConversionBadges,
+  isHeadlineAlreadyOptimized,
+  deriveOriginalHeadlineCritique,
 } from './normalize.js';
 import type { ScrapedProfile } from './domain/scraped.js';
 
@@ -310,6 +312,62 @@ describe('calculateInboundReadiness, calculateInboundJourney and stabilizeInboun
 
     // Score improvement: 85 -> 92
     expect(stabilizeInboundReadiness({ previousScore: 85, rawScore: 92 })).toBe(92);
+  });
+
+  describe('isHeadlineAlreadyOptimized and deriveOriginalHeadlineCritique', () => {
+    const optimizedHeadline =
+      'Senior Full Stack Engineer | Node.js, NestJS, TypeScript, React | 7M+ Req/Mo Scale | US Remote';
+    const unoptimizedPtHeadline =
+      'Desenvolvedor Backend | Java | Spring Boot | Microserviços | Buscando desafios';
+    const genericShortHeadline = 'Software Engineer at Leadzy';
+
+    it('detects already optimized or identical headlines', () => {
+      // Identical
+      expect(isHeadlineAlreadyOptimized(optimizedHeadline, optimizedHeadline)).toBe(true);
+
+      // Substring / near-identical
+      expect(
+        isHeadlineAlreadyOptimized(
+          'Senior Full Stack Engineer | Node.js, NestJS, TypeScript, React | 7M+ Req/Mo Scale | US Remote',
+          'Senior Full Stack Engineer | Node.js, NestJS, React | 7M+ Req/Mo Scale | US Remote',
+        ),
+      ).toBe(true);
+
+      // Structure matches formula even without rewritten headline
+      expect(isHeadlineAlreadyOptimized(optimizedHeadline)).toBe(true);
+
+      // Unoptimized headlines
+      expect(isHeadlineAlreadyOptimized(unoptimizedPtHeadline, optimizedHeadline)).toBe(false);
+      expect(isHeadlineAlreadyOptimized(genericShortHeadline, optimizedHeadline)).toBe(false);
+      expect(isHeadlineAlreadyOptimized('', optimizedHeadline)).toBe(false);
+      expect(isHeadlineAlreadyOptimized(undefined, optimizedHeadline)).toBe(false);
+    });
+
+    it('derives positive diagnostic critique when headline is already optimized', () => {
+      const critique = deriveOriginalHeadlineCritique(optimizedHeadline, optimizedHeadline);
+      expect(critique.isAlreadyOptimized).toBe(true);
+      expect(critique.statusBadge).toBe('Já Recruiter Ready');
+      expect(critique.reasons).toHaveLength(3);
+      expect(critique.reasons[0]).toContain('Sua headline original já segue a fórmula de alta conversão');
+    });
+
+    it('derives constructive deficiencies when headline is in Portuguese with cliches', () => {
+      const critique = deriveOriginalHeadlineCritique(unoptimizedPtHeadline, optimizedHeadline);
+      expect(critique.isAlreadyOptimized).toBe(false);
+      expect(critique.statusBadge).toBe('Snippet Cortado');
+      expect(critique.reasons.some((r) => r.includes('português'))).toBe(true);
+      expect(critique.reasons.some((r) => r.includes('clichês'))).toBe(true);
+    });
+
+    it('handles generic short headlines and empty headlines safely', () => {
+      const shortCritique = deriveOriginalHeadlineCritique(genericShortHeadline, optimizedHeadline);
+      expect(shortCritique.isAlreadyOptimized).toBe(false);
+      expect(shortCritique.reasons.some((r) => r.includes('genérico sem especificação'))).toBe(true);
+
+      const emptyCritique = deriveOriginalHeadlineCritique('', optimizedHeadline);
+      expect(emptyCritique.isAlreadyOptimized).toBe(false);
+      expect(emptyCritique.statusBadge).toBe('Sem Headline');
+    });
   });
 });
 
