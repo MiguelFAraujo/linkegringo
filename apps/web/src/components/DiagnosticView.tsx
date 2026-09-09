@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
@@ -32,6 +32,7 @@ import {
 } from '@linkegringo/core';
 import { FormattedText } from './ui/formatted-text';
 import { CandidateAvatar } from './ui/candidate-avatar';
+import { track, toScoreBand } from '@/lib/telemetry';
 
 const isTriageInquiry = (issue: string) =>
   issue.startsWith('Ponto de atenção') ||
@@ -153,6 +154,10 @@ export function DiagnosticView({
   const biggestUnlock =
     (primaryGapId ? derivedGaps.find((g) => g.id === primaryGapId) : undefined) ?? derivedGaps[0];
   const secondaryUnlocks = derivedGaps.filter((g) => g.id !== biggestUnlock?.id).slice(0, 2);
+
+  useEffect(() => {
+    track('diagnosis_viewed', { scoreBand: toScoreBand(inboundScore) });
+  }, [inboundScore]);
 
   const handleProceed = () => {
     if (onProceedToInterview) {

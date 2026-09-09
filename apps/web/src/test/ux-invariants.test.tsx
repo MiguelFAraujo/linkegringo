@@ -247,7 +247,7 @@ describe('UX Invariants Verification', () => {
 
       // Telemetry records the interaction locally with zero network leak
       const events = getRecentEvents();
-      expect(events.some((e) => e.event === 'integrate_gap_clicked' && e.data?.term === 'GraphQL')).toBe(true);
+      expect(events.some((e) => e.event === 'micro_integration_started' && e.data?.kind !== undefined)).toBe(true);
     });
   });
 

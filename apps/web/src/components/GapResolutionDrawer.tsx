@@ -189,7 +189,6 @@ export function GapResolutionDrawer({
 
       setProposal(result);
       setStep('proposal');
-      track('micro_integration_proposal_generated', { term: gapTerm, patchKind: result.patchKind });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Falha ao gerar integração com IA.';
       setErrorMessage(msg);
@@ -230,7 +229,6 @@ export function GapResolutionDrawer({
 
       const applied = applyMicroIntegration(analysis, proposal);
       onApplyPatch(applied);
-      track('micro_integration_applied', { term: gapTerm, patchKind: proposal.patchKind });
       onOpenChange(false);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Erro ao aplicar alteração.';
@@ -384,7 +382,10 @@ export function GapResolutionDrawer({
                   variant="outline"
                   onClick={() => {
                     setStep('denied');
-                    track('micro_integration_denied', { term: gapTerm });
+                    if (gap?.kind) {
+                      track('micro_integration_applied', { kind: gap.kind, outcome: 'no_safe_change' });
+                      track('gap_resolved', { kind: gap.kind, outcome: 'no_safe_change' });
+                    }
                   }}
                   className="w-full py-5 text-xs sm:text-sm font-semibold border-[#1E293B] bg-[#090D14] text-slate-300 hover:bg-slate-800/80 hover:text-white cursor-pointer"
                 >

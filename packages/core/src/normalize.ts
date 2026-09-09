@@ -368,7 +368,7 @@ export function deriveOriginalHeadlineCritique(
   if (isOptimized) {
     return {
       isAlreadyOptimized: true,
-      statusBadge: 'Já Recruiter Ready',
+      statusBadge: 'Recruiter-Ready',
       reasons: [
         'Sua headline original já segue a fórmula de alta conversão de tech recruiters dos EUA.',
         'Ancoragem sênior, stack de alta busca e escopo de sistemas já visíveis nos primeiros 60 caracteres.',

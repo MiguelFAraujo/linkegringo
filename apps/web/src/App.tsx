@@ -38,6 +38,7 @@ import {
   getCandidateIdentityKey,
   evaluateScoreTransition,
 } from '@linkegringo/core';
+import { track, toDurationBand } from './lib/telemetry';
 
 export type FlowStep = 'upload' | 'diagnostic' | 'interview' | 'facts' | 'action-hub';
 
@@ -197,6 +198,8 @@ export function App() {
     setIsLoading(true);
     setLoadingMessage('Analisando perfil com IA multimodal...');
     setErrorMessage(null);
+    const startTime = Date.now();
+    track('analysis_started', { source: 'upload' });
 
     try {
       const provider = getActiveProvider();
@@ -244,6 +247,7 @@ export function App() {
           excludedTechnologies: [],
         });
       }
+      track('analysis_completed', { durationBand: toDurationBand(Date.now() - startTime) });
       setStep('diagnostic');
     } catch (err: any) {
       console.error('Erro na análise do perfil:', err);
@@ -263,6 +267,12 @@ export function App() {
     setErrorMessage(null);
     setProviderId('demo');
     setStoredProviderId('demo');
+    const startTime = Date.now();
+    track('pdf_uploaded', { source: 'demo' });
+    if (targetRole) {
+      track('target_role_selected', { roleCategory: targetRole });
+    }
+    track('analysis_started', { source: 'demo' });
 
     try {
       const provider = createAiProvider('demo');
@@ -303,6 +313,7 @@ export function App() {
         workPreference: 'remote',
         excludedTechnologies: [],
       });
+      track('analysis_completed', { durationBand: toDurationBand(Date.now() - startTime) });
       setStep('diagnostic');
     } catch (err: any) {
       console.error('Erro no modo demo:', err);
@@ -440,6 +451,7 @@ export function App() {
         setFacts(baselineFacts);
       }
     }
+    track('interview_skipped');
     setStep('facts');
   };
 
@@ -490,6 +502,7 @@ export function App() {
       }
 
       setAnalysis(stabilizedAnalysis);
+      track('rewrite_completed');
       setStep('action-hub');
     } catch (err: any) {
       console.error('Erro ao gerar perfil final:', err);

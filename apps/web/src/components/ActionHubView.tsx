@@ -8,7 +8,6 @@ import {
   Sparkles,
   Copy,
   Check,
-  CheckCircle2,
   FileText,
   Briefcase,
   Layers,
@@ -17,7 +16,6 @@ import {
   Target,
   Search,
   Rocket,
-  ArrowRight,
 } from 'lucide-react';
 import {
   type Profile,
@@ -27,7 +25,6 @@ import {
   type SearchGap,
   type AppliedMicroIntegration,
   type AiProvider,
-  isHeadlineAlreadyOptimized,
 } from '@linkegringo/core';
 import { copyToClipboard } from '@/lib/file-utils';
 import { InterviewGuideCard } from './InterviewGuideCard';
@@ -37,7 +34,13 @@ import { RecruiterSearchCard } from './RecruiterSearchCard';
 import { LinkedInLaunchChecklist } from './LinkedInLaunchChecklist';
 import { RecruiterSearchSimulator } from './RecruiterSearchSimulator';
 import { GapResolutionDrawer } from './GapResolutionDrawer';
-import { track } from '@/lib/telemetry';
+import { track, toScoreBand } from '@/lib/telemetry';
+import {
+  HeadlineSection,
+  AboutSection,
+  ExperienceSection,
+  SkillsSection,
+} from './profile';
 
 export type HubTab = 'profile' | 'search' | 'launch';
 
@@ -93,11 +96,20 @@ export function ActionHubView({
     Record<string, { before: string; after: string; evidenceText?: string; companyName?: string }>
   >({});
 
+  useEffect(() => {
+    track('action_hub_viewed', { initialScoreBand: toScoreBand(initialScore) });
+  }, [initialScore]);
+
   // Sync with URL parameters
   const handleTabChange = (tab: string) => {
     const validTab: HubTab = tab === 'search' || tab === 'launch' || tab === 'profile' ? tab : 'profile';
     setCurrentTab(validTab);
     track('tab_switched', { tab: validTab });
+    if (validTab === 'search') {
+      track('search_tab_opened');
+    } else if (validTab === 'launch') {
+      track('launch_started');
+    }
 
     if (typeof window !== 'undefined' && window.history) {
       const url = new URL(window.location.href);
@@ -115,7 +127,6 @@ export function ActionHubView({
   }, []);
 
   const handleFixGap = (gap: ProfileGap) => {
-    track('fix_gap_clicked', { gapType: gap.targetSection });
     handleTabChange('profile');
 
     const targetSection = gap.targetSection;
@@ -143,14 +154,13 @@ export function ActionHubView({
   };
 
   const handleIntegrateGap = (gap: SearchGap) => {
-    track('integrate_gap_clicked', { term: gap.term });
+    track('micro_integration_started', { kind: gap.kind });
     setActiveDrawerGap(gap);
     setDrawerResolvedDiff(undefined);
     setDrawerOpen(true);
   };
 
   const handleViewResolvedGap = (gap: SearchGap) => {
-    track('view_resolved_gap_clicked', { term: gap.term });
     const meta = resolvedGapMetadata[gap.term.toLowerCase()];
     setActiveDrawerGap(gap);
     setDrawerResolvedDiff(meta);
@@ -160,6 +170,11 @@ export function ActionHubView({
   const handleApplyMicroIntegration = (applied: AppliedMicroIntegration) => {
     setActiveAnalysis(applied.analysis);
     onUpdateAnalysis?.(applied.analysis);
+
+    if (activeDrawerGap?.kind) {
+      track('micro_integration_applied', { kind: activeDrawerGap.kind, outcome: 'match' });
+      track('gap_resolved', { kind: activeDrawerGap.kind, outcome: 'match' });
+    }
 
     const termKey = activeDrawerGap?.term?.toLowerCase() || '';
     if (termKey) {
@@ -183,7 +198,15 @@ export function ActionHubView({
     const ok = await copyToClipboard(text);
     if (ok) {
       setCopiedKey(key);
-      track('copy_section', { section: key });
+      if (key === 'headline') {
+        track('copy_headline');
+      } else if (key === 'summary') {
+        track('copy_about');
+      } else if (key.startsWith('exp')) {
+        track('copy_experience');
+      } else if (key === 'skills') {
+        track('copy_skills');
+      }
       setTimeout(() => setCopiedKey(null), 2000);
     }
   };
@@ -536,287 +559,42 @@ export function ActionHubView({
 
               {/* Headline Tab */}
               <TabsContent value="headline" className="space-y-4">
-                <Card id="profile-section-headline" className="p-5 sm:p-6 border-[#1E293B] bg-[#0F1623]/80 space-y-4 shadow-lg">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-semibold text-white text-sm sm:text-base">Headline otimizada</h3>
-                        <span className={`text-[11px] font-mono px-2 py-0.5 rounded-full border ${
-                          activeAnalysis.rewritten.headline.length <= 160
-                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                            : activeAnalysis.rewritten.headline.length <= 220
-                            ? 'bg-blue-500/10 text-blue-400 border-blue-500/30'
-                            : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
-                        }`}>
-                          {activeAnalysis.rewritten.headline.length} / 220 caracteres {activeAnalysis.rewritten.headline.length <= 160 ? '✓ (ideal sem cortes no mobile)' : ''}
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-400">Título estratégico indexável pelo LinkedIn Recruiter. Cole diretamente no campo Título/Headline.</p>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="default"
-                      onClick={() => handleCopy(activeAnalysis.rewritten.headline, 'headline')}
-                      className="text-xs gap-1.5 font-semibold bg-blue-600 hover:bg-blue-500 text-white cursor-pointer"
-                    >
-                      {copiedKey === 'headline' ? (
-                        <>
-                          <Check className="w-3.5 h-3.5" /> Copiado!
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-3.5 h-3.5" /> Copiar headline
-                        </>
-                      )}
-                    </Button>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                    {isHeadlineAlreadyOptimized(originalProfile.headline, activeAnalysis.rewritten.headline) ? (
-                      <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-950/15 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="font-semibold text-emerald-400 text-xs flex items-center gap-1.5">
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                            LinkedIn Original (Já Recruiter Ready)
-                          </span>
-                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                            Alto CTR
-                          </span>
-                        </div>
-                        <p className="text-slate-200 font-medium text-xs sm:text-sm leading-relaxed">
-                          {originalProfile.headline}
-                        </p>
-                        <p className="text-[11px] text-emerald-300/80 pt-1 border-t border-emerald-500/20">
-                          ✓ Sua headline original já segue a estrutura recomendada para tech recruiters dos EUA e foi mantida como referência de alta conversão.
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="p-4 rounded-xl border border-rose-500/20 bg-rose-950/10 space-y-1.5">
-                        <span className="font-semibold text-rose-400 text-xs block">
-                          Antes (LinkedIn Original)
-                        </span>
-                        <p className="text-slate-400 italic text-xs sm:text-sm leading-relaxed">
-                          {originalProfile.headline || '(Vazio ou sem título estratégico)'}
-                        </p>
-                      </div>
-                    )}
-
-                    <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-950/15 space-y-1.5">
-                      <span className="font-semibold text-emerald-400 text-xs block">
-                        Depois (Versão dos EUA)
-                      </span>
-                      <FormattedText
-                        text={activeAnalysis.rewritten.headline}
-                        as="p"
-                        className="text-slate-100 font-medium text-xs sm:text-sm leading-relaxed"
-                      />
-                    </div>
-                  </div>
-                </Card>
+                <HeadlineSection
+                  originalHeadline={originalProfile.headline}
+                  rewrittenHeadline={activeAnalysis.rewritten.headline}
+                  onCopy={handleCopy}
+                  copiedKey={copiedKey}
+                />
               </TabsContent>
 
               {/* About Tab */}
               <TabsContent value="summary" className="space-y-4">
-                <Card id="profile-section-about" className="p-5 sm:p-6 border-[#1E293B] bg-[#0F1623]/80 space-y-4 shadow-lg">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-semibold text-white text-sm sm:text-base">About / Summary otimizado</h3>
-                        <span className="text-[11px] font-mono px-2 py-0.5 rounded-full border bg-slate-800 text-slate-300 border-slate-700">
-                          {activeAnalysis.rewritten.summary.length} caracteres (ideal: 1.200 a 1.600)
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-400">Resumo estruturado para leitura F-shape em 6s. Quebras de linha e bullets são 100% preservados ao colar no LinkedIn.</p>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="default"
-                      onClick={() => handleCopy(activeAnalysis.rewritten.summary, 'summary')}
-                      className="text-xs gap-1.5 font-semibold bg-blue-600 hover:bg-blue-500 text-white cursor-pointer"
-                    >
-                      {copiedKey === 'summary' ? (
-                        <>
-                          <Check className="w-3.5 h-3.5" /> Copiado!
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-3.5 h-3.5" /> Copiar About
-                        </>
-                      )}
-                    </Button>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                    <div className="p-4 rounded-xl border border-rose-500/20 bg-rose-950/10 space-y-2">
-                      <span className="font-semibold text-rose-400 text-xs block">
-                        Antes (LinkedIn Original)
-                      </span>
-                      <p className="text-slate-400 whitespace-pre-wrap leading-relaxed italic text-xs sm:text-sm max-h-80 overflow-y-auto">
-                        {originalProfile.summary || '(Resumo curto ou sem dados de escala)'}
-                      </p>
-                    </div>
-
-                    <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-950/15 space-y-2">
-                      <span className="font-semibold text-emerald-400 text-xs block">
-                        Depois (Versão dos EUA)
-                      </span>
-                      <FormattedText
-                        text={activeAnalysis.rewritten.summary}
-                        as="div"
-                        className="text-slate-100 whitespace-pre-wrap leading-relaxed text-xs sm:text-sm font-normal max-h-80 overflow-y-auto"
-                      />
-                    </div>
-                  </div>
-                </Card>
+                <AboutSection
+                  originalSummary={originalProfile.summary}
+                  rewrittenSummary={activeAnalysis.rewritten.summary}
+                  onCopy={handleCopy}
+                  copiedKey={copiedKey}
+                />
               </TabsContent>
 
               {/* Experiences Tab */}
               <TabsContent value="experiences" className="space-y-4">
-                <div id="profile-section-experience" className="space-y-4">
-                  {activeAnalysis.rewritten.experiences.map((exp, idx) => {
-                    const expText = `${exp.title} | ${exp.companyName}\n${exp.bullets
-                      .map((b) => `• ${b}`)
-                      .join('\n')}`;
-
-                    const originalExp =
-                      originalProfile.experiences.find(
-                        (e) =>
-                          e.companyName.toLowerCase().trim() === exp.companyName.toLowerCase().trim() ||
-                          e.title.toLowerCase().trim() === exp.title.toLowerCase().trim(),
-                      ) || originalProfile.experiences[idx];
-
-                    return (
-                      <Card key={idx} id={`experience-block-${idx}`} className="p-5 border-[#1E293B] bg-[#0F1623]/80 space-y-4 shadow-lg">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-                          <div>
-                            <h4 className="font-bold text-white text-base">{exp.title}</h4>
-                            <p className="text-xs text-blue-400 font-medium">{exp.companyName}</p>
-                          </div>
-
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            onClick={() => handleCopy(expText, `exp-${idx}`)}
-                            className="text-xs gap-1.5 font-medium border border-[#1E293B] bg-[#090D14] hover:bg-slate-800 text-slate-200 cursor-pointer"
-                          >
-                            {copiedKey === `exp-${idx}` ? (
-                              <>
-                                <Check className="w-3.5 h-3.5 text-emerald-400" /> Copiado!
-                              </>
-                            ) : (
-                              <>
-                                <Copy className="w-3.5 h-3.5" /> Copiar bullets
-                              </>
-                            )}
-                          </Button>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs pt-1 border-t border-[#1E293B]">
-                          <div className="p-3.5 rounded-xl border border-rose-500/20 bg-rose-950/10 space-y-1.5">
-                            <span className="font-semibold text-rose-400 text-xs block">
-                              Antes (LinkedIn Original)
-                            </span>
-                            {originalExp?.description && originalExp.description.trim().length > 0 ? (
-                              <p className="text-slate-400 whitespace-pre-line italic leading-relaxed text-xs sm:text-sm">
-                                {originalExp.description.trim()}
-                              </p>
-                            ) : (
-                              <p className="text-slate-500 italic leading-relaxed text-xs sm:text-sm">
-                                (Cargo cadastrado sem descrição ou bullets no perfil original do LinkedIn)
-                              </p>
-                            )}
-                          </div>
-
-                          <div className="p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-950/15 space-y-1.5">
-                            <span className="font-semibold text-emerald-400 text-xs block">
-                              Depois (Versão dos EUA • Framework XYZ)
-                            </span>
-                            <ul className="space-y-1.5 text-slate-100 leading-relaxed text-xs sm:text-sm">
-                              {exp.bullets.map((bullet, bIdx) => (
-                                <li key={bIdx} className="flex items-start gap-2">
-                                  <span className="text-emerald-400 font-bold">•</span>
-                                  <FormattedText text={bullet} as="span" />
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        </div>
-                      </Card>
-                    );
-                  })}
-                </div>
+                <ExperienceSection
+                  originalExperiences={originalProfile.experiences}
+                  rewrittenExperiences={activeAnalysis.rewritten.experiences}
+                  onCopy={handleCopy}
+                  copiedKey={copiedKey}
+                />
               </TabsContent>
 
               {/* Skills Tab */}
               <TabsContent value="skills" className="space-y-4">
-                <Card id="profile-section-skills" className="p-5 sm:p-6 border-[#1E293B] bg-[#0F1623]/80 space-y-4 shadow-lg">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold text-white text-sm sm:text-base">Top skills priorizadas</h3>
-                      <p className="text-xs text-slate-400">
-                        Ordenadas por relevância para busca semântica de recrutadores internacionais.
-                      </p>
-                    </div>
-
-                    <Button
-                      size="sm"
-                      variant="default"
-                      onClick={() => handleCopy(activeAnalysis.rewritten.skills.join(', '), 'skills')}
-                      className="text-xs gap-1.5 font-semibold bg-blue-600 hover:bg-blue-500 text-white cursor-pointer"
-                    >
-                      {copiedKey === 'skills' ? (
-                        <>
-                          <Check className="w-3.5 h-3.5" /> Copiado!
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-3.5 h-3.5" /> Copiar lista de skills
-                        </>
-                      )}
-                    </Button>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs pt-1">
-                    <div className="p-4 rounded-xl border border-rose-500/20 bg-rose-950/10 space-y-2">
-                      <span className="font-semibold text-rose-400 text-xs block">
-                        Antes (Skills Originais do Perfil)
-                      </span>
-                      <div className="flex flex-wrap gap-1.5 pt-1">
-                        {originalProfile.skills && originalProfile.skills.length > 0 ? (
-                          originalProfile.skills.map((s, sIdx) => (
-                            <Badge
-                              key={sIdx}
-                              variant="outline"
-                              className="text-xs py-1 px-2.5 bg-[#090D14] border-rose-900/30 text-slate-400 font-normal"
-                            >
-                              {s.name}
-                            </Badge>
-                          ))
-                        ) : (
-                          <p className="text-slate-400 italic text-xs sm:text-sm">(Nenhuma skill listada originalmente)</p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-950/15 space-y-2">
-                      <span className="font-semibold text-emerald-400 text-xs block">
-                        Depois (Top Skills Priorizadas para Recrutadores dos EUA)
-                      </span>
-                      <div className="flex flex-wrap gap-1.5 pt-1">
-                        {activeAnalysis.rewritten.skills.map((skill, sIdx) => (
-                          <Badge
-                            key={sIdx}
-                            variant="outline"
-                            className="text-xs py-1.5 px-3 bg-[#090D14] border-emerald-500/30 text-slate-200 font-medium"
-                          >
-                            <span className="text-emerald-400 mr-1.5 text-xs font-semibold">#{sIdx + 1}</span>
-                            {skill}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </Card>
+                <SkillsSection
+                  originalSkills={originalProfile.skills}
+                  rewrittenSkills={activeAnalysis.rewritten.skills}
+                  onCopy={handleCopy}
+                  copiedKey={copiedKey}
+                />
               </TabsContent>
             </Tabs>
           </div>

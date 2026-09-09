@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -15,6 +15,7 @@ import {
 import { FormattedText } from './ui/formatted-text';
 import type { ProfileGap, SearchGap } from '@linkegringo/core';
 import { classifyGapTerm, termMatchesText } from '@linkegringo/core';
+import { track } from '@/lib/telemetry';
 
 export interface RecruiterSearchSimulatorProps {
   primaryRole: string;
@@ -192,6 +193,14 @@ export function RecruiterSearchSimulator({
   const weakCount = termResults.filter((r) => r.status === 'weak').length;
   const total = termResults.length || 1;
   const matchPercentage = Math.round(((matchCount * 1.0 + weakCount * 0.5) / total) * 100);
+
+  const overallResult: 'match' | 'weak' | 'missing' =
+    matchPercentage >= 80 ? 'match' : matchPercentage >= 40 ? 'weak' : 'missing';
+
+  useEffect(() => {
+    track('search_query_run', { result: overallResult });
+    track('recruiter_search_simulated', { result: overallResult });
+  }, [searchQuery, overallResult]);
 
   return (
     <Card className="border-[#1E293B] bg-[#0F1623]/80 shadow-xl w-full">

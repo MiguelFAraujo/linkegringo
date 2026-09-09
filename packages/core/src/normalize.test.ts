@@ -346,7 +346,7 @@ describe('calculateInboundReadiness, calculateInboundJourney and stabilizeInboun
     it('derives positive diagnostic critique when headline is already optimized', () => {
       const critique = deriveOriginalHeadlineCritique(optimizedHeadline, optimizedHeadline);
       expect(critique.isAlreadyOptimized).toBe(true);
-      expect(critique.statusBadge).toBe('Já Recruiter Ready');
+      expect(critique.statusBadge).toBe('Recruiter-Ready');
       expect(critique.reasons).toHaveLength(3);
       expect(critique.reasons[0]).toContain('Sua headline original já segue a fórmula de alta conversão');
     });

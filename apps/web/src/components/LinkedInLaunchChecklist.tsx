@@ -14,6 +14,7 @@ import {
 import { copyToClipboard } from '@/lib/file-utils';
 import { deriveOpenToWorkTitles } from '@linkegringo/core';
 import { FormattedText } from './ui/formatted-text';
+import { track } from '@/lib/telemetry';
 
 export interface LinkedInLaunchChecklistProps {
   primaryRole?: string;
@@ -90,17 +91,27 @@ export function LinkedInLaunchChecklist({
   ]);
 
   const handleToggle = (id: string) => {
-    setChecklist((prev) =>
-      prev.map((item) => {
-        if (item.id !== id) return item;
-        const nextCompleted = !item.completed;
-        return {
-          ...item,
-          completed: nextCompleted,
-          status: nextCompleted ? 'done' : 'todo',
-        };
-      }),
-    );
+    const itemIndex = checklist.findIndex((item) => item.id === id);
+    const item = checklist[itemIndex];
+    if (item) {
+      const nextCompleted = !item.completed;
+      track('checklist_toggled', { itemIndex, checked: nextCompleted });
+
+      const newChecklist = checklist.map((it, idx) =>
+        idx === itemIndex
+          ? {
+              ...it,
+              completed: nextCompleted,
+              status: nextCompleted ? ('done' as const) : ('todo' as const),
+            }
+          : it,
+      );
+      setChecklist(newChecklist);
+
+      if (newChecklist.every((it) => it.completed)) {
+        track('launch_completed');
+      }
+    }
   };
 
   const handleSetStatus = (id: string, newStatus: LaunchItemStatus, e: React.MouseEvent) => {

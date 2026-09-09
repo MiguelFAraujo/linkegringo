@@ -11,6 +11,7 @@ import {
   MinusCircle,
 } from 'lucide-react';
 import type { InterviewAnswer, InterviewPlan } from '@linkegringo/core';
+import { track } from '@/lib/telemetry';
 
 interface InterviewViewProps {
   plan: InterviewPlan;
@@ -36,6 +37,15 @@ export function InterviewView({
   const [answersMap, setAnswersMap] = useState<Record<string, { value: string; skipped: boolean }>>({});
 
   const isElitePolish = Boolean(isPolishMode || (overallScore && overallScore >= 92));
+
+  useEffect(() => {
+    track('interview_started', { questionCount: questions.length });
+  }, [questions.length]);
+
+  const handleSkipToFactsAction = () => {
+    track('interview_skipped');
+    onSkipToFacts?.();
+  };
 
   // Reset question index and answers when round or plan changes
   useEffect(() => {
@@ -101,6 +111,9 @@ export function InterviewView({
       };
     });
 
+    const answeredCount = formattedAnswers.filter((a) => !a.skipped && a.value.trim().length > 0).length;
+    track('interview_completed', { answeredCount });
+
     await onSubmitAnswers(formattedAnswers);
   };
 
@@ -126,7 +139,7 @@ export function InterviewView({
             type="button"
             variant="default"
             size="sm"
-            onClick={onSkipToFacts}
+            onClick={handleSkipToFactsAction}
             className="text-xs font-semibold"
           >
             Avançar direto para validação de fatos
@@ -193,7 +206,7 @@ export function InterviewView({
             type="button"
             variant="outline"
             size="sm"
-            onClick={onSkipToFacts}
+            onClick={handleSkipToFactsAction}
             disabled={isLoading}
             className="text-xs border-white/[0.08] text-slate-300 hover:text-white bg-[#0F1623] hover:bg-[#151E2E] cursor-pointer"
           >
@@ -339,7 +352,7 @@ export function InterviewView({
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={onSkipToFacts}
+                onClick={handleSkipToFactsAction}
                 disabled={isLoading}
                 className="text-slate-400 hover:text-slate-200 text-xs h-9 px-3 cursor-pointer"
                 title="Finalizar entrevista antecipadamente e avançar direto para os fatos"

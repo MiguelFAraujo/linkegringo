@@ -15,6 +15,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { fileToBase64 } from '../lib/file-utils';
+import { track } from '@/lib/telemetry';
 
 export const QUICK_TARGET_ROLES = [
   'Senior Backend Engineer',
@@ -104,6 +105,7 @@ export function FileUploadDropzone({
     }
 
     setLinkedinFile(pdf);
+    track('pdf_uploaded', { source: 'upload' });
   };
 
   const handleLinkedinFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -115,6 +117,7 @@ export function FileUploadDropzone({
         return;
       }
       setLinkedinFile(file);
+      track('pdf_uploaded', { source: 'upload' });
     }
   };
 
@@ -131,6 +134,9 @@ export function FileUploadDropzone({
 
     setError(null);
     try {
+      if (targetRole.trim()) {
+        track('target_role_selected', { roleCategory: targetRole.trim() });
+      }
       const pdfBase64 = await fileToBase64(linkedinFile);
       await onAnalyze({
         file: linkedinFile,
@@ -300,7 +306,10 @@ export function FileUploadDropzone({
                   <button
                     key={role}
                     type="button"
-                    onClick={() => setTargetRole(role)}
+                    onClick={() => {
+                      setTargetRole(role);
+                      track('target_role_selected', { roleCategory: role });
+                    }}
                     className={`px-2.5 py-1 rounded-md text-xs transition-colors border cursor-pointer ${
                       targetRole === role
                         ? 'bg-blue-600/20 text-blue-300 border-blue-500/50 font-medium shadow-sm'

@@ -7,7 +7,7 @@ import { MOCK_PROFILE } from '@linkegringo/ai';
 describe('RecruiterSearchCard Component', () => {
   const rewrittenHeadline = 'Senior Distributed Systems & Backend Engineer | Java & Kafka';
 
-  it('renders LinkedIn Recruiter search card header and Antes vs Depois snippets', () => {
+  it('renders LinkedIn Recruiter search card header and Antes vs Depois snippets when profile is unoptimized', () => {
     render(
       <RecruiterSearchCard
         originalProfile={MOCK_PROFILE}
@@ -17,10 +17,12 @@ describe('RecruiterSearchCard Component', () => {
     );
 
     expect(screen.getByText(/Card de Busca no LinkedIn Recruiter \(Antes vs Depois\)/i)).toBeDefined();
-    expect(screen.getByText(/Antes \(LinkedIn Original • Baixo CTR\)/i)).toBeDefined();
-    expect(screen.getByText(/Depois \(LinkedIn Recruiter Ready • Alto CTR\)/i)).toBeDefined();
+    expect(screen.getByText(/Antes \(LinkedIn Original\)/i)).toBeDefined();
+    expect(screen.getByText(/Depois \(LinkedIn Recruiter Ready\)/i)).toBeDefined();
     expect(screen.getByText(/Snippet Cortado/i)).toBeDefined();
-    expect(screen.getByText(/Alta Conversão/i)).toBeDefined();
+    expect(screen.getByText(/Por que o recrutador ignora:/i)).toBeDefined();
+    expect(screen.getByText(/Por que este snippet funciona:/i)).toBeDefined();
+    expect(screen.getByText(/Por que este snippet favorece uma abordagem do recruiter:/i)).toBeDefined();
   });
 
   it('renders default conversion badges and reasons from core deriveCardConversionBadges', () => {
@@ -36,7 +38,7 @@ describe('RecruiterSearchCard Component', () => {
     expect(screen.getByText('Stack de alta busca')).toBeDefined();
     expect(screen.getByText('Senioridade clara')).toBeDefined();
 
-    expect(screen.getByText(/Por que isso converte em InMail:/i)).toBeDefined();
+    expect(screen.getByText(/Por que este snippet funciona:/i)).toBeDefined();
     expect(
       screen.getByText(/Alinhado diretamente com o filtro de "Current Job Title" mais utilizado por tech recruiters dos EUA/i),
     ).toBeDefined();
@@ -62,7 +64,7 @@ describe('RecruiterSearchCard Component', () => {
     expect(screen.getByText(/Razão customizada: Termos estratégicos de alta prioridade/i)).toBeDefined();
   });
 
-  it('renders positive diagnostic feedback without contradictory negative critique when original headline is already optimized', () => {
+  it('renders unified Spotlight Recruiter Card with full width when original headline is already Recruiter-Ready', () => {
     const alreadyOptimizedHeadline =
       'Senior Full Stack Engineer | Node.js, NestJS, TypeScript, React | 7M+ Req/Mo Scale | US Remote';
     const profileWithOptimizedHeadline = {
@@ -78,15 +80,17 @@ describe('RecruiterSearchCard Component', () => {
       />,
     );
 
-    // Should NOT show negative warning labels
+    // Should NOT render split comparison cards
     expect(screen.queryByText(/Snippet Cortado/i)).toBeNull();
-    expect(screen.queryByText(/Antes \(LinkedIn Original • Baixo CTR\)/i)).toBeNull();
+    expect(screen.queryByText(/Antes \(LinkedIn Original\)/i)).toBeNull();
+    expect(screen.queryByText(/Depois \(LinkedIn Recruiter Ready\)/i)).toBeNull();
     expect(screen.queryByText(/Por que o recrutador ignora:/i)).toBeNull();
 
-    // Should show positive recognition
-    expect(screen.getByText(/LinkedIn Original \(Já Otimizado • Alto CTR\)/i)).toBeDefined();
-    expect(screen.getByText(/Já Recruiter Ready/i)).toBeDefined();
-    expect(screen.getByText(/Diagnóstico da sua Headline Original:/i)).toBeDefined();
-    expect(screen.getByText(/Sua headline original já segue a fórmula de alta conversão/i)).toBeDefined();
+    // Should render unified Spotlight view
+    expect(screen.getByText(/Card de Busca no LinkedIn Recruiter \(Recruiter-Ready\)/i)).toBeDefined();
+    expect(screen.getByText(/Seu Perfil no LinkedIn Recruiter \(Recruiter-Ready\)/i)).toBeDefined();
+    expect(screen.getByText('Recruiter-Ready')).toBeDefined();
+    expect(screen.getByText(/Por que este snippet funciona:/i)).toBeDefined();
+    expect(screen.getByText(/Por que este snippet favorece uma abordagem do recruiter:/i)).toBeDefined();
   });
 });
