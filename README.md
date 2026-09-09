@@ -136,6 +136,12 @@ Contribuicoes sao bem-vindas. Consulte o arquivo [CONTRIBUTING.md](CONTRIBUTING.
 
 ---
 
+## Codigo de Conduta
+
+Este projeto adota o [Contributor Covenant](CODE_OF_CONDUCT.md). Ao participar deste projeto, espera-se que todas as pessoas respeitem seus termos.
+
+---
+
 ## Seguranca e Privacidade
 
 Consulte as diretrizes e procedimentos de reporte em [SECURITY.md](SECURITY.md).

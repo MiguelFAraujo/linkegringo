@@ -1,0 +1,41 @@
+name: Sugestão de Funcionalidade
+description: Sugerir uma melhoria, nova capacidade ou aprimoramento no LinkeGringo
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por contribuir com ideias para evoluir o LinkeGringo!
+        
+        Lembre-se do princípio fundamental do projeto: **100% Client-Side (Zero Backend)**. Todas as propostas devem rodar diretamente no navegador via BYOK.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Contexto ou Problema
+      description: Qual problema ou oportunidade de melhoria você identificou?
+      placeholder: Sinto falta de uma verificação para...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Solução Proposta
+      description: Descreva a funcionalidade ou melhoria que gostaria de ver implementada.
+      placeholder: Adicionar uma verificação no Launch Center para...
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativas Consideradas
+      description: Quais outras abordagens ou alternativas você considerou?
+      placeholder: Tentei contornar isso fazendo...
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Contexto Adicional
+      description: Exemplos, referências, capturas de tela ou mockups relevantes.

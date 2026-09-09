@@ -1,0 +1,61 @@
+name: Bug Report
+description: Relatar um bug ou comportamento inesperado no LinkeGringo
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por relatar um problema. Antes de abrir uma nova issue, verifique se o problema já foi reportado.
+        
+        **Atenção à Segurança**: NUNCA compartilhe sua Gemini API Key ou credenciais pessoais em logs, capturas de tela ou descrições. O LinkeGringo é estritamente BYOK (Bring Your Own Key) e sua chave fica apenas no seu navegador.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Descrição do Bug
+      description: Uma explicação clara e objetiva sobre a falha encontrada.
+      placeholder: Ao carregar o PDF do LinkedIn na etapa 1...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Passos para Reproduzir
+      description: Sequência detalhada de passos para reproduzir o comportamento.
+      placeholder: |
+        1. Abrir a aplicação em https://muriel-gasparini.github.io/linkegringo/
+        2. Configurar a API Key ou selecionar Modo Demonstração
+        3. Fazer upload do PDF do perfil
+        4. Notar erro ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Comportamento Esperado
+      description: O que deveria ter acontecido.
+      placeholder: O raio-x do perfil deveria carregar as notas do funil e identificar os gargalos de triagem.
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Informações de Ambiente
+      description: Detalhes do sistema, navegador e provedor de IA utilizado.
+      value: |
+        - Navegador e Versão: [ex: Chrome 128, Firefox 130, Brave, Safari]
+        - Sistema Operacional: [ex: Ubuntu 24.04, Windows 11, macOS Sequoia]
+        - Provedor Utilizado: [ex: Google Gemini (gemini-2.5-flash), Modo Demonstração]
+        - Ambiente: [ex: Produção (GitHub Pages), Desenvolvimento local (`pnpm dev`)]
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs do Console do Navegador
+      description: Erros exibidos no Developer Tools (F12 > Console). Certifique-se de que chaves de API não estejam visíveis.
+      render: shell
