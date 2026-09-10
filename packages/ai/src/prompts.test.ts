@@ -7,6 +7,8 @@ import {
   buildInterviewPrompt,
   buildInterviewProgressPrompt,
   buildRewriteProfilePrompt,
+  detectSparseExperiences,
+  getExperienceBulletCount,
   PARSE_PROFILE_SYSTEM_PROMPT,
   DIAGNOSE_PROFILE_SYSTEM_PROMPT,
   PARSE_AND_DIAGNOSE_SYSTEM_PROMPT,
@@ -170,14 +172,15 @@ describe('US Tech Recruiter Playbook & NDA Proxy Metrics Rubric', () => {
     expect(PARSE_AND_DIAGNOSE_SYSTEM_PROMPT).toContain('RIGOROUS CALIBRATION FOR ELITE LEVEL (95+ SCORE)');
   });
 
-  it('INTERVIEW_SYSTEM_PROMPT embeds the 5 core axes, active discovery mandate, and 4-6 question structure', () => {
-    // 5 Core Axes
-    expect(INTERVIEW_SYSTEM_PROMPT).toContain('THE 5 CORE AXES OF THE US TECH RECRUITER PLAYBOOK');
+  it('INTERVIEW_SYSTEM_PROMPT embeds the 6 core axes, active discovery mandate, and 4-6 question structure', () => {
+    // 6 Core Axes
+    expect(INTERVIEW_SYSTEM_PROMPT).toContain('THE 6 CORE AXES OF THE US TECH RECRUITER PLAYBOOK');
     expect(INTERVIEW_SYSTEM_PROMPT).toContain('1. Scope & Ownership');
     expect(INTERVIEW_SYSTEM_PROMPT).toContain('2. Architectural Trade-offs & Engineering Judgment');
     expect(INTERVIEW_SYSTEM_PROMPT).toContain('3. Metrics of Scale under NDA (Proxy Metrics)');
     expect(INTERVIEW_SYSTEM_PROMPT).toContain('4. Invisible Work & Operational Reliability');
     expect(INTERVIEW_SYSTEM_PROMPT).toContain('5. Technical Leadership & Engineering Standards');
+    expect(INTERVIEW_SYSTEM_PROMPT).toContain('6. Experience Depth & Bullet Density Expansion');
 
     // 4 to 6 questions
     expect(INTERVIEW_SYSTEM_PROMPT).toContain('MANDATORY MULTI-QUESTION INTERVIEW STRUCTURE (4 TO 6 QUESTIONS)');
@@ -351,4 +354,56 @@ describe('Profile Rewrite ATS Rules & Hard Constraints', () => {
     expect(prompt).toContain('Candidate Interview Answers & Discovered Technical Context:');
     expect(prompt).toContain('Corrigimos brecha de subscription para 200+ contas usando BullMQ e idempotency keys no PostgreSQL');
   });
+
+  describe('Sparse Experience Bullet Density Audit in Interview Generation', () => {
+    it('accurately counts bullets and sentences in experience descriptions', () => {
+      expect(getExperienceBulletCount({ description: 'Bullet 1\n• Bullet 2\n- Bullet 3' })).toBe(2);
+      expect(
+        getExperienceBulletCount({
+          description:
+            'Responsável pelo desenvolvimento de APIs REST em Spring Boot. Participei da migração de legado monolítico para microserviços. Atuei com PostgreSQL e mensageria Kafka.',
+        }),
+      ).toBe(3);
+      expect(getExperienceBulletCount({ bullets: ['B1', 'B2', 'B3', 'B4', 'B5'] })).toBe(5);
+    });
+
+    it('detects experiences with <= 3 bullets as sparse', () => {
+      const sparse = detectSparseExperiences(MOCK_PROFILE.experiences);
+      expect(sparse.length).toBeGreaterThan(0);
+      expect(sparse.some((s) => s.company === 'Fintech Pagamentos Brasil')).toBe(true);
+      expect(sparse.some((s) => s.company === 'Varejo Online S.A.')).toBe(true);
+    });
+
+    it('injects SPARSE EXPERIENCE BULLET DENSITY ALERT into buildInterviewPrompt when sparse experiences exist', () => {
+      const prompt = buildInterviewPrompt(MOCK_PROFILE, SAMPLE_OBJECTIVE, 'September 2026', MOCK_REVIEW);
+
+      expect(prompt).toContain('SPARSE EXPERIENCE BULLET DENSITY ALERT (SUB-OPTIMAL TENURE DEPTH):');
+      expect(prompt).toContain('Fintech Pagamentos Brasil');
+      expect(prompt).toContain('YOU MUST FORMULATE AT LEAST 1 TO 2 QUESTIONS DEDICATED TO EXPANDING THESE SPARSE EXPERIENCES:');
+    });
+
+    it('omits SPARSE EXPERIENCE ALERT when all experiences have >= 4 bullets', () => {
+      const denseProfile = {
+        ...MOCK_PROFILE,
+        experiences: [
+          {
+            title: 'Staff Engineer',
+            companyName: 'Scale Corp',
+            current: true,
+            description: '• Item 1\n• Item 2\n• Item 3\n• Item 4\n• Item 5',
+          },
+        ],
+      };
+
+      const prompt = buildInterviewPrompt(denseProfile, SAMPLE_OBJECTIVE, 'September 2026', MOCK_REVIEW);
+      expect(prompt).not.toContain('SPARSE EXPERIENCE BULLET DENSITY ALERT (SUB-OPTIMAL TENURE DEPTH):');
+    });
+
+    it('INTERVIEW_SYSTEM_PROMPT includes the 6th axis for Experience Depth & Bullet Density Expansion', () => {
+      expect(INTERVIEW_SYSTEM_PROMPT).toContain('THE 6 CORE AXES OF THE US TECH RECRUITER PLAYBOOK:');
+      expect(INTERVIEW_SYSTEM_PROMPT).toContain('Experience Depth & Bullet Density Expansion');
+      expect(INTERVIEW_SYSTEM_PROMPT).toContain('SPARSE EXPERIENCE BULLET DENSITY EXPANSION');
+    });
+  });
 });
+

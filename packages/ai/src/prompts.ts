@@ -1,6 +1,7 @@
 import type {
   CareerObjective,
   ConfirmedFact,
+  Experience,
   InterviewAnswer,
   InterviewPlan,
   Profile,
@@ -13,6 +14,48 @@ export const TARGET_LANGUAGE = 'en';
 
 export function formatCurrentDate(date: Date = new Date()): string {
   return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}
+
+export interface SparseExperience {
+  company: string;
+  title: string;
+  estimatedBullets: number;
+}
+
+export function getExperienceBulletCount(exp: { description?: string; bullets?: string[] }): number {
+  if (Array.isArray(exp.bullets) && exp.bullets.length > 0) {
+    return exp.bullets.length;
+  }
+  const desc = exp.description;
+  if (!desc || !desc.trim()) return 0;
+
+  const lines = desc.split(/\n+/).map((l) => l.trim()).filter(Boolean);
+  const bulletLines = lines.filter((l) => /^[-*•\u2022\u25E6\u25AA\d+.]/.test(l));
+  if (bulletLines.length > 0) return bulletLines.length;
+
+  const sentences = desc.split(/(?<=[.!?])\s+/).filter((s) => s.trim().length > 10);
+  return Math.max(lines.length, sentences.length);
+}
+
+export function detectSparseExperiences(experiences?: Experience[]): SparseExperience[] {
+  if (!experiences || !Array.isArray(experiences)) return [];
+  const sparse: SparseExperience[] = [];
+
+  for (const exp of experiences) {
+    const company = exp.companyName || (exp as any).company || 'Company';
+    const title = exp.title || 'Software Engineer';
+    const count = getExperienceBulletCount(exp);
+
+    if (count <= 3) {
+      sparse.push({
+        company,
+        title,
+        estimatedBullets: count,
+      });
+    }
+  }
+
+  return sparse;
 }
 
 // ============================================================================
@@ -450,12 +493,13 @@ Your mission is to uncover high-value technical accomplishments, architectural c
 STRICT PROHIBITION OF EMOJIS:
 - Absolutely ZERO emojis anywhere in questions, reasons, or placeholders. Maintain sober, professional engineering language.
 
-THE 5 CORE AXES OF THE US TECH RECRUITER PLAYBOOK:
+THE 6 CORE AXES OF THE US TECH RECRUITER PLAYBOOK:
 1. Scope & Ownership (RFC vs. Ticket-Taking): Probing end-to-end design ownership, navigating ambiguity, leading technical initiatives vs. merely picking tasks.
 2. Architectural Trade-offs & Engineering Judgment: Why choose technology X over Y (e.g. BullMQ + Redis + PostgreSQL vs Kafka)? What broke, and what were the operational trade-offs?
 3. Metrics of Scale under NDA (Proxy Metrics): How to quantify impact without violating NDA (e.g., 100% billing compliance across 200+ business accounts, p99 latency in ms, QPS/RPS)? Remind candidate: if exact revenue is confidential, use proxy operational metrics (% compliance, account volume, SLAs).
 4. Invisible Work & Operational Reliability: Active discovery of unlisted backstage engineering: database tuning/indexing, query refactoring, observability (Datadog/Grafana/APM), production outage post-mortems, circuit breakers, and cloud cost efficiency.
 5. Technical Leadership & Engineering Standards: Mentoring junior/mid engineers, establishing code review guidelines, authoring ADRs (Architecture Decision Records), and automated CI/CD deployment pipelines.
+6. Experience Depth & Bullet Density Expansion (Target: 3 to 5 XYZ Bullets per Tenure): A key tenure with only 1 to 3 sparse bullets makes a senior engineer's track record appear shallow or under-documented to US recruiters. When any experience has <= 3 bullets, proactively probe for unlisted product deliverables, architectural initiatives, performance refactorings, or migrations to unlock material for 4 to 5 robust Google XYZ bullets.
 
 PRESUMPTION OF GOOD FAITH & CONSTRUCTIVE DISCOVERY ACROSS ROLE FACETS:
 You are an empowering technical career coach, NOT a skeptical bureaucrat or auditor.
@@ -470,14 +514,15 @@ You are an empowering technical career coach, NOT a skeptical bureaucrat or audi
 MANDATORY MULTI-QUESTION INTERVIEW STRUCTURE (4 TO 6 QUESTIONS):
 - Generate between 4 and 6 surgical, high-yield questions in Portuguese.
 - Question Allocation:
-  * 2 to 3 questions focused on deepening existing profile experiences and resolving detected triage bottlenecks (prompting for proxy metrics if under NDA).
-  * 2 to 3 questions dedicated to ACTIVE DISCOVERY of unlisted/invisible work across backstage engineering (CI/CD, database tuning, observability, incident post-mortems, cloud costs, ADRs) to unlock forgotten accomplishments.
+  * 1 to 2 questions focused on deepening existing profile experiences and resolving detected triage bottlenecks (prompting for proxy metrics if under NDA).
+  * 1 to 2 questions dedicated to SPARSE EXPERIENCE BULLET DENSITY EXPANSION (when any experience has <= 3 bullets, probe for additional product deliverables, features, or architectural initiatives at that specific company).
+  * 1 to 2 questions dedicated to ACTIVE DISCOVERY of unlisted/invisible work across backstage engineering (CI/CD, database tuning, observability, incident post-mortems, cloud costs, ADRs) to unlock forgotten accomplishments.
 - STRICT PROHIBITION OF INVENTED NUMBERS: Never invent numbers or encourage the candidate to make up statistics. Prompt for real orders of magnitude.
 - HIGH TECHNICAL DEPTH REQUIRED (ZERO TOLERANCE FOR SHALLOW BULLETS): Explicitly instruct that answers must contain the complete triad: operational problem + technical mechanism + measurable outcome.
 
 MANDATORY CHAIN-OF-THOUGHT (COT) DELIBERATION SCRATCHPAD:
 Before generating questions, you MUST deliberate in the "reasoning" object:
-1. "diagnosticGapsIdentified": Identify 4 to 6 specific gaps and discovery opportunities (e.g. unlisted database indexing, missing scale proxies in payments, qualitative claims without NDA-safe metrics, short stint transition).
+1. "diagnosticGapsIdentified": Identify 4 to 6 specific gaps and discovery opportunities (e.g. unlisted database indexing, missing scale proxies in payments, qualitative claims without NDA-safe metrics, short stint transition, sparse experience density).
 2. "questionStrategy": For each question, plan:
    - "targetTopic": What architectural topic or invisible work axis to probe.
    - "usRecruiterRationale": Why US recruiters probe this.
@@ -493,6 +538,10 @@ FEW-SHOT INTERVIEW PLANNING DEMONSTRATION:
   * Question: "Você realizou algum trabalho de bastidores que não está no seu perfil, como otimização de queries lentas em PostgreSQL, índices compostos, criação de dashboards no Datadog/Grafana ou mitigação de deadlocks?"
   * Recruiter rationale: "Critério dos recrutadores dos EUA: Engenheiros sênior investem pesado em confiabilidade operacional e observabilidade; esse é o maior diferencial contra candidatos genéricos."
   * Placeholder example: "Ex: Analisei planos de execução de queries (EXPLAIN ANALYZE) e criei índices parciais no PostgreSQL, reduzindo o tempo de consulta de 4.2s para 180ms e cortando o uso de CPU do banco em 35%."
+- Question 3 (Sparse Experience Depth & Bullet Density Expansion):
+  * Question: "Na sua atuação como Senior Engineer na Fintech Pagamentos Brasil, você possui poucas entregas descritas no perfil. Além do que já está listado, quais outros projetos críticos, novas features de produto ou refatorações de arquitetura você desenvolveu ou liderou nessa empresa?"
+  * Recruiter rationale: "Critério dos recrutadores dos EUA: Recrutadores esperam de 3 a 5 bullets densos em formato Google XYZ por atuação relevante. Expandir essa experiência comprova amplitude e autonomia técnica."
+  * Placeholder example: "Ex: Além das APIs de pagamento, liderei a integração com o motor antifraude reduzindo chargebacks em 18% e implementei cache com Redis diminuindo o tempo de resposta do checkout de 800ms para 120ms."
 
 Rules:
 - Generate between 4 and 6 questions in Portuguese.
@@ -522,6 +571,8 @@ export function buildInterviewPrompt(
     )
     .filter(Boolean);
 
+  const sparseExperiences = detectSparseExperiences(profile.experiences);
+
   return `Current Real-World Date: ${dateAnchor}
 
 Generate an adaptive interview plan (4 to 6 surgical questions) for this candidate targeting "${objective.primaryRole}".
@@ -533,6 +584,16 @@ Do NOT ask basic introductory questions. Focus on high-yield senior differentiat
 2. Extreme edge-case handling, system degradation under heavy load, and resilience engineering.
 3. Active discovery of invisible work (database index tuning, observability, incident post-mortems).
 4. Quantifiable business outcomes and NDA-safe proxy metrics (100% compliance across N accounts, latency p99, SLAs).
+` : ''}
+${sparseExperiences.length > 0 ? `
+SPARSE EXPERIENCE BULLET DENSITY ALERT (SUB-OPTIMAL TENURE DEPTH):
+The following experiences have only 1 to 3 bullets in the candidate's profile, making them look under-documented or shallow to US tech recruiters (who expect 3 to 5 comprehensive Google XYZ bullets for key tenures):
+${sparseExperiences.map((s) => `- "${s.title}" at "${s.company}" (currently only ${s.estimatedBullets} bullet${s.estimatedBullets === 1 ? '' : 's'})`).join('\n')}
+
+YOU MUST FORMULATE AT LEAST 1 TO 2 QUESTIONS DEDICATED TO EXPANDING THESE SPARSE EXPERIENCES:
+- Probe for unlisted product features, architectural initiatives, performance refactorings, or migrations completed during that tenure.
+- Explicitly prompt the candidate: "Na sua atuação na ${sparseExperiences[0]?.company || 'empresa'}, você possui poucas entregas descritas no perfil. Além do que já consta, quais outros projetos, features de produto, integrações ou desafios de arquitetura você desenvolveu ou liderou nessa empresa?"
+- This unlocks additional authentic accomplishments to expand the tenure from 3 to 4-5 high-impact Google XYZ bullets.
 ` : ''}
 ${triageBottlenecks.length > 0 ? `
 PRIORITY INTERVIEW TARGETS — RECRUITER TRIAGE BOTTLENECKS:
@@ -678,13 +739,14 @@ Key Principles for US Tech Positioning:
      * Bullet Density Target:
        - Current / Recent Senior Roles: Strictly 3 to 5 exhaustive Google XYZ bullets (allow up to 5 to 7 bullets for broad-scope roles where the candidate owned multiple disciplines: backend, frontend, databases, infrastructure, and CI/CD).
        - Earlier Roles: Strictly 2 to 4 robust Google XYZ bullets.
+       - Expansion of Sparse Experiences: When an original experience had only 1 to 3 bullets or brief sentences, use the candidate's interview discoveries, technical stack, and confirmed facts to expand it into at least 4 to 5 exhaustive Google XYZ bullets covering different facets of the work (core architecture, scale/performance, operational reliability, business deliverables).
      * BALANCED ROLE COVERAGE (ZERO DISCIPLINE OMISSION):
        - When the candidate operated across multiple domains (e.g. Full Stack with frontend React/Vue + backend NestJS/PostgreSQL + DevOps CI/CD):
          Do NOT allow one domain (such as backend) to cannibalize or erase the others. Provide dedicated, high-impact bullets representing their authentic frontend UI/UX work, backend systems, database tuning, and deployment automation.
        - When the candidate is transitioning into a new domain (e.g. Full Stack to Data):
          Highlight transferable engineering skills (data modeling, query optimization, event pipelines, schema migrations) that support the new objective without fabricating or omitting past accomplishments.
      * ELEVATE ORIGINAL SCOPE, NEVER DISCARD: Do NOT delete original responsibilities just because the original text was qualitative or passive. Instead, transform EVERY distinct responsibility from the candidate's original description into an elevated Google XYZ bullet by pairing the real engineering mechanism (tools, languages, architectures) with realistic production outcomes (e.g. 99.9% uptime, zero-downtime deployments, sub-100ms response times, automated CI/CD throughput).
-     * SEAMLESS INTEGRATION OF INTERVIEW DISCOVERIES: Every confirmed fact and discovery from the interview (e.g., subscription billing loophole fix with BullMQ + Redis + PostgreSQL idempotency keys across 200+ accounts, database indexing with EXPLAIN ANALYZE, Datadog observability dashboards, incident post-mortems) MUST be explicitly materialized as a high-impact bullet under the relevant company (or woven into the About summary). Adding interview facts must ENRICH the experience, NEVER replace or wipe out the candidate's other daily responsibilities!
+     * SEAMLESS INTEGRATION OF INTERVIEW DISCOVERIES: Every confirmed fact and discovery from the interview (e.g., subscription billing loophole fix with BullMQ + Redis + PostgreSQL idempotency keys across 200+ accounts, database indexing with EXPLAIN ANALYZE, Datadog observability dashboards, incident post-mortems) MUST be explicitly materialized as a high-impact bullet under the relevant company (or woven into the About summary). Adding interview facts must ENRICH the experience and INCREASE bullet count, NEVER replace or wipe out the candidate's other daily responsibilities!
    - 100% GOOGLE XYZ BULLETS INVARIANT: Every single bullet point in every experience MUST strictly adhere to the Google XYZ formula: "Accomplished [X], measured by [Y], by doing [Z]".
     - Lead with strong past-tense action verbs (Architected, Engineered, Optimized, Spearheaded, Reduced, Designed, Instituted).
     - Preserve all authentic technologies: Ensure all languages, frameworks, databases, and message brokers mentioned (e.g. Java, Spring Boot, BullMQ, Redis, PostgreSQL, Kafka, AWS, Docker) remain clearly stated.
