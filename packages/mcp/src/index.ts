@@ -23,8 +23,29 @@ async function main() {
   console.error('[LinkeGringo MCP] Servidor iniciado com sucesso via stdio.');
 }
 
-// Executa apenas se chamado diretamente como CLI
-if (import.meta.url === `file://${process.argv[1]}`) {
+import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
+
+function isDirectExecution(): boolean {
+  if (!process.argv[1]) return false;
+  try {
+    const currentFilePath = fileURLToPath(import.meta.url);
+    const scriptPath = fs.existsSync(process.argv[1])
+      ? fs.realpathSync(process.argv[1])
+      : process.argv[1];
+    return (
+      currentFilePath === scriptPath ||
+      process.argv[1].endsWith('index.js') ||
+      process.argv[1].endsWith('linkegringo-mcp') ||
+      process.argv[1].endsWith('mcp') ||
+      process.argv[1].endsWith('linkegringo')
+    );
+  } catch {
+    return true;
+  }
+}
+
+if (isDirectExecution()) {
   main().catch((err) => {
     console.error('[LinkeGringo MCP] Erro fatal na inicialização:', err);
     process.exit(1);
