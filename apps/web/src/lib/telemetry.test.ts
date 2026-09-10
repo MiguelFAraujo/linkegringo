@@ -1,5 +1,13 @@
 import { describe, expect, it, beforeEach, vi, afterEach } from 'vitest';
-import { track, getRecentEvents, clearTelemetry, toScoreBand, initAnalytics } from './telemetry';
+import {
+  track,
+  getRecentEvents,
+  clearTelemetry,
+  toScoreBand,
+  toScoreDeltaBand,
+  categorizeApiError,
+  initAnalytics,
+} from './telemetry';
 
 describe('Client-Side BYOK Telemetry & Analytics', () => {
   beforeEach(() => {
@@ -36,6 +44,51 @@ describe('Client-Side BYOK Telemetry & Analytics', () => {
     expect(toScoreBand(74)).toBe('mid');
     expect(toScoreBand(75)).toBe('high');
     expect(toScoreBand(98)).toBe('high');
+  });
+
+  it('correctly categorizes score deltas into delta bands', () => {
+    expect(toScoreDeltaBand(3)).toBe('minor');
+    expect(toScoreDeltaBand(5)).toBe('minor');
+    expect(toScoreDeltaBand(10)).toBe('moderate');
+    expect(toScoreDeltaBand(15)).toBe('moderate');
+    expect(toScoreDeltaBand(16)).toBe('major');
+    expect(toScoreDeltaBand(30)).toBe('major');
+  });
+
+  it('categorizes API errors into standardized operational error types', () => {
+    expect(categorizeApiError(new Error('Resource exhausted (429): Quota exceeded'))).toBe('quota_exceeded');
+    expect(categorizeApiError(new Error('API key not valid. Please pass a valid API key (403)'))).toBe('invalid_key');
+    expect(categorizeApiError(new Error('503 Service Unavailable: Model is overloaded'))).toBe('model_overloaded');
+    expect(categorizeApiError(new Error('Failed to fetch: NetworkError'))).toBe('network');
+    expect(categorizeApiError(new Error('Unknown unexpected failure'))).toBe('unknown');
+  });
+
+  it('tracks enriched events with numbers, booleans, and error types', () => {
+    track('analysis_completed', {
+      durationBand: 'normal',
+      durationSeconds: 8,
+      inboundScore: 78,
+      scoreBand: 'high',
+      experienceCount: 4,
+      sparseExperiencesCount: 1,
+      gapsCount: 2,
+    });
+    track('copy_opentowork_titles', { count: 5 });
+    track('api_error', { stage: 'rewrite', errorType: 'quota_exceeded' });
+
+    const events = getRecentEvents();
+    expect(events).toHaveLength(3);
+    expect(events[0].data).toEqual({
+      durationBand: 'normal',
+      durationSeconds: 8,
+      inboundScore: 78,
+      scoreBand: 'high',
+      experienceCount: 4,
+      sparseExperiencesCount: 1,
+      gapsCount: 2,
+    });
+    expect(events[1].data).toEqual({ count: 5 });
+    expect(events[2].data).toEqual({ stage: 'rewrite', errorType: 'quota_exceeded' });
   });
 
   it('strips sensitive PII and domain objects from telemetry payloads at runtime', () => {

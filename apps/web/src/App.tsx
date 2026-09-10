@@ -25,7 +25,7 @@ import {
   setStoredChatHistory,
   clearStoredChatHistory,
 } from './lib/storage';
-import { createAiProvider, formatCurrentDate } from '@linkegringo/ai';
+import { createAiProvider, formatCurrentDate, detectSparseExperiences } from '@linkegringo/ai';
 import {
   type AiProvider,
   type CareerObjective,
@@ -38,7 +38,13 @@ import {
   getCandidateIdentityKey,
   evaluateScoreTransition,
 } from '@linkegringo/core';
-import { track, toDurationBand } from './lib/telemetry';
+import {
+  track,
+  toDurationBand,
+  toScoreBand,
+  toScoreDeltaBand,
+  categorizeApiError,
+} from './lib/telemetry';
 
 export type FlowStep = 'upload' | 'diagnostic' | 'interview' | 'facts' | 'action-hub';
 
@@ -247,10 +253,26 @@ export function App() {
           excludedTechnologies: [],
         });
       }
-      track('analysis_completed', { durationBand: toDurationBand(Date.now() - startTime) });
+      const durationMs = Date.now() - startTime;
+      const durationSeconds = Math.round(durationMs / 1000);
+      const experienceCount = parsedProfile.experiences?.length || 0;
+      const sparseExperiencesCount = detectSparseExperiences(parsedProfile.experiences || []).length;
+      const gapsCount = (profileReview.primaryGaps?.length || profileReview.triageBottlenecks?.length) || 0;
+      const inboundScore = profileReview.inboundReadiness?.score ?? profileReview.overallScore ?? 0;
+
+      track('analysis_completed', {
+        durationBand: toDurationBand(durationMs),
+        durationSeconds,
+        inboundScore,
+        scoreBand: toScoreBand(inboundScore),
+        experienceCount,
+        sparseExperiencesCount,
+        gapsCount,
+      });
       setStep('diagnostic');
     } catch (err: any) {
       console.error('Erro na análise do perfil:', err);
+      track('api_error', { stage: 'diagnose', errorType: categorizeApiError(err) });
       setErrorMessage(
         err?.message || 'Falha ao analisar o perfil com a IA. Verifique sua chave de API e tente novamente.',
       );
@@ -268,11 +290,11 @@ export function App() {
     setProviderId('demo');
     setStoredProviderId('demo');
     const startTime = Date.now();
-    track('pdf_uploaded', { source: 'demo' });
+    track('pdf_uploaded', { source: 'demo', hasTargetRole: Boolean(targetRole) });
     if (targetRole) {
-      track('target_role_selected', { roleCategory: targetRole });
+      track('target_role_selected', { roleCategory: targetRole, selectionMethod: 'quick_pill' });
     }
-    track('analysis_started', { source: 'demo' });
+    track('analysis_started', { source: 'demo', providerType: 'demo' });
 
     try {
       const provider = createAiProvider('demo');
@@ -313,10 +335,26 @@ export function App() {
         workPreference: 'remote',
         excludedTechnologies: [],
       });
-      track('analysis_completed', { durationBand: toDurationBand(Date.now() - startTime) });
+      const durationMs = Date.now() - startTime;
+      const durationSeconds = Math.round(durationMs / 1000);
+      const experienceCount = demoProfile.experiences?.length || 0;
+      const sparseExperiencesCount = detectSparseExperiences(demoProfile.experiences || []).length;
+      const gapsCount = (demoReview.primaryGaps?.length || demoReview.triageBottlenecks?.length) || 0;
+      const inboundScore = demoReview.inboundReadiness?.score ?? demoReview.overallScore ?? 0;
+
+      track('analysis_completed', {
+        durationBand: toDurationBand(durationMs),
+        durationSeconds,
+        inboundScore,
+        scoreBand: toScoreBand(inboundScore),
+        experienceCount,
+        sparseExperiencesCount,
+        gapsCount,
+      });
       setStep('diagnostic');
     } catch (err: any) {
       console.error('Erro no modo demo:', err);
+      track('api_error', { stage: 'diagnose', errorType: categorizeApiError(err) });
       setErrorMessage('Erro ao carregar dados de demonstração.');
     } finally {
       setIsLoading(false);
@@ -451,7 +489,10 @@ export function App() {
         setFacts(baselineFacts);
       }
     }
-    track('interview_skipped');
+    track('interview_skipped', {
+      reason: 'user_opt_out',
+      questionsOffered: interviewPlan?.questions?.length || 0,
+    });
     setStep('facts');
   };
 
@@ -461,6 +502,7 @@ export function App() {
     setIsLoading(true);
     setErrorMessage(null);
     setFacts(confirmedFacts);
+    const rewriteStartTime = Date.now();
 
     const activeObjective: CareerObjective = objective || {
       targetMarket: review?.targetMarket || 'United States',
@@ -502,10 +544,20 @@ export function App() {
       }
 
       setAnalysis(stabilizedAnalysis);
-      track('rewrite_completed');
+      const durationSeconds = Math.round((Date.now() - rewriteStartTime) / 1000);
+      const finalScore = stabilizedAnalysis.overallScore;
+      const scoreDelta = finalScore - initialScore;
+      track('rewrite_completed', {
+        durationSeconds,
+        initialScore,
+        finalScore,
+        scoreDelta,
+        scoreDeltaBand: toScoreDeltaBand(scoreDelta),
+      });
       setStep('action-hub');
     } catch (err: any) {
       console.error('Erro ao gerar perfil final:', err);
+      track('api_error', { stage: 'rewrite', errorType: categorizeApiError(err) });
       setErrorMessage(err?.message || 'Falha ao gerar perfil otimizado.');
     } finally {
       setIsLoading(false);

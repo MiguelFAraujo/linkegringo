@@ -191,16 +191,31 @@ export function RecruiterSearchSimulator({
   // Overall match score
   const matchCount = termResults.filter((r) => r.status === 'match').length;
   const weakCount = termResults.filter((r) => r.status === 'weak').length;
+  const missingCount = termResults.filter((r) => r.status === 'missing').length;
   const total = termResults.length || 1;
   const matchPercentage = Math.round(((matchCount * 1.0 + weakCount * 0.5) / total) * 100);
 
   const overallResult: 'match' | 'weak' | 'missing' =
     matchPercentage >= 80 ? 'match' : matchPercentage >= 40 ? 'weak' : 'missing';
 
+  const queryType: 'preset' | 'custom' = presetQueries.includes(searchQuery) ? 'preset' : 'custom';
+
   useEffect(() => {
-    track('search_query_run', { result: overallResult });
-    track('recruiter_search_simulated', { result: overallResult });
-  }, [searchQuery, overallResult]);
+    track('search_query_run', {
+      result: overallResult,
+      queryType,
+      matchCount,
+      weakCount,
+      missingCount,
+    });
+    track('recruiter_search_simulated', {
+      result: overallResult,
+      queryType,
+      matchCount,
+      weakCount,
+      missingCount,
+    });
+  }, [searchQuery, overallResult, queryType, matchCount, weakCount, missingCount]);
 
   return (
     <Card className="border-[#1E293B] bg-[#0F1623]/80 shadow-xl w-full">

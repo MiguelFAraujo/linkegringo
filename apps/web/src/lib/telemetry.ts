@@ -13,42 +13,99 @@ import type { GapTermKind } from '@linkegringo/core';
 
 export interface TelemetryEventMap {
   // Funnel: Upload -> Diagnosis
-  pdf_uploaded: { source: 'upload' | 'demo' };
-  target_role_selected: { roleCategory: string };
-  analysis_started: { source: 'upload' | 'demo' };
-  analysis_completed: { durationBand: 'fast' | 'normal' | 'slow' };
-  diagnosis_viewed: { scoreBand: 'low' | 'mid' | 'high' };
+  pdf_uploaded: { source: 'upload' | 'demo'; fileSizeKb?: number; hasTargetRole?: boolean };
+  target_role_selected: { roleCategory: string; selectionMethod?: 'quick_pill' | 'custom_input' };
+  analysis_started: { source: 'upload' | 'demo'; providerType?: 'gemini' | 'demo' };
+  analysis_completed: {
+    durationBand: 'fast' | 'normal' | 'slow';
+    durationSeconds?: number;
+    inboundScore?: number;
+    scoreBand?: 'low' | 'mid' | 'high';
+    experienceCount?: number;
+    sparseExperiencesCount?: number;
+    gapsCount?: number;
+  };
+  diagnosis_viewed: {
+    scoreBand: 'low' | 'mid' | 'high';
+    inboundScore?: number;
+    bottlenecksCount?: number;
+    funnelSearchStatus?: string;
+    funnelCardStatus?: string;
+    funnelProfileStatus?: string;
+  };
 
   // Funnel: Interview
-  interview_started: { questionCount: number };
-  interview_skipped: undefined;
-  interview_completed: { answeredCount: number };
+  interview_started: {
+    questionCount: number;
+    hasSparseQuestions?: boolean;
+    targetRole?: string;
+  };
+  interview_skipped: { reason?: 'user_opt_out'; questionsOffered?: number } | undefined;
+  interview_completed: {
+    answeredCount: number;
+    skippedCount?: number;
+    completionRate?: number;
+    durationSeconds?: number;
+  };
 
   // Funnel: Rewrite
-  rewrite_completed: undefined;
-  action_hub_viewed: { initialScoreBand: 'low' | 'mid' | 'high' };
+  rewrite_completed:
+    | {
+        durationSeconds?: number;
+        initialScore?: number;
+        finalScore?: number;
+        scoreDelta?: number;
+        scoreDeltaBand?: 'minor' | 'moderate' | 'major';
+      }
+    | undefined;
+  action_hub_viewed: {
+    initialScoreBand: 'low' | 'mid' | 'high';
+    initialScore?: number;
+    finalScore?: number;
+    scoreDelta?: number;
+    spotlightMode?: boolean;
+  };
 
   // Navigation
-  tab_switched: { tab: string };
+  tab_switched: { tab: string; fromTab?: string };
 
   // Search Simulator & Micro-Integrations
   search_tab_opened: undefined;
-  search_query_run: { result: 'match' | 'weak' | 'missing' };
-  recruiter_search_simulated: { result: 'match' | 'weak' | 'missing' };
+  search_query_run: {
+    result: 'match' | 'weak' | 'missing';
+    queryType?: 'preset' | 'custom';
+    matchCount?: number;
+    weakCount?: number;
+    missingCount?: number;
+  };
+  recruiter_search_simulated: {
+    result: 'match' | 'weak' | 'missing';
+    queryType?: 'preset' | 'custom';
+    matchCount?: number;
+    weakCount?: number;
+    missingCount?: number;
+  };
   micro_integration_started: { kind: GapTermKind };
-  micro_integration_applied: { kind: GapTermKind; outcome: 'match' | 'no_safe_change' };
-  gap_resolved: { kind: GapTermKind; outcome: 'match' | 'no_safe_change' };
+  micro_integration_applied: { kind: GapTermKind; outcome: 'match' | 'no_safe_change'; targetSection?: string };
+  gap_resolved: { kind: GapTermKind; outcome: 'match' | 'no_safe_change'; targetSection?: string };
 
   // Actions / Value delivery
-  copy_headline: undefined;
-  copy_about: undefined;
-  copy_experience: undefined;
-  copy_skills: undefined;
+  copy_headline: { charCount?: number } | undefined;
+  copy_about: { charCount?: number } | undefined;
+  copy_experience: { bulletCount?: number } | undefined;
+  copy_skills: { skillCount?: number } | undefined;
+  copy_opentowork_titles: { count?: number } | undefined;
 
   // Launch Checklist
   launch_started: undefined;
-  launch_completed: undefined;
-  checklist_toggled: { itemIndex: number; checked: boolean };
+  launch_completed: { totalItems?: number } | undefined;
+  checklist_toggled: { itemIndex: number; checked: boolean; itemKey?: string; totalCompleted?: number };
+
+  // System Health / API Telemetry
+  api_error: {
+    stage: 'diagnose' | 'interview' | 'rewrite' | 'connection';
+    errorType: 'quota_exceeded' | 'invalid_key' | 'model_overloaded' | 'network' | 'unknown';
+  };
 }
 
 export type TelemetryEventType = keyof TelemetryEventMap;
@@ -122,7 +179,7 @@ export function sanitizeData(data?: Record<string, unknown>): Record<string, unk
 
 export function track<E extends keyof TelemetryEventMap>(
   event: E,
-  ...args: TelemetryEventMap[E] extends undefined ? [data?: undefined] : [data: TelemetryEventMap[E]]
+  ...args: undefined extends TelemetryEventMap[E] ? [data?: TelemetryEventMap[E]] : [data: TelemetryEventMap[E]]
 ): void {
   const data = args[0] as Record<string, unknown> | undefined;
   const cleanData = sanitizeData(data);
@@ -152,6 +209,54 @@ export function toDurationBand(ms: number): 'fast' | 'normal' | 'slow' {
   if (ms < 5000) return 'fast';
   if (ms < 15000) return 'normal';
   return 'slow';
+}
+
+export function toScoreDeltaBand(delta: number): 'minor' | 'moderate' | 'major' {
+  if (delta <= 5) return 'minor';
+  if (delta <= 15) return 'moderate';
+  return 'major';
+}
+
+export function categorizeApiError(
+  err: unknown,
+): 'quota_exceeded' | 'invalid_key' | 'model_overloaded' | 'network' | 'unknown' {
+  const msg = err instanceof Error ? err.message : String(err);
+  const lower = msg.toLowerCase();
+  if (
+    lower.includes('429') ||
+    lower.includes('quota') ||
+    lower.includes('exhausted') ||
+    lower.includes('rate limit')
+  ) {
+    return 'quota_exceeded';
+  }
+  if (
+    lower.includes('api key') ||
+    lower.includes('unauthorized') ||
+    lower.includes('401') ||
+    lower.includes('403') ||
+    lower.includes('invalid key')
+  ) {
+    return 'invalid_key';
+  }
+  if (
+    lower.includes('503') ||
+    lower.includes('overloaded') ||
+    lower.includes('unavailable') ||
+    lower.includes('high demand') ||
+    lower.includes('500')
+  ) {
+    return 'model_overloaded';
+  }
+  if (
+    lower.includes('network') ||
+    lower.includes('failed to fetch') ||
+    lower.includes('cors') ||
+    lower.includes('offline')
+  ) {
+    return 'network';
+  }
+  return 'unknown';
 }
 
 export function getRecentEvents(): ReadonlyArray<TelemetryRecord> {

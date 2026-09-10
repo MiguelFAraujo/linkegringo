@@ -156,8 +156,21 @@ export function DiagnosticView({
   const secondaryUnlocks = derivedGaps.filter((g) => g.id !== biggestUnlock?.id).slice(0, 2);
 
   useEffect(() => {
-    track('diagnosis_viewed', { scoreBand: toScoreBand(inboundScore) });
-  }, [inboundScore]);
+    track('diagnosis_viewed', {
+      scoreBand: toScoreBand(inboundScore),
+      inboundScore,
+      bottlenecksCount: review.triageBottlenecks?.length || 0,
+      funnelSearchStatus: journey.search?.status,
+      funnelCardStatus: journey.card?.status,
+      funnelProfileStatus: journey.profile?.status,
+    });
+  }, [
+    inboundScore,
+    review.triageBottlenecks?.length,
+    journey.search?.status,
+    journey.card?.status,
+    journey.profile?.status,
+  ]);
 
   const handleProceed = () => {
     if (onProceedToInterview) {

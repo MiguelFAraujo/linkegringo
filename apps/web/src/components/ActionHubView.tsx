@@ -97,14 +97,21 @@ export function ActionHubView({
   >({});
 
   useEffect(() => {
-    track('action_hub_viewed', { initialScoreBand: toScoreBand(initialScore) });
-  }, [initialScore]);
+    track('action_hub_viewed', {
+      initialScoreBand: toScoreBand(initialScore),
+      initialScore,
+      finalScore: newScore,
+      scoreDelta,
+      spotlightMode: newScore >= 80,
+    });
+  }, [initialScore, newScore, scoreDelta]);
 
   // Sync with URL parameters
   const handleTabChange = (tab: string) => {
     const validTab: HubTab = tab === 'search' || tab === 'launch' || tab === 'profile' ? tab : 'profile';
+    const fromTab = currentTab;
     setCurrentTab(validTab);
-    track('tab_switched', { tab: validTab });
+    track('tab_switched', { tab: validTab, fromTab });
     if (validTab === 'search') {
       track('search_tab_opened');
     } else if (validTab === 'launch') {
@@ -199,13 +206,17 @@ export function ActionHubView({
     if (ok) {
       setCopiedKey(key);
       if (key === 'headline') {
-        track('copy_headline');
+        track('copy_headline', { charCount: text.length });
       } else if (key === 'summary') {
-        track('copy_about');
+        track('copy_about', { charCount: text.length });
       } else if (key.startsWith('exp')) {
-        track('copy_experience');
+        track('copy_experience', {
+          bulletCount: text.split('\n').filter((l) => l.trim().length > 0).length,
+        });
       } else if (key === 'skills') {
-        track('copy_skills');
+        track('copy_skills', {
+          skillCount: text.split('\n').filter((l) => l.trim().length > 0).length,
+        });
       }
       setTimeout(() => setCopiedKey(null), 2000);
     }

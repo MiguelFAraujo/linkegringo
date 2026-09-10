@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Textarea } from './ui/textarea';
@@ -18,8 +18,9 @@ interface InterviewViewProps {
   onSubmitAnswers: (answers: InterviewAnswer[]) => Promise<void>;
   isLoading: boolean;
   roundNumber?: number;
-  overallScore?: number;
+  totalRounds?: number;
   isPolishMode?: boolean;
+  overallScore?: number;
   onSkipToFacts?: () => void;
 }
 
@@ -28,22 +29,36 @@ export function InterviewView({
   onSubmitAnswers,
   isLoading,
   roundNumber = 1,
+  totalRounds = 1,
+  isPolishMode = false,
   overallScore,
-  isPolishMode,
   onSkipToFacts,
 }: InterviewViewProps) {
   const questions = plan.questions;
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answersMap, setAnswersMap] = useState<Record<string, { value: string; skipped: boolean }>>({});
+  const startTimeRef = useRef<number>(Date.now());
 
   const isElitePolish = Boolean(isPolishMode || (overallScore && overallScore >= 92));
 
   useEffect(() => {
-    track('interview_started', { questionCount: questions.length });
-  }, [questions.length]);
+    const hasSparse = questions.some(
+      (q) =>
+        q.reason?.toLowerCase().includes('esparsa') ||
+        q.reason?.toLowerCase().includes('poucas entregas') ||
+        q.reason?.toLowerCase().includes('densidade'),
+    );
+    track('interview_started', {
+      questionCount: questions.length,
+      hasSparseQuestions: hasSparse,
+    });
+  }, [questions]);
 
   const handleSkipToFactsAction = () => {
-    track('interview_skipped');
+    track('interview_skipped', {
+      reason: 'user_opt_out',
+      questionsOffered: questions.length,
+    });
     onSkipToFacts?.();
   };
 
@@ -112,7 +127,16 @@ export function InterviewView({
     });
 
     const answeredCount = formattedAnswers.filter((a) => !a.skipped && a.value.trim().length > 0).length;
-    track('interview_completed', { answeredCount });
+    const durationSeconds = Math.round((Date.now() - startTimeRef.current) / 1000);
+    const skippedCount = totalQuestions - answeredCount;
+    const completionRate = totalQuestions > 0 ? Math.round((answeredCount / totalQuestions) * 100) : 100;
+
+    track('interview_completed', {
+      answeredCount,
+      skippedCount,
+      completionRate,
+      durationSeconds,
+    });
 
     await onSubmitAnswers(formattedAnswers);
   };

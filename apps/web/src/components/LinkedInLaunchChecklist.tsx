@@ -95,8 +95,6 @@ export function LinkedInLaunchChecklist({
     const item = checklist[itemIndex];
     if (item) {
       const nextCompleted = !item.completed;
-      track('checklist_toggled', { itemIndex, checked: nextCompleted });
-
       const newChecklist = checklist.map((it, idx) =>
         idx === itemIndex
           ? {
@@ -108,8 +106,11 @@ export function LinkedInLaunchChecklist({
       );
       setChecklist(newChecklist);
 
+      const totalCompleted = newChecklist.filter((it) => it.completed).length;
+      track('checklist_toggled', { itemIndex, checked: nextCompleted, itemKey: item.id, totalCompleted });
+
       if (newChecklist.every((it) => it.completed)) {
-        track('launch_completed');
+        track('launch_completed', { totalItems: newChecklist.length });
       }
     }
   };
@@ -133,6 +134,7 @@ export function LinkedInLaunchChecklist({
     const textToCopy = titles.join('\n');
     const ok = await copyToClipboard(textToCopy);
     if (ok) {
+      track('copy_opentowork_titles', { count: titles.length });
       setCopiedTitles(true);
       setTimeout(() => setCopiedTitles(false), 2500);
     }

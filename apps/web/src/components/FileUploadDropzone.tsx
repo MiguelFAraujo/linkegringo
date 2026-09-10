@@ -105,7 +105,11 @@ export function FileUploadDropzone({
     }
 
     setLinkedinFile(pdf);
-    track('pdf_uploaded', { source: 'upload' });
+    track('pdf_uploaded', {
+      source: 'upload',
+      fileSizeKb: Math.round(pdf.size / 1024),
+      hasTargetRole: Boolean(targetRole.trim()),
+    });
   };
 
   const handleLinkedinFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -117,7 +121,11 @@ export function FileUploadDropzone({
         return;
       }
       setLinkedinFile(file);
-      track('pdf_uploaded', { source: 'upload' });
+      track('pdf_uploaded', {
+        source: 'upload',
+        fileSizeKb: Math.round(file.size / 1024),
+        hasTargetRole: Boolean(targetRole.trim()),
+      });
     }
   };
 
@@ -135,7 +143,7 @@ export function FileUploadDropzone({
     setError(null);
     try {
       if (targetRole.trim()) {
-        track('target_role_selected', { roleCategory: targetRole.trim() });
+        track('target_role_selected', { roleCategory: targetRole.trim(), selectionMethod: 'custom_input' });
       }
       const pdfBase64 = await fileToBase64(linkedinFile);
       await onAnalyze({
@@ -308,7 +316,7 @@ export function FileUploadDropzone({
                     type="button"
                     onClick={() => {
                       setTargetRole(role);
-                      track('target_role_selected', { roleCategory: role });
+                      track('target_role_selected', { roleCategory: role, selectionMethod: 'quick_pill' });
                     }}
                     className={`px-2.5 py-1 rounded-md text-xs transition-colors border cursor-pointer ${
                       targetRole === role
