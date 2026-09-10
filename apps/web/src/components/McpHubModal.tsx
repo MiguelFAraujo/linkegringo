@@ -290,11 +290,69 @@ export function McpHubModal({ isOpen, onClose }: McpHubModalProps) {
             </div>
           </div>
 
-          {/* Card 2: AI Client Setup Tabs */}
+          {/* Card 2: One-Liner CLI Installer (No JSON editing needed) */}
+          <div className="p-4 rounded-xl bg-gradient-to-r from-cyan-950/40 via-[#0E1526] to-emerald-950/30 border border-cyan-500/30 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-cyan-400" />
+                <h3 className="text-sm font-semibold text-white">
+                  2. Instalação em 1 Linha de Comando (Sem Editar JSON!)
+                </h3>
+              </div>
+              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                Recomendado
+              </span>
+            </div>
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Rode este comando no terminal da sua máquina. Ele detecta automaticamente o <strong>Claude Desktop</strong>, <strong>Google Antigravity</strong> e <strong>Cursor</strong> e grava as configurações com segurança sem você precisar abrir arquivos:
+            </p>
+            <div className="flex items-center justify-between p-2.5 rounded-lg bg-black/70 border border-cyan-500/30">
+              <code className="text-xs font-mono text-cyan-300 select-all">
+                npx -y linkegringo-mcp install
+              </code>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => copyToClipboard('npx -y linkegringo-mcp install', 'cmd-install')}
+                className="h-7 text-xs text-cyan-400 hover:text-cyan-300 gap-1"
+              >
+                {copiedKey === 'cmd-install' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copiedKey === 'cmd-install' ? 'Copiado!' : 'Copiar'}</span>
+              </Button>
+            </div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-slate-400 pt-1">
+              <div>
+                <strong>Claude Code CLI:</strong>{' '}
+                <button
+                  type="button"
+                  onClick={() =>
+                    copyToClipboard('claude mcp add linkegringo npx -y linkegringo-mcp', 'claude-cli')
+                  }
+                  className="font-mono text-cyan-300 hover:underline"
+                >
+                  {copiedKey === 'claude-cli' ? 'Copiado!' : 'claude mcp add linkegringo npx -y linkegringo-mcp'}
+                </button>
+              </div>
+              <div>
+                <strong>Goose CLI:</strong>{' '}
+                <button
+                  type="button"
+                  onClick={() =>
+                    copyToClipboard('goose configure --add-extension "npx -y linkegringo-mcp"', 'goose-cmd-top')
+                  }
+                  className="font-mono text-cyan-300 hover:underline"
+                >
+                  {copiedKey === 'goose-cmd-top' ? 'Copiado!' : 'goose configure --add-extension ...'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 3: AI Client Setup Tabs (Manual JSON Fallback) */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-white">2. Configuração no seu Cliente de IA</h3>
-              <span className="text-xs text-slate-400">Selecione seu aplicativo:</span>
+              <h3 className="text-xs font-medium text-slate-400">Ou configure manualmente via JSON:</h3>
+              <span className="text-xs text-slate-500">Selecione seu aplicativo:</span>
             </div>
 
             {/* Tab Selector */}

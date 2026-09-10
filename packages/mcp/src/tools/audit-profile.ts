@@ -1,6 +1,47 @@
 import { z } from 'zod';
-import { detectSparseExperiences, getExperienceBulletCount } from '@linkegringo/ai';
 import type { Experience } from '@linkegringo/core';
+
+export interface SparseExperience {
+  company: string;
+  title: string;
+  estimatedBullets: number;
+}
+
+export function getExperienceBulletCount(exp: { description?: string; bullets?: string[] }): number {
+  if (Array.isArray(exp.bullets) && exp.bullets.length > 0) {
+    return exp.bullets.length;
+  }
+  const desc = exp.description;
+  if (!desc || !desc.trim()) return 0;
+
+  const lines = desc.split(/\n+/).map((l) => l.trim()).filter(Boolean);
+  const bulletLines = lines.filter((l) => /^[-*•\u2022\u25E6\u25AA\d+.]/.test(l));
+  if (bulletLines.length > 0) return bulletLines.length;
+
+  const sentences = desc.split(/(?<=[.!?])\s+/).filter((s) => s.trim().length > 10);
+  return Math.max(lines.length, sentences.length);
+}
+
+export function detectSparseExperiences(experiences?: Experience[]): SparseExperience[] {
+  if (!experiences || !Array.isArray(experiences)) return [];
+  const sparse: SparseExperience[] = [];
+
+  for (const exp of experiences) {
+    const company = exp.companyName || (exp as any).company || 'Company';
+    const title = exp.title || 'Software Engineer';
+    const count = getExperienceBulletCount(exp);
+
+    if (count <= 3) {
+      sparse.push({
+        company,
+        title,
+        estimatedBullets: count,
+      });
+    }
+  }
+
+  return sparse;
+}
 
 export const auditProfileInputSchema = z.object({
   profileText: z
