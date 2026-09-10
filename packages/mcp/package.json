@@ -4,7 +4,11 @@
   "description": "Servidor MCP oficial do LinkeGringo para auditoria e otimização de perfis para o mercado internacional",
   "type": "module",
   "bin": {
-    "linkegringo-mcp": "./dist/index.js"
+    "linkegringo-mcp": "dist/index.js",
+    "mcp": "dist/index.js"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

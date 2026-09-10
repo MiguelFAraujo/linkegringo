@@ -84,7 +84,7 @@ export function installMcpServerConfig(configPath: string): { status: 'created' 
   // Injeta o servidor oficial LinkeGringo (Zero API Key, local)
   configData.mcpServers['linkegringo'] = {
     command: 'npx',
-    args: ['-y', 'linkegringo-mcp'],
+    args: ['-y', '@linkegringo/mcp'],
   };
 
   // Injeta o servidor oficial Chrome DevTools com autoConnect
@@ -132,10 +132,10 @@ export function runInstaller(): InstallResult[] {
 
   console.log('---');
   console.log('💡 Comandos One-Line diretos para agentes de linha de comando (CLI):');
-  console.log('   • Antigravity CLI: agy mcp add linkegringo npx -y linkegringo-mcp');
-  console.log('   • Codex CLI:       codex mcp add linkegringo -- npx -y linkegringo-mcp');
-  console.log('   • Claude Code CLI: claude mcp add linkegringo npx -y linkegringo-mcp');
-  console.log('   • Goose CLI:       goose configure --add-extension "npx -y linkegringo-mcp"');
+  console.log('   • Antigravity CLI: agy mcp add linkegringo npx -y @linkegringo/mcp');
+  console.log('   • Codex CLI:       codex mcp add linkegringo -- npx -y @linkegringo/mcp');
+  console.log('   • Claude Code CLI: claude mcp add linkegringo npx -y @linkegringo/mcp');
+  console.log('   • Goose CLI:       goose configure --add-extension "npx -y @linkegringo/mcp"');
   console.log('================================================');
   console.log('🎉 Instalação concluída! Reinicie o Claude Desktop, Antigravity ou Cursor para ativar.\n');
 

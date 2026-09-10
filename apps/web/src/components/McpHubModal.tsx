@@ -81,7 +81,7 @@ export function McpHubModal({ isOpen, onClose }: McpHubModalProps) {
       mcpServers: {
         linkegringo: {
           command: 'npx',
-          args: ['-y', 'linkegringo-mcp'],
+          args: ['-y', '@linkegringo/mcp'],
         },
         'chrome-devtools': {
           command: 'npx',
@@ -98,7 +98,7 @@ export function McpHubModal({ isOpen, onClose }: McpHubModalProps) {
       mcpServers: {
         linkegringo: {
           command: 'npx',
-          args: ['-y', 'linkegringo-mcp'],
+          args: ['-y', '@linkegringo/mcp'],
         },
         'chrome-devtools': {
           command: 'npx',
@@ -115,7 +115,7 @@ export function McpHubModal({ isOpen, onClose }: McpHubModalProps) {
       mcpServers: {
         linkegringo: {
           command: 'npx',
-          args: ['-y', 'linkegringo-mcp'],
+          args: ['-y', '@linkegringo/mcp'],
         },
         'chrome-devtools': {
           command: 'npx',
@@ -129,7 +129,7 @@ export function McpHubModal({ isOpen, onClose }: McpHubModalProps) {
 
   const codexConfigToml = `[mcp_servers.linkegringo]
 command = "npx"
-args = ["-y", "linkegringo-mcp"]
+args = ["-y", "@linkegringo/mcp"]
 
 [mcp_servers.chrome-devtools]
 command = "npx"
@@ -370,12 +370,12 @@ args = ["-y", "chrome-devtools-mcp@latest", "--autoConnect"]`;
                 </p>
                 <div className="flex items-center justify-between p-2.5 rounded-lg bg-black/70 border border-cyan-500/30">
                   <code className="text-xs font-mono text-cyan-300 select-all">
-                    npx -y linkegringo-mcp install
+                    npx -y @linkegringo/mcp install
                   </code>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => copyToClipboard('npx -y linkegringo-mcp install', 'cmd-universal')}
+                    onClick={() => copyToClipboard('npx -y @linkegringo/mcp install', 'cmd-universal')}
                     className="h-7 text-xs text-cyan-400 hover:text-cyan-300 gap-1"
                   >
                     {copiedKey === 'cmd-universal' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -393,12 +393,12 @@ args = ["-y", "chrome-devtools-mcp@latest", "--autoConnect"]`;
                 </p>
                 <div className="flex items-center justify-between p-2.5 rounded-lg bg-black/70 border border-cyan-500/30">
                   <code className="text-xs font-mono text-cyan-300 select-all">
-                    agy mcp add linkegringo npx -y linkegringo-mcp
+                    agy mcp add linkegringo npx -y @linkegringo/mcp
                   </code>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => copyToClipboard('agy mcp add linkegringo npx -y linkegringo-mcp', 'cmd-agy')}
+                    onClick={() => copyToClipboard('agy mcp add linkegringo npx -y @linkegringo/mcp', 'cmd-agy')}
                     className="h-7 text-xs text-cyan-400 hover:text-cyan-300 gap-1"
                   >
                     {copiedKey === 'cmd-agy' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -430,12 +430,12 @@ args = ["-y", "chrome-devtools-mcp@latest", "--autoConnect"]`;
                 </p>
                 <div className="flex items-center justify-between p-2.5 rounded-lg bg-black/70 border border-cyan-500/30">
                   <code className="text-xs font-mono text-cyan-300 select-all">
-                    codex mcp add linkegringo -- npx -y linkegringo-mcp
+                    codex mcp add linkegringo -- npx -y @linkegringo/mcp
                   </code>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => copyToClipboard('codex mcp add linkegringo -- npx -y linkegringo-mcp', 'cmd-codex')}
+                    onClick={() => copyToClipboard('codex mcp add linkegringo -- npx -y @linkegringo/mcp', 'cmd-codex')}
                     className="h-7 text-xs text-cyan-400 hover:text-cyan-300 gap-1"
                   >
                     {copiedKey === 'cmd-codex' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -467,12 +467,12 @@ args = ["-y", "chrome-devtools-mcp@latest", "--autoConnect"]`;
                 </p>
                 <div className="flex items-center justify-between p-2.5 rounded-lg bg-black/70 border border-cyan-500/30">
                   <code className="text-xs font-mono text-cyan-300 select-all">
-                    claude mcp add linkegringo npx -y linkegringo-mcp
+                    claude mcp add linkegringo npx -y @linkegringo/mcp
                   </code>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => copyToClipboard('claude mcp add linkegringo npx -y linkegringo-mcp', 'cmd-claude-cli')}
+                    onClick={() => copyToClipboard('claude mcp add linkegringo npx -y @linkegringo/mcp', 'cmd-claude-cli')}
                     className="h-7 text-xs text-cyan-400 hover:text-cyan-300 gap-1"
                   >
                     {copiedKey === 'cmd-claude-cli' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -504,13 +504,13 @@ args = ["-y", "chrome-devtools-mcp@latest", "--autoConnect"]`;
                 </p>
                 <div className="flex items-center justify-between p-2.5 rounded-lg bg-black/70 border border-cyan-500/30">
                   <code className="text-xs font-mono text-cyan-300 select-all">
-                    goose configure --add-extension "npx -y linkegringo-mcp"
+                    goose configure --add-extension "npx -y @linkegringo/mcp"
                   </code>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() =>
-                      copyToClipboard('goose configure --add-extension "npx -y linkegringo-mcp"', 'cmd-goose')
+                      copyToClipboard('goose configure --add-extension "npx -y @linkegringo/mcp"', 'cmd-goose')
                     }
                     className="h-7 text-xs text-cyan-400 hover:text-cyan-300 gap-1"
                   >

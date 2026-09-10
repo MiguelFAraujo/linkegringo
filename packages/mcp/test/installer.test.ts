@@ -22,6 +22,7 @@ describe('MCP CLI Installer', () => {
     const data = JSON.parse(fs.readFileSync(tmpConfigPath, 'utf8'));
     expect(data.mcpServers.linkegringo).toBeDefined();
     expect(data.mcpServers.linkegringo.command).toBe('npx');
+    expect(data.mcpServers.linkegringo.args).toEqual(['-y', '@linkegringo/mcp']);
     expect(data.mcpServers['chrome-devtools']).toBeDefined();
   });
 
