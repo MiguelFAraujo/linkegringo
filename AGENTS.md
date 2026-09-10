@@ -93,14 +93,19 @@ O objetivo do LinkeGringo é converter buscas e visualizações de recrutadores 
 
 O pacote `@linkegringo/mcp` expõe ferramentas locais do LinkeGringo e integração com o Google Chrome:
 
-1. **Ferramentas MCP Disponíveis**:
-   - `audit_profile`: Executa diagnóstico Inbound (0-100), gargalos e lacunas técnicas a partir de PDF ou texto.
+1. **Zero Chaves de API / O Próprio Agente Conectado é a Inteligência**:
+   - O servidor MCP **NÃO** consome chave de API do Gemini nem de nenhum provedor externo.
+   - O modelo do próprio agente de IA que consome o MCP (Claude 3.7, Antigravity/Gemini, Cursor/GPT-4o, Goose) é o cérebro que executa a cognição, raciocínio e síntese.
+   - As ferramentas do `@linkegringo/mcp` atuam como especialistas determinísticos: calculam deduções de ATS, validam métricas Google XYZ, formatam headlines $\le 160$ caracteres e inspecionam o browser via CDP.
+
+2. **Ferramentas MCP Disponíveis**:
+   - `audit_profile`: Executa diagnóstico Inbound (0-100), gargalos e lacunas técnicas de forma determinística a partir de PDF ou texto.
    - `simulate_recruiter_search`: Avalia match booleano e semântico com peso 3x em Headline/Skills.
    - `convert_to_xyz_bullet`: Transforma bullets comuns na fórmula oficial do Google XYZ.
    - `generate_headline_proposals`: Gera 3 opções de headline calibradas $\le 160$ caracteres.
    - `check_chrome_cdp_status`: Testa porta de depuração do Chrome (9222) e lista abas do LinkeGringo.
 
-2. **Fluxo Chrome DevTools MCP (Chrome M144+)**:
+3. **Fluxo Chrome DevTools MCP (Chrome M144+)**:
    - Os usuários ativam a depuração remota visualmente em `chrome://inspect/#remote-debugging` sem necessidade de reiniciar o navegador pelo terminal.
    - Integração com `chrome-devtools-mcp@latest --autoConnect` solicita autorização nativa de sessão ao usuário via pop-up seguro.
 

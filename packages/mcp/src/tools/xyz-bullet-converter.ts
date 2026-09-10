@@ -1,13 +1,4 @@
 import { z } from 'zod';
-import { resolveAiProvider } from '../utils/provider-factory.js';
-
-export function formatGoogleXyzBullet(parts: {
-  action: string;
-  metric: string;
-  method: string;
-}): string {
-  return `${parts.action}, measured by ${parts.metric}, by ${parts.method}.`;
-}
 
 export const convertToXyzBulletInputSchema = z.object({
   rawBullet: z
@@ -17,93 +8,135 @@ export const convertToXyzBulletInputSchema = z.object({
     .string()
     .default('Senior Software Engineer')
     .describe('Contexto da empresa, cargo ou projeto (ex: "Fintech de pagamentos, alta escala")'),
-  metricsOrHints: z
+  action: z
     .string()
     .optional()
-    .describe('Métricas reais ou pistas numéricas (ex: "20M req/dia, latência caiu 45%, SLA 99.99%")'),
-  apiKey: z.string().optional().describe('Chave opcional do Gemini'),
+    .describe('Ação de impacto com verbo no passado (ex: "Architected and deployed distributed payment services")'),
+  metric: z
+    .string()
+    .optional()
+    .describe('Métrica quantitativa [Y] (ex: "reducing p99 latency by 35% and scaling to 12,000 RPS")'),
+  method: z
+    .string()
+    .optional()
+    .describe('Como foi feito [Z] (ex: "by migrating monolith endpoints to Go microservices on AWS EKS")'),
 });
 
 export type ConvertToXyzBulletInput = z.infer<
   typeof convertToXyzBulletInputSchema
 >;
 
+export function formatGoogleXyzBullet(parts: {
+  action: string;
+  metric: string;
+  method: string;
+}): string {
+  const cleanAction = parts.action.trim().replace(/[.,;]+$/, '');
+  const cleanMetric = parts.metric.trim().replace(/[.,;]+$/, '');
+  const cleanMethod = parts.method.trim().replace(/[.,;]+$/, '');
+
+  const methodPrefix = /^by\s+/i.test(cleanMethod) ? '' : 'by ';
+  const metricPrefix = /^measured by\s+/i.test(cleanMetric)
+    ? ''
+    : /^resulting in\s+/i.test(cleanMetric)
+      ? ''
+      : 'measured by ';
+
+  return `${cleanAction}, ${metricPrefix}${cleanMetric}, ${methodPrefix}${cleanMethod}.`;
+}
+
 export async function handleConvertToXyzBullet(input: ConvertToXyzBulletInput) {
-  const { provider, isDemo } = resolveAiProvider(input.apiKey);
+  const raw = input.rawBullet.trim();
 
-  let formattedBullet: string;
-
-  if (isDemo) {
-    formattedBullet = formatGoogleXyzBullet({
-      action: 'Architected and deployed distributed services',
-      metric: input.metricsOrHints || 'reducing p99 latency by 35% and scaling throughput to 10k+ RPS',
-      method: `leveraging ${input.roleContext || 'modern distributed architecture and robust observability'}`,
+  // Se o usuário/agente já forneceu as 3 partes discriminadas
+  if (input.action && input.metric && input.method) {
+    const formatted = formatGoogleXyzBullet({
+      action: input.action,
+      metric: input.metric,
+      method: input.method,
     });
-  } else {
-    // Reescrita inteligente via Gemini AiProvider
-    const prompt = `
-Transform this passive resume bullet into a high-impact Google XYZ bullet ("Accomplished [X], measured by [Y], by doing [Z]") in English:
-- Original Bullet: "${input.rawBullet}"
-- Role / Company Context: "${input.roleContext}"
-- Numerical Hints / Metrics: "${input.metricsOrHints || 'Include realistic engineering scale metrics like latency, throughput, cost, or reliability'}"
 
-Rules:
-1. Start with a strong active past-tense engineering verb (e.g., Architected, Engineered, Optimized, Automated).
-2. Follow strict Google XYZ structure.
-3. No buzzwords (avoid "passionate", "synergy", "rockstar").
-4. Output ONLY the single resulting bullet without quotation marks.
-`.trim();
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: `
+# Bullet Google XYZ Formatado
 
-    try {
-      const chat = (provider as any).ai?.chats?.create?.({
-        model: 'gemini-2.5-flash',
-        config: { temperature: 0.2 },
-      });
-      if (chat) {
-        const res = await chat.sendMessage({ message: prompt });
-        formattedBullet = res.text.trim();
-      } else {
-        formattedBullet = formatGoogleXyzBullet({
-          action: 'Engineered high-throughput production services',
-          metric: input.metricsOrHints || 'improving reliability to 99.99% uptime',
-          method: `by redesigning core workflows for ${input.roleContext}`,
-        });
-      }
-    } catch {
-      formattedBullet = formatGoogleXyzBullet({
-        action: 'Engineered high-throughput production services',
-        metric: input.metricsOrHints || 'improving reliability to 99.99% uptime',
-        method: `by redesigning core workflows for ${input.roleContext}`,
-      });
-    }
+✨ **${formatted}**
+
+- **[X] Accomplished**: ${input.action}
+- **[Y] Measured by**: ${input.metric}
+- **[Z] By doing**: ${input.method}
+`.trim(),
+        },
+      ],
+      structuredData: {
+        formattedBullet: formatted,
+        parts: { action: input.action, metric: input.metric, method: input.method },
+      },
+    };
   }
 
-  const markdownSummary = `
-# Conversão para Bullet Google XYZ
+  // Análise heurística do bullet fornecido
+  const metricRegex = /\b(\d+|%|\$|ms|s|k|m|rps|tps|x)\b/i;
+  const hasMetrics = metricRegex.test(raw);
+  const activeVerbs = [
+    'Architected',
+    'Engineered',
+    'Designed',
+    'Spearheaded',
+    'Optimized',
+    'Scaled',
+    'Automated',
+    'Refactored',
+    'Implemented',
+    'Streamlined',
+    'Accelerated',
+  ];
 
-**Original**:
-> "${input.rawBullet}"
+  // Gera 3 templates recomendados para o Agente de IA usar diretamente
+  const cleanBullet = raw.replace(/^[-*•\s]+/, '');
+  const optionScale = `Architected and scaled core ${input.roleContext} workflows, measured by reducing p99 latency by 35% and handling 10k+ peak RPS, by redesigning synchronous bottlenecks with distributed message queues.`;
+  const optionCost = `Optimized cloud resource utilization and data processing pipelines, measured by reducing AWS infrastructure costs by 28% ($45k/year savings), by implementing intelligent autoscaling and caching layers.`;
+  const optionReliability = `Engineered robust automated CI/CD and deployment pipelines for ${input.roleContext}, measured by increasing deployment frequency by 3x and achieving 99.99% system availability, by establishing automated regression testing and canary releases.`;
 
-**Reescrito no Formato Google XYZ**:
-> ✨ **${formattedBullet}**
+  const report = `
+# Análise de Fórmula Google XYZ
 
-**Por que este formato converte**:
-- **[X] Ação de Impacto**: Foco direto no que você construiu ou resolveu com verbos fortes no passado.
-- **[Y] Métrica / Escala**: Dá credibilidade imediata ao demonstrar mensuração de engenharia.
-- **[Z] Método / Engenharia**: Deixa claro as tecnologias e arquitetura empregadas.
+**Bullet Analisado**:
+> "${cleanBullet}"
+
+**Status de Auditoria**:
+- **Verbo de Ação no Passado**: ${activeVerbs.some((v) => cleanBullet.toLowerCase().startsWith(v.toLowerCase())) ? '✅ Presente' : '⚠️ Recomendado substituir o início por um verbo de forte liderança técnica (ex: Architected, Engineered, Optimized)'}
+- **Métrica Quantitativa [Y]**: ${hasMetrics ? '✅ Detectada' : '❌ Não detectada — faltam números, porcentagens, latência ou volume'}
+
+---
+
+## 3 Propostas Prontas de Google XYZ para este Contexto:
+1. **Foco em Escala & Performance (Latência/Throughput)**:
+   > ✨ "${optionScale}"
+2. **Foco em Otimização de Custo & Recursos**:
+   > ✨ "${optionCost}"
+3. **Foco em Confiabilidade & Qualidade de Engenharia**:
+   > ✨ "${optionReliability}"
+
+## 💡 Instruções para o Agente de IA:
+Pergunte ao candidato qual métrica real mais se aproxima da sua entrega (${hasMetrics ? 'ou valide os números detectados' : 'ex: % de redução de tempo, volume de requisições ou economia'}). Em seguida, finalize o bullet usando a estrutura:
+\`Accomplished [X], measured by [Y], by doing [Z]\`.
 `.trim();
 
   return {
     content: [
       {
         type: 'text' as const,
-        text: markdownSummary,
+        text: report,
       },
     ],
     structuredData: {
-      originalBullet: input.rawBullet,
-      formattedBullet,
-      isDemo,
+      hasMetrics,
+      rawBullet: cleanBullet,
+      proposals: [optionScale, optionCost, optionReliability],
     },
   };
 }

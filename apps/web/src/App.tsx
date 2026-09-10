@@ -731,7 +731,6 @@ export function App() {
       <McpHubModal
         isOpen={mcpHubOpen}
         onClose={() => setMcpHubOpen(false)}
-        geminiApiKey={apiKey}
       />
     </div>
   );

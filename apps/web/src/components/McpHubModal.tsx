@@ -20,12 +20,11 @@ import { Button } from './ui/button';
 interface McpHubModalProps {
   isOpen: boolean;
   onClose: () => void;
-  geminiApiKey?: string;
 }
 
 type ClientTab = 'claude' | 'antigravity' | 'cursor' | 'codex';
 
-export function McpHubModal({ isOpen, onClose, geminiApiKey }: McpHubModalProps) {
+export function McpHubModal({ isOpen, onClose }: McpHubModalProps) {
   const [activeClientTab, setActiveClientTab] = useState<ClientTab>('claude');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [showLegacyCommands, setShowLegacyCommands] = useState(false);
@@ -79,9 +78,6 @@ export function McpHubModal({ isOpen, onClose, geminiApiKey }: McpHubModalProps)
         linkegringo: {
           command: 'npx',
           args: ['-y', 'linkegringo-mcp'],
-          env: {
-            GEMINI_API_KEY: geminiApiKey || 'SUA_CHAVE_GEMINI_AQUI',
-          },
         },
         'chrome-devtools': {
           command: 'npx',
@@ -99,9 +95,10 @@ export function McpHubModal({ isOpen, onClose, geminiApiKey }: McpHubModalProps)
         linkegringo: {
           command: 'npx',
           args: ['-y', 'linkegringo-mcp'],
-          env: {
-            GEMINI_API_KEY: geminiApiKey || 'SUA_CHAVE_GEMINI_AQUI',
-          },
+        },
+        'chrome-devtools': {
+          command: 'npx',
+          args: ['-y', 'chrome-devtools-mcp@latest', '--autoConnect'],
         },
       },
     },
@@ -128,12 +125,12 @@ export function McpHubModal({ isOpen, onClose, geminiApiKey }: McpHubModalProps)
                 <h2 id="mcp-modal-title" className="text-base font-semibold text-white">
                   LinkeGringo MCP & Agentes de IA
                 </h2>
-                <span className="px-2 py-0.5 text-[10px] font-medium bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 rounded-full">
-                  BYOK • Model Context Protocol
+                <span className="px-2 py-0.5 text-[10px] font-medium bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 rounded-full">
+                  Zero Chave de API • 100% Gratuito
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
-                Conecte o LinkeGringo diretamente no Claude Desktop, Google Antigravity, Cursor AI ou Codex
+                Conecte ferramentas de ATS diretamente no seu agente de IA (Claude Desktop, Google Antigravity, Cursor AI, Goose)
               </p>
             </div>
           </div>
@@ -149,6 +146,13 @@ export function McpHubModal({ isOpen, onClose, geminiApiKey }: McpHubModalProps)
 
         {/* Modal Scrollable Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          {/* Zero API Key Callout */}
+          <div className="p-3 rounded-lg bg-cyan-950/30 border border-cyan-500/30 text-xs text-cyan-200 flex items-start gap-2.5">
+            <Sparkles className="w-4 h-4 shrink-0 text-cyan-400 mt-0.5" />
+            <p className="leading-relaxed">
+              <strong>O seu próprio agente de IA é o cérebro:</strong> Você não precisa de chave da API do Gemini nem de nenhum outro provedor. O servidor MCP roda localmente na sua máquina e equipa o seu agente (Claude, Antigravity, Cursor) com as regras do LinkedIn ATS, fórmulas Google XYZ e ferramentas de inspeção do Chrome via CDP com custo zero!
+            </p>
+          </div>
           {/* Card 1: Chrome Remote Debugging (Modern W3C / CDP Flow) */}
           <div className="p-5 rounded-xl bg-[#0F172A]/70 border border-[#1E293B] space-y-4">
             <div className="flex items-start justify-between gap-4">

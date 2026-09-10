@@ -1,95 +1,250 @@
-import fs from 'node:fs/promises';
-import path from 'node:path';
 import { z } from 'zod';
-import { resolveAiProvider } from '../utils/provider-factory.js';
+import { detectSparseExperiences, getExperienceBulletCount } from '@linkegringo/ai';
+import type { Experience } from '@linkegringo/core';
 
 export const auditProfileInputSchema = z.object({
-  pdfPath: z
-    .string()
-    .optional()
-    .describe('Caminho local (absoluto ou relativo) para o PDF exportado do LinkedIn'),
-  pdfBase64: z
-    .string()
-    .optional()
-    .describe('Conteúdo do arquivo PDF codificado em Base64'),
   profileText: z
     .string()
     .optional()
-    .describe('Texto bruto ou extraído do perfil do LinkedIn'),
+    .describe('Texto bruto extraído do perfil do LinkedIn ou currículo do candidato'),
+  headline: z
+    .string()
+    .optional()
+    .describe('Headline / Título atual do LinkedIn (se fornecido isoladamente)'),
+  summary: z
+    .string()
+    .optional()
+    .describe('Seção Sobre / About atual (se fornecida isoladamente)'),
+  experiences: z
+    .array(
+      z.object({
+        company: z.string(),
+        title: z.string(),
+        bullets: z.array(z.string()).optional(),
+        description: z.string().optional(),
+      }),
+    )
+    .optional()
+    .describe('Lista estruturada de experiências profissionais'),
+  skills: z
+    .array(z.string())
+    .optional()
+    .describe('Lista de competências / skills declaradas'),
   targetRole: z
     .string()
     .default('Senior Software Engineer')
-    .describe('Cargo-alvo nos EUA (ex: Senior Backend Engineer, Staff DevOps Engineer)'),
-  apiKey: z
+    .describe('Cargo almejado no mercado norte-americano (ex: Senior Backend Engineer)'),
+  targetMarket: z
     .string()
-    .optional()
-    .describe('Chave opcional do Gemini para sobrepor a variável de ambiente GEMINI_API_KEY'),
+    .default('United States Remote')
+    .describe('Mercado e regime de trabalho pretendido'),
 });
 
 export type AuditProfileInput = z.infer<typeof auditProfileInputSchema>;
 
+export interface AuditIssue {
+  severity: 'critical' | 'warning' | 'info';
+  category: 'headline' | 'experience' | 'about' | 'skills';
+  message: string;
+  recommendation: string;
+}
+
 export async function handleAuditProfile(input: AuditProfileInput) {
-  let base64Content = input.pdfBase64;
+  let headline = input.headline || '';
+  let summary = input.summary || '';
+  let skills = input.skills || [];
+  const rawExperiences = input.experiences || [];
 
-  if (!base64Content && input.pdfPath) {
-    const resolvedPath = path.resolve(process.cwd(), input.pdfPath);
-    const fileBuffer = await fs.readFile(resolvedPath);
-    base64Content = fileBuffer.toString('base64');
+  // Se apenas profileText foi fornecido, extrai os blocos básicos heurísticos
+  if (input.profileText && !headline && rawExperiences.length === 0) {
+    const lines = input.profileText
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean);
+
+    if (lines.length > 0) {
+      // Primeira linha provável nome, segunda linha provável headline
+      headline = lines[1] || lines[0];
+      // Tenta achar trechos com termos chave
+      const potentialSkills = lines.filter(
+        (l) =>
+          l.includes(',') &&
+          (l.toLowerCase().includes('react') ||
+            l.toLowerCase().includes('typescript') ||
+            l.toLowerCase().includes('python') ||
+            l.toLowerCase().includes('go') ||
+            l.toLowerCase().includes('aws') ||
+            l.toLowerCase().includes('docker')),
+      );
+      if (potentialSkills.length > 0) {
+        skills = potentialSkills[0].split(',').map((s) => s.trim());
+      }
+    }
   }
 
-  if (!base64Content && !input.profileText) {
-    throw new Error(
-      'É necessário fornecer ao menos uma fonte de dados: pdfPath, pdfBase64 ou profileText.',
-    );
+  // Mapeia para formato do detector de sparse
+  const domainExperiences: Experience[] = rawExperiences.map((e) => ({
+    companyName: e.company,
+    title: e.title,
+    bullets: e.bullets,
+    description: e.description,
+    current: false,
+    location: '',
+  }));
+
+  // Heurística de deduções da Rubrica LinkeGringo (Inicia em 100)
+  let score = 100;
+  const issues: AuditIssue[] = [];
+  const triageBottlenecks: string[] = [];
+
+  // 1. Auditoria de Headline (Peso 3x no algoritmo de busca)
+  if (!headline || headline.length < 5) {
+    score -= 25;
+    triageBottlenecks.push('Headline ausente ou muito curta: perfil invisível no LinkedIn Recruiter.');
+    issues.push({
+      severity: 'critical',
+      category: 'headline',
+      message: 'Headline vazia ou insuficiente.',
+      recommendation: `Adicione uma headline no formato: "${input.targetRole} | [3-4 Core Techs] | [Escala/Impacto] | US Remote".`,
+    });
+  } else {
+    if (headline.length > 160) {
+      score -= 10;
+      issues.push({
+        severity: 'warning',
+        category: 'headline',
+        message: `Headline possui ${headline.length} caracteres, excedendo o limite recomendado de 160.`,
+        recommendation: 'Reduza para menos de 160 caracteres para evitar que o LinkedIn corte informações cruciais no app mobile.',
+      });
+    }
+
+    const lowerHeadline = headline.toLowerCase();
+    const fluffWords = ['passionate', 'aspiring', 'open to opportunities', 'looking for', 'rockstar', 'ninja', 'entusiasta'];
+    const detectedFluff = fluffWords.filter((w) => lowerHeadline.includes(w));
+    if (detectedFluff.length > 0) {
+      score -= 10;
+      triageBottlenecks.push(`Termos vagos na headline (${detectedFluff.join(', ')}): enfraquece o posicionamento sênior.`);
+      issues.push({
+        severity: 'warning',
+        category: 'headline',
+        message: `Headline contém palavras-chave fracas: ${detectedFluff.join(', ')}.`,
+        recommendation: 'Substitua termos genéricos por especializações técnicas concretas e métricas de sistema.',
+      });
+    }
+
+    if (!lowerHeadline.includes('remote') && !lowerHeadline.includes('global') && !lowerHeadline.includes('us')) {
+      issues.push({
+        severity: 'info',
+        category: 'headline',
+        message: 'Nenhuma menção explícita a trabalho remoto internacional na headline.',
+        recommendation: 'Inclua "US Remote" ou "Global Teams" para facilitar a triagem de recrutadores americanos.',
+      });
+    }
   }
 
-  const { provider, isDemo, message } = resolveAiProvider(input.apiKey);
+  // 2. Auditoria de Experiências & Bullets Google XYZ
+  const sparseExps = detectSparseExperiences(domainExperiences);
+  let totalBullets = 0;
+  let bulletsWithMetrics = 0;
+  const metricRegex = /\b(\d+|%|\$|ms|s|k|m|rps|tps|x)\b/i;
 
-  const result = await provider.parseAndDiagnose({
-    pdfBase64: base64Content,
-    pdfText: input.profileText,
-    targetRole: input.targetRole,
-  });
+  for (const exp of rawExperiences) {
+    const bullets = exp.bullets || (exp.description ? exp.description.split('\n') : []);
+    for (const b of bullets) {
+      if (b.trim().length > 10) {
+        totalBullets++;
+        if (metricRegex.test(b)) {
+          bulletsWithMetrics++;
+        }
+      }
+    }
+  }
 
-  const { profile, review } = result;
-  const candidateName = [profile.firstName, profile.lastName].filter(Boolean).join(' ') || 'Não identificado';
-  const score = review.inboundReadiness?.score ?? review.overallScore ?? 0;
-  const bottlenecks = review.triageBottlenecks || [];
-  const primaryGaps = review.primaryGaps || [];
+  if (rawExperiences.length > 0) {
+    if (sparseExps.length > 0) {
+      const deduction = Math.min(25, sparseExps.length * 10);
+      score -= deduction;
+      triageBottlenecks.push(
+        `${sparseExps.length} experiência(s) com poucos detalhes (≤ 3 bullets): faltam evidências de escopo técnico.`,
+      );
+      issues.push({
+        severity: 'critical',
+        category: 'experience',
+        message: `Experiências esparsas detectadas em: ${sparseExps.map((s) => s.company).join(', ')}.`,
+        recommendation: 'Expanda cada experiência com 3 a 5 bullets densos e fundamentados.',
+      });
+    }
+
+    if (totalBullets > 0) {
+      const metricRatio = bulletsWithMetrics / totalBullets;
+      if (metricRatio < 0.4) {
+        score -= 20;
+        triageBottlenecks.push('Falta de mensuração quantitativa (apenas ' + Math.round(metricRatio * 100) + '% dos bullets possuem métricas).');
+        issues.push({
+          severity: 'critical',
+          category: 'experience',
+          message: 'Baixa densidade da fórmula Google XYZ.',
+          recommendation: 'Converta os bullets para "Accomplished [X], measured by [Y], by doing [Z]" ancorando latência, throughput, custo ou SLA.',
+        });
+      }
+    }
+  } else if (input.profileText) {
+    // Se foi texto genérico, checagem rápida de números
+    const hasNumbers = /\b\d+(%|k|m|ms)?\b/i.test(input.profileText);
+    if (!hasNumbers) {
+      score -= 15;
+      triageBottlenecks.push('Raras evidências numéricas encontradas no texto do currículo.');
+    }
+  }
+
+  // 3. Auditoria da Seção Sobre (About)
+  if (summary) {
+    if (summary.length < 100) {
+      score -= 10;
+      issues.push({
+        severity: 'warning',
+        category: 'about',
+        message: 'Resumo Sobre (About) muito conciso ou incompleto.',
+        recommendation: 'Crie um resumo estruturado com um gancho forte nos primeiros 250 caracteres e escopo arquitetural.',
+      });
+    }
+  }
+
+  // Normalização do score
+  const finalScore = Math.max(15, Math.min(100, score));
 
   const markdownSummary = `
-# Diagnóstico de Perfil LinkeGringo
+# Relatório de Diagnóstico Inbound (LinkeGringo)
 
-**Candidato**: ${candidateName}
-**Cargo-Alvo**: ${input.targetRole}
-**Nota Inbound**: **${score} / 100** ${score >= 80 ? '🟢 Recruiter-Ready' : score >= 50 ? '🟡 Competitivo Médio' : '🔴 Crítico / Baixa Indexação'}
-**Modo**: ${isDemo ? 'Demonstração (Simulação Local)' : 'Google Gemini AI'}
+**Cargo-Alvo**: ${input.targetRole} (${input.targetMarket})
+**Nota Inbound**: **${finalScore} / 100** ${finalScore >= 80 ? '🟢 Recruiter-Ready' : finalScore >= 50 ? '🟡 Competitivo Médio' : '🔴 Crítico / Baixa Indexação'}
+**Modo**: 100% Local (Executado pelo seu Agente de IA sem necessidade de Chaves de API)
 
-${message ? `> ⚠️ **Aviso**: ${message}\n` : ''}
+---
 
-## 🚦 Gargalos de Triagem (Triage Bottlenecks)
+## 🚦 Gargalos Críticos de Triagem (Triage Bottlenecks)
 ${
-  bottlenecks.length > 0
-    ? bottlenecks.map((b) => `- ❌ ${b}`).join('\n')
-    : '- ✓ Nenhum gargalo crítico impeditivo detectado.'
+  triageBottlenecks.length > 0
+    ? triageBottlenecks.map((b) => `- ❌ ${b}`).join('\n')
+    : '- ✓ Nenhum gargalo impeditivo encontrado para triagem inicial.'
 }
 
-## 🎯 Principais Lacunas Técnicas (Gaps)
+## 📋 Auditoria Seção a Seção
 ${
-  primaryGaps.length > 0
-    ? primaryGaps
+  issues.length > 0
+    ? issues
         .map(
-          (g) =>
-            `- **${g.targetSection}**: ${g.label} ${g.suggestedUnlock ? `*(Sugestão: ${g.suggestedUnlock})*` : ''}`,
+          (iss) =>
+            `- **[${iss.category.toUpperCase()}]** (${iss.severity}): ${iss.message}\n  *Ação recomendada*: ${iss.recommendation}`,
         )
         .join('\n')
-    : '- ✓ Perfil alinhado com a stack esperada.'
+    : '- Todas as seções atendem às diretrizes de triagem dos EUA.'
 }
 
-## 📋 Resumo Estruturado
-- **Headline Atual**: "${profile.headline || 'Sem headline'}"
-- **Total de Experiências**: ${profile.experiences?.length || 0}
-- **Top Competências**: ${profile.skills?.slice(0, 8).join(', ') || 'Nenhuma'}
+## 💡 Próximos Passos para o Agente de IA:
+1. Usar a ferramenta \`generate_headline_proposals\` para calibrar a headline em até 160 caracteres.
+2. Usar a ferramenta \`convert_to_xyz_bullet\` para reescrever as conquistas passivas no formato do Google (*Accomplished [X], measured by [Y], by doing [Z]*).
+3. Conduzir uma breve entrevista técnica sobre as experiências esparsas detectadas para extrair métricas de escala realistas.
 `.trim();
 
   return {
@@ -100,10 +255,14 @@ ${
       },
     ],
     structuredData: {
-      profile,
-      review,
-      score,
-      isDemo,
+      score: finalScore,
+      targetRole: input.targetRole,
+      headline,
+      totalBullets,
+      bulletsWithMetrics,
+      sparseExperiences: sparseExps,
+      triageBottlenecks,
+      issues,
     },
   };
 }
