@@ -18,6 +18,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: github-pages
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -45,7 +46,7 @@ jobs:
       - name: Build Web App
         run: pnpm --filter @linkegringo/web build
         env:
-          VITE_UMAMI_WEBSITE_ID: ${{ vars.VITE_UMAMI_WEBSITE_ID || '134bc2c8-4129-43da-951a-c873d28b83e6' }}
+          VITE_UMAMI_WEBSITE_ID: ${{ secrets.VITE_UMAMI_WEBSITE_ID || vars.VITE_UMAMI_WEBSITE_ID }}
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
