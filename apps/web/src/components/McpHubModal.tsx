@@ -6,6 +6,7 @@ import {
   Copy,
   Cpu,
   ExternalLink,
+  FileCode,
   Info,
   Radio,
   RefreshCw,
@@ -23,8 +24,11 @@ interface McpHubModalProps {
 }
 
 type ClientTab = 'claude' | 'antigravity' | 'cursor' | 'codex';
+type CliAgent = 'universal' | 'agy' | 'codex' | 'claude' | 'goose';
 
 export function McpHubModal({ isOpen, onClose }: McpHubModalProps) {
+  const [activeCliTab, setActiveCliTab] = useState<CliAgent>('universal');
+  const [showManualConfig, setShowManualConfig] = useState(false);
   const [activeClientTab, setActiveClientTab] = useState<ClientTab>('claude');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [showLegacyCommands, setShowLegacyCommands] = useState(false);
@@ -105,6 +109,31 @@ export function McpHubModal({ isOpen, onClose }: McpHubModalProps) {
     null,
     2,
   );
+
+  const cursorConfigJson = JSON.stringify(
+    {
+      mcpServers: {
+        linkegringo: {
+          command: 'npx',
+          args: ['-y', 'linkegringo-mcp'],
+        },
+        'chrome-devtools': {
+          command: 'npx',
+          args: ['-y', 'chrome-devtools-mcp@latest', '--autoConnect'],
+        },
+      },
+    },
+    null,
+    2,
+  );
+
+  const codexConfigToml = `[mcp_servers.linkegringo]
+command = "npx"
+args = ["-y", "linkegringo-mcp"]
+
+[mcp_servers.chrome-devtools]
+command = "npx"
+args = ["-y", "chrome-devtools-mcp@latest", "--autoConnect"]`;
 
   return (
     <div
@@ -290,91 +319,41 @@ export function McpHubModal({ isOpen, onClose }: McpHubModalProps) {
             </div>
           </div>
 
-          {/* Card 2: One-Liner CLI Installer (No JSON editing needed) */}
-          <div className="p-4 rounded-xl bg-gradient-to-r from-cyan-950/40 via-[#0E1526] to-emerald-950/30 border border-cyan-500/30 space-y-3">
+          {/* Card 2: One-Liner CLI Terminal Setup (100% Focused on CLI) */}
+          <div className="p-4 rounded-xl bg-gradient-to-r from-cyan-950/40 via-[#0E1526] to-emerald-950/30 border border-cyan-500/30 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-cyan-400" />
+                <Terminal className="w-4 h-4 text-cyan-400" />
                 <h3 className="text-sm font-semibold text-white">
-                  2. Instalação em 1 Linha de Comando (Sem Editar JSON!)
+                  2. Instalação One-Line no Terminal (Foco CLI)
                 </h3>
               </div>
               <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                Recomendado
+                1 Clique
               </span>
             </div>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              Rode este comando no terminal da sua máquina. Ele detecta automaticamente o <strong>Claude Desktop</strong>, <strong>Google Antigravity</strong> e <strong>Cursor</strong> e grava as configurações com segurança sem você precisar abrir arquivos:
-            </p>
-            <div className="flex items-center justify-between p-2.5 rounded-lg bg-black/70 border border-cyan-500/30">
-              <code className="text-xs font-mono text-cyan-300 select-all">
-                npx -y linkegringo-mcp install
-              </code>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => copyToClipboard('npx -y linkegringo-mcp install', 'cmd-install')}
-                className="h-7 text-xs text-cyan-400 hover:text-cyan-300 gap-1"
-              >
-                {copiedKey === 'cmd-install' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{copiedKey === 'cmd-install' ? 'Copiado!' : 'Copiar'}</span>
-              </Button>
-            </div>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-slate-400 pt-1">
-              <div>
-                <strong>Claude Code CLI:</strong>{' '}
-                <button
-                  type="button"
-                  onClick={() =>
-                    copyToClipboard('claude mcp add linkegringo npx -y linkegringo-mcp', 'claude-cli')
-                  }
-                  className="font-mono text-cyan-300 hover:underline"
-                >
-                  {copiedKey === 'claude-cli' ? 'Copiado!' : 'claude mcp add linkegringo npx -y linkegringo-mcp'}
-                </button>
-              </div>
-              <div>
-                <strong>Goose CLI:</strong>{' '}
-                <button
-                  type="button"
-                  onClick={() =>
-                    copyToClipboard('goose configure --add-extension "npx -y linkegringo-mcp"', 'goose-cmd-top')
-                  }
-                  className="font-mono text-cyan-300 hover:underline"
-                >
-                  {copiedKey === 'goose-cmd-top' ? 'Copiado!' : 'goose configure --add-extension ...'}
-                </button>
-              </div>
-            </div>
-          </div>
 
-          {/* Card 3: AI Client Setup Tabs (Manual JSON Fallback) */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-medium text-slate-400">Ou configure manualmente via JSON:</h3>
-              <span className="text-xs text-slate-500">Selecione seu aplicativo:</span>
-            </div>
-
-            {/* Tab Selector */}
-            <div className="flex items-center gap-1 p-1 rounded-lg bg-[#0F172A] border border-[#1E293B]">
+            {/* CLI Sub-Tabs */}
+            <div className="flex items-center gap-1 p-1 rounded-lg bg-black/50 border border-cyan-500/20 overflow-x-auto">
               {(
                 [
-                  { id: 'claude', label: 'Claude Desktop' },
-                  { id: 'antigravity', label: 'Google Antigravity' },
-                  { id: 'cursor', label: 'Cursor AI' },
-                  { id: 'codex', label: 'Goose / Codex CLI' },
+                  { id: 'universal', label: '⚡ Universal (Auto)' },
+                  { id: 'agy', label: 'Antigravity (agy)' },
+                  { id: 'codex', label: 'Codex CLI' },
+                  { id: 'claude', label: 'Claude Code' },
+                  { id: 'goose', label: 'Goose CLI' },
                 ] as const
               ).map((tab) => (
                 <button
                   key={tab.id}
                   type="button"
                   onClick={() => {
-                    setActiveClientTab(tab.id);
-                    track('mcp_modal_opened', { clientTab: tab.id });
+                    setActiveCliTab(tab.id);
+                    track('mcp_modal_opened', { cliTab: tab.id });
                   }}
-                  className={`flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-all ${
-                    activeClientTab === tab.id
-                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow-sm'
+                  className={`py-1 px-2.5 rounded-md text-xs font-medium whitespace-nowrap transition-all ${
+                    activeCliTab === tab.id
+                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
                       : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
                   }`}
                 >
@@ -383,99 +362,323 @@ export function McpHubModal({ isOpen, onClose }: McpHubModalProps) {
               ))}
             </div>
 
-            {/* Tab Content: Claude Desktop */}
-            {activeClientTab === 'claude' && (
-              <div className="p-4 rounded-xl bg-[#0F172A]/70 border border-[#1E293B] space-y-3 animate-in fade-in">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs text-slate-300">
-                    Cole no arquivo <code className="font-mono text-cyan-300">claude_desktop_config.json</code>:
-                  </p>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => copyToClipboard(claudeConfigJson, 'claude-json')}
-                    className="h-7 text-xs text-cyan-400 hover:text-cyan-300 gap-1"
-                  >
-                    {copiedKey === 'claude-json' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>{copiedKey === 'claude-json' ? 'Copiado!' : 'Copiar Configuração'}</span>
-                  </Button>
-                </div>
-                <pre className="p-3.5 rounded-lg bg-black/60 text-slate-300 text-xs font-mono overflow-x-auto border border-[#1E293B]">
-                  {claudeConfigJson}
-                </pre>
-                <div className="text-[11px] text-slate-400 flex items-center gap-1.5">
-                  <Info className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                  <span>
-                    No macOS: <code className="font-mono text-slate-300">~/Library/Application Support/Claude/claude_desktop_config.json</code> | No Windows: <code className="font-mono text-slate-300">%APPDATA%\Claude\claude_desktop_config.json</code>
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* Tab Content: Antigravity */}
-            {activeClientTab === 'antigravity' && (
-              <div className="p-4 rounded-xl bg-[#0F172A]/70 border border-[#1E293B] space-y-3 animate-in fade-in">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs text-slate-300">
-                    Adicione ao seu arquivo de configuração de MCP no Antigravity:
-                  </p>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => copyToClipboard(antigravityConfigJson, 'antigravity-json')}
-                    className="h-7 text-xs text-cyan-400 hover:text-cyan-300 gap-1"
-                  >
-                    {copiedKey === 'antigravity-json' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>{copiedKey === 'antigravity-json' ? 'Copiado!' : 'Copiar Configuração'}</span>
-                  </Button>
-                </div>
-                <pre className="p-3.5 rounded-lg bg-black/60 text-slate-300 text-xs font-mono overflow-x-auto border border-[#1E293B]">
-                  {antigravityConfigJson}
-                </pre>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  Com o servidor ativo, o Antigravity pode auditar currículos em PDF, gerar bullets Google XYZ e simular buscas de recrutadores diretamente em conversas locais ou em conjunto com a skill <code className="text-cyan-300 font-mono">/browser</code>.
+            {/* CLI Tab Content: Universal */}
+            {activeCliTab === 'universal' && (
+              <div className="space-y-2 animate-in fade-in">
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Configura automaticamente <strong>Google Antigravity</strong>, <strong>Claude Desktop</strong> e <strong>Cursor AI</strong> na sua máquina (Linux, macOS, Windows) sem abrir nenhum arquivo:
                 </p>
-              </div>
-            )}
-
-            {/* Tab Content: Cursor AI */}
-            {activeClientTab === 'cursor' && (
-              <div className="p-4 rounded-xl bg-[#0F172A]/70 border border-[#1E293B] space-y-3 animate-in fade-in text-xs text-slate-300 leading-relaxed">
-                <p className="font-semibold text-white">Como configurar no Cursor AI:</p>
-                <ol className="list-decimal list-inside space-y-2 text-slate-400">
-                  <li>Abra as configurações do Cursor (<code className="text-slate-200">Ctrl + Shift + J</code> ou <code className="text-slate-200">Cmd + Shift + J</code>).</li>
-                  <li>Navegue até <strong>Features</strong> &gt; <strong>MCP Servers</strong> e clique em <strong>+ Add New MCP Server</strong>.</li>
-                  <li>Preencha os campos:
-                    <ul className="list-disc list-inside pl-4 mt-1 space-y-1 text-slate-300">
-                      <li><strong>Name</strong>: <code className="font-mono text-cyan-300">linkegringo</code></li>
-                      <li><strong>Type</strong>: <code className="font-mono text-cyan-300">command</code></li>
-                      <li><strong>Command</strong>: <code className="font-mono text-cyan-300">npx -y linkegringo-mcp</code></li>
-                    </ul>
-                  </li>
-                </ol>
-              </div>
-            )}
-
-            {/* Tab Content: Goose / Codex CLI */}
-            {activeClientTab === 'codex' && (
-              <div className="p-4 rounded-xl bg-[#0F172A]/70 border border-[#1E293B] space-y-3 animate-in fade-in">
-                <p className="text-xs text-slate-300">
-                  Execute no seu terminal para registrar o servidor diretamente:
-                </p>
-                <div className="flex items-center justify-between p-2.5 rounded bg-black/60 border border-[#1E293B]">
-                  <code className="text-xs font-mono text-cyan-300">
-                    goose configure --add-extension "npx -y linkegringo-mcp"
+                <div className="flex items-center justify-between p-2.5 rounded-lg bg-black/70 border border-cyan-500/30">
+                  <code className="text-xs font-mono text-cyan-300 select-all">
+                    npx -y linkegringo-mcp install
                   </code>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => copyToClipboard('npx -y linkegringo-mcp install', 'cmd-universal')}
+                    className="h-7 text-xs text-cyan-400 hover:text-cyan-300 gap-1"
+                  >
+                    {copiedKey === 'cmd-universal' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedKey === 'cmd-universal' ? 'Copiado!' : 'Copiar'}</span>
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* CLI Tab Content: Antigravity CLI */}
+            {activeCliTab === 'agy' && (
+              <div className="space-y-2.5 animate-in fade-in">
+                <p className="text-xs text-slate-300">
+                  Comando oficial para registrar no <strong>Antigravity CLI (<code className="font-mono text-cyan-300">agy</code>)</strong>:
+                </p>
+                <div className="flex items-center justify-between p-2.5 rounded-lg bg-black/70 border border-cyan-500/30">
+                  <code className="text-xs font-mono text-cyan-300 select-all">
+                    agy mcp add linkegringo npx -y linkegringo-mcp
+                  </code>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => copyToClipboard('agy mcp add linkegringo npx -y linkegringo-mcp', 'cmd-agy')}
+                    className="h-7 text-xs text-cyan-400 hover:text-cyan-300 gap-1"
+                  >
+                    {copiedKey === 'cmd-agy' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedKey === 'cmd-agy' ? 'Copiado!' : 'Copiar'}</span>
+                  </Button>
+                </div>
+                <div className="flex items-center justify-between p-2 rounded bg-black/40 border border-[#1E293B] text-[11px]">
+                  <span className="text-slate-400 font-mono">
+                    agy mcp add chrome-devtools npx -y chrome-devtools-mcp@latest --autoConnect
+                  </span>
                   <button
                     type="button"
                     onClick={() =>
-                      copyToClipboard('goose configure --add-extension "npx -y linkegringo-mcp"', 'goose-cmd')
+                      copyToClipboard('agy mcp add chrome-devtools npx -y chrome-devtools-mcp@latest --autoConnect', 'cmd-agy-cdp')
                     }
-                    className="text-slate-400 hover:text-white text-xs pl-2"
+                    className="text-cyan-400 hover:text-cyan-300 pl-2 shrink-0"
                   >
-                    {copiedKey === 'goose-cmd' ? 'Copiado!' : 'Copiar'}
+                    {copiedKey === 'cmd-agy-cdp' ? 'Copiado!' : 'Copiar Chrome DevTools'}
                   </button>
                 </div>
+              </div>
+            )}
+
+            {/* CLI Tab Content: Codex CLI */}
+            {activeCliTab === 'codex' && (
+              <div className="space-y-2.5 animate-in fade-in">
+                <p className="text-xs text-slate-300">
+                  Comando oficial para registrar no <strong>Codex CLI (OpenAI)</strong>:
+                </p>
+                <div className="flex items-center justify-between p-2.5 rounded-lg bg-black/70 border border-cyan-500/30">
+                  <code className="text-xs font-mono text-cyan-300 select-all">
+                    codex mcp add linkegringo -- npx -y linkegringo-mcp
+                  </code>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => copyToClipboard('codex mcp add linkegringo -- npx -y linkegringo-mcp', 'cmd-codex')}
+                    className="h-7 text-xs text-cyan-400 hover:text-cyan-300 gap-1"
+                  >
+                    {copiedKey === 'cmd-codex' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedKey === 'cmd-codex' ? 'Copiado!' : 'Copiar'}</span>
+                  </Button>
+                </div>
+                <div className="flex items-center justify-between p-2 rounded bg-black/40 border border-[#1E293B] text-[11px]">
+                  <span className="text-slate-400 font-mono">
+                    codex mcp add chrome-devtools -- npx -y chrome-devtools-mcp@latest --autoConnect
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      copyToClipboard('codex mcp add chrome-devtools -- npx -y chrome-devtools-mcp@latest --autoConnect', 'cmd-codex-cdp')
+                    }
+                    className="text-cyan-400 hover:text-cyan-300 pl-2 shrink-0"
+                  >
+                    {copiedKey === 'cmd-codex-cdp' ? 'Copiado!' : 'Copiar Chrome DevTools'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* CLI Tab Content: Claude Code CLI */}
+            {activeCliTab === 'claude' && (
+              <div className="space-y-2.5 animate-in fade-in">
+                <p className="text-xs text-slate-300">
+                  Comando oficial para registrar no <strong>Claude Code CLI</strong>:
+                </p>
+                <div className="flex items-center justify-between p-2.5 rounded-lg bg-black/70 border border-cyan-500/30">
+                  <code className="text-xs font-mono text-cyan-300 select-all">
+                    claude mcp add linkegringo npx -y linkegringo-mcp
+                  </code>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => copyToClipboard('claude mcp add linkegringo npx -y linkegringo-mcp', 'cmd-claude-cli')}
+                    className="h-7 text-xs text-cyan-400 hover:text-cyan-300 gap-1"
+                  >
+                    {copiedKey === 'cmd-claude-cli' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedKey === 'cmd-claude-cli' ? 'Copiado!' : 'Copiar'}</span>
+                  </Button>
+                </div>
+                <div className="flex items-center justify-between p-2 rounded bg-black/40 border border-[#1E293B] text-[11px]">
+                  <span className="text-slate-400 font-mono">
+                    claude mcp add chrome-devtools npx -y chrome-devtools-mcp@latest --autoConnect
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      copyToClipboard('claude mcp add chrome-devtools npx -y chrome-devtools-mcp@latest --autoConnect', 'cmd-claude-cdp')
+                    }
+                    className="text-cyan-400 hover:text-cyan-300 pl-2 shrink-0"
+                  >
+                    {copiedKey === 'cmd-claude-cdp' ? 'Copiado!' : 'Copiar Chrome DevTools'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* CLI Tab Content: Goose CLI */}
+            {activeCliTab === 'goose' && (
+              <div className="space-y-2 animate-in fade-in">
+                <p className="text-xs text-slate-300">
+                  Comando oficial para registrar a extensão no <strong>Goose CLI (Block)</strong>:
+                </p>
+                <div className="flex items-center justify-between p-2.5 rounded-lg bg-black/70 border border-cyan-500/30">
+                  <code className="text-xs font-mono text-cyan-300 select-all">
+                    goose configure --add-extension "npx -y linkegringo-mcp"
+                  </code>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      copyToClipboard('goose configure --add-extension "npx -y linkegringo-mcp"', 'cmd-goose')
+                    }
+                    className="h-7 text-xs text-cyan-400 hover:text-cyan-300 gap-1"
+                  >
+                    {copiedKey === 'cmd-goose' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedKey === 'cmd-goose' ? 'Copiado!' : 'Copiar'}</span>
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Accordion Fechado por Padrão: Configuração Manual via Arquivo (JSON / TOML) */}
+          <div className="rounded-xl border border-[#1E293B] bg-[#0A0E1A] overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setShowManualConfig(!showManualConfig)}
+              className="w-full flex items-center justify-between p-3.5 hover:bg-[#0F172A] transition-colors text-left"
+            >
+              <div className="flex items-center gap-2.5">
+                <FileCode className="w-4 h-4 text-slate-400" />
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold text-slate-300">
+                      Configuração Manual via Arquivo (JSON / TOML)
+                    </span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">
+                      Opcional
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    Abra aqui apenas se preferir editar arquivos de configuração manualmente em vez do terminal
+                  </p>
+                </div>
+              </div>
+              <ChevronDown
+                className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${
+                  showManualConfig ? 'rotate-180 text-cyan-400' : ''
+                }`}
+              />
+            </button>
+
+            {showManualConfig && (
+              <div className="p-4 border-t border-[#1E293B] space-y-3 bg-[#0B0F19] animate-in fade-in">
+                {/* Tab Selector */}
+                <div className="flex items-center gap-1 p-1 rounded-lg bg-[#0F172A] border border-[#1E293B]">
+                  {(
+                    [
+                      { id: 'claude', label: 'Claude Desktop' },
+                      { id: 'antigravity', label: 'Google Antigravity' },
+                      { id: 'cursor', label: 'Cursor AI' },
+                      { id: 'codex', label: 'Codex (TOML)' },
+                    ] as const
+                  ).map((tab) => (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => {
+                        setActiveClientTab(tab.id);
+                        track('mcp_modal_opened', { clientTab: tab.id });
+                      }}
+                      className={`flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-all ${
+                        activeClientTab === tab.id
+                          ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow-sm'
+                          : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Tab Content: Claude Desktop */}
+                {activeClientTab === 'claude' && (
+                  <div className="p-4 rounded-xl bg-[#0F172A]/70 border border-[#1E293B] space-y-3 animate-in fade-in">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-slate-300">
+                        Arquivo: <code className="font-mono text-cyan-300">claude_desktop_config.json</code>
+                      </p>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => copyToClipboard(claudeConfigJson, 'claude-json')}
+                        className="h-7 text-xs text-cyan-400 hover:text-cyan-300 gap-1"
+                      >
+                        {copiedKey === 'claude-json' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                        <span>{copiedKey === 'claude-json' ? 'Copiado!' : 'Copiar Configuração'}</span>
+                      </Button>
+                    </div>
+                    <pre className="p-3.5 rounded-lg bg-black/60 text-slate-300 text-xs font-mono overflow-x-auto border border-[#1E293B]">
+                      {claudeConfigJson}
+                    </pre>
+                    <div className="text-[11px] text-slate-400 flex items-center gap-1.5">
+                      <Info className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                      <span>
+                        macOS: <code className="font-mono text-slate-300">~/Library/Application Support/Claude/claude_desktop_config.json</code> | Linux: <code className="font-mono text-slate-300">~/.config/Claude/claude_desktop_config.json</code>
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Tab Content: Antigravity */}
+                {activeClientTab === 'antigravity' && (
+                  <div className="p-4 rounded-xl bg-[#0F172A]/70 border border-[#1E293B] space-y-3 animate-in fade-in">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-slate-300">
+                        Arquivo: <code className="font-mono text-cyan-300">~/.gemini/config/mcp_config.json</code>
+                      </p>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => copyToClipboard(antigravityConfigJson, 'antigravity-json')}
+                        className="h-7 text-xs text-cyan-400 hover:text-cyan-300 gap-1"
+                      >
+                        {copiedKey === 'antigravity-json' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                        <span>{copiedKey === 'antigravity-json' ? 'Copiado!' : 'Copiar Configuração'}</span>
+                      </Button>
+                    </div>
+                    <pre className="p-3.5 rounded-lg bg-black/60 text-slate-300 text-xs font-mono overflow-x-auto border border-[#1E293B]">
+                      {antigravityConfigJson}
+                    </pre>
+                  </div>
+                )}
+
+                {/* Tab Content: Cursor AI */}
+                {activeClientTab === 'cursor' && (
+                  <div className="p-4 rounded-xl bg-[#0F172A]/70 border border-[#1E293B] space-y-3 animate-in fade-in">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-slate-300">
+                        Arquivo: <code className="font-mono text-cyan-300">~/.cursor/mcp.json</code>
+                      </p>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => copyToClipboard(cursorConfigJson, 'cursor-json')}
+                        className="h-7 text-xs text-cyan-400 hover:text-cyan-300 gap-1"
+                      >
+                        {copiedKey === 'cursor-json' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                        <span>{copiedKey === 'cursor-json' ? 'Copiado!' : 'Copiar Configuração'}</span>
+                      </Button>
+                    </div>
+                    <pre className="p-3.5 rounded-lg bg-black/60 text-slate-300 text-xs font-mono overflow-x-auto border border-[#1E293B]">
+                      {cursorConfigJson}
+                    </pre>
+                  </div>
+                )}
+
+                {/* Tab Content: Codex CLI (TOML) */}
+                {activeClientTab === 'codex' && (
+                  <div className="p-4 rounded-xl bg-[#0F172A]/70 border border-[#1E293B] space-y-3 animate-in fade-in">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-slate-300">
+                        Arquivo: <code className="font-mono text-cyan-300">~/.codex/config.toml</code>
+                      </p>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => copyToClipboard(codexConfigToml, 'codex-toml')}
+                        className="h-7 text-xs text-cyan-400 hover:text-cyan-300 gap-1"
+                      >
+                        {copiedKey === 'codex-toml' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                        <span>{copiedKey === 'codex-toml' ? 'Copiado!' : 'Copiar TOML'}</span>
+                      </Button>
+                    </div>
+                    <pre className="p-3.5 rounded-lg bg-black/60 text-slate-300 text-xs font-mono overflow-x-auto border border-[#1E293B]">
+                      {codexConfigToml}
+                    </pre>
+                  </div>
+                )}
               </div>
             )}
           </div>

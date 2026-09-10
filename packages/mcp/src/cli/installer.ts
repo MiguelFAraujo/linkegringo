@@ -131,7 +131,9 @@ export function runInstaller(): InstallResult[] {
   }
 
   console.log('---');
-  console.log('💡 Dica para agentes de linha de comando (CLI):');
+  console.log('💡 Comandos One-Line diretos para agentes de linha de comando (CLI):');
+  console.log('   • Antigravity CLI: agy mcp add linkegringo npx -y linkegringo-mcp');
+  console.log('   • Codex CLI:       codex mcp add linkegringo -- npx -y linkegringo-mcp');
   console.log('   • Claude Code CLI: claude mcp add linkegringo npx -y linkegringo-mcp');
   console.log('   • Goose CLI:       goose configure --add-extension "npx -y linkegringo-mcp"');
   console.log('================================================');

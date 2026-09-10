@@ -102,7 +102,7 @@ export interface TelemetryEventMap {
   checklist_toggled: { itemIndex: number; checked: boolean; itemKey?: string; totalCompleted?: number };
 
   // MCP & AI Agents Hub
-  mcp_modal_opened: { clientTab?: string } | undefined;
+  mcp_modal_opened: { clientTab?: string; cliTab?: string } | undefined;
   mcp_connection_tested: { isRunning: boolean; port: number } | undefined;
 
   // System Health / API Telemetry
