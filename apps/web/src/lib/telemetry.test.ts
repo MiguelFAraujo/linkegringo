@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach, vi, afterEach } from 'vitest';
-import { track, getRecentEvents, clearTelemetry, toScoreBand } from './telemetry';
+import { track, getRecentEvents, clearTelemetry, toScoreBand, initAnalytics } from './telemetry';
 
 describe('Client-Side BYOK Telemetry & Analytics', () => {
   beforeEach(() => {
@@ -97,6 +97,29 @@ describe('Client-Side BYOK Telemetry & Analytics', () => {
       expect(fetchSpy).not.toHaveBeenCalled();
     } finally {
       globalThis.fetch = originalFetch;
+    }
+  });
+
+  it('injects Umami script tag when VITE_UMAMI_WEBSITE_ID is configured', () => {
+    const existing = document.querySelector('script[data-website-id]');
+    if (existing) existing.remove();
+
+    vi.stubEnv('VITE_UMAMI_WEBSITE_ID', 'test-website-id-12345');
+    try {
+      initAnalytics();
+      const injected = document.querySelector('script[data-website-id="test-website-id-12345"]') as HTMLScriptElement;
+      expect(injected).not.toBeNull();
+      expect(injected.src).toBe('https://cloud.umami.is/script.js');
+      expect(injected.defer).toBe(true);
+
+      // Verify idempotency (no duplicate script tags)
+      initAnalytics();
+      const allScripts = document.querySelectorAll('script[data-website-id="test-website-id-12345"]');
+      expect(allScripts.length).toBe(1);
+    } finally {
+      vi.unstubAllEnvs();
+      const script = document.querySelector('script[data-website-id]');
+      if (script) script.remove();
     }
   });
 });

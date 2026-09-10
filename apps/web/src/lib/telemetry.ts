@@ -162,3 +162,25 @@ export function clearTelemetry(): void {
   eventLog.length = 0;
 }
 
+/**
+ * Injects Umami analytics script conditionally if VITE_UMAMI_WEBSITE_ID is provided.
+ * Safe for SSR, dev mode, and test environments.
+ */
+export function initAnalytics(): void {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+
+  const websiteId = import.meta.env.VITE_UMAMI_WEBSITE_ID;
+  if (!websiteId) return;
+
+  // Prevent duplicate script injection
+  if (document.querySelector('script[data-website-id]')) return;
+
+  const scriptSrc = import.meta.env.VITE_UMAMI_SRC || 'https://cloud.umami.is/script.js';
+  const script = document.createElement('script');
+  script.defer = true;
+  script.src = scriptSrc;
+  script.setAttribute('data-website-id', websiteId);
+
+  document.head.appendChild(script);
+}
+
