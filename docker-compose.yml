@@ -1,0 +1,14 @@
+version: "3.8"
+
+services:
+  linkegringo:
+    build: .
+    container_name: linkegringo
+    restart: unless-stopped
+    ports:
+      - "8107:80"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:80/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
