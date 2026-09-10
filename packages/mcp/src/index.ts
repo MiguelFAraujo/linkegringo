@@ -13,7 +13,7 @@ async function main() {
     process.argv.includes('setup') ||
     process.argv.includes('--install')
   ) {
-    runInstaller();
+    runInstaller(process.argv);
     return;
   }
 

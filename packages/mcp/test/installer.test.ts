@@ -45,4 +45,26 @@ describe('MCP CLI Installer', () => {
     expect(data.mcpServers.linkegringo).toBeDefined();
     expect(data.mcpServers['chrome-devtools']).toBeDefined();
   });
+
+  it('parses CLI arguments correctly', async () => {
+    const { parseArgs } = await import('../src/cli/installer.js');
+    expect(parseArgs(['install', '--all'])).toEqual({ all: true });
+    expect(parseArgs(['install', '--local'])).toEqual({ local: true });
+    expect(parseArgs(['install', '--client=cursor'])).toEqual({ client: 'cursor' });
+    expect(parseArgs(['install', '--force'])).toEqual({ all: true });
+  });
+
+  it('discovers supported MCP targets with detection metadata', async () => {
+    const { getMcpConfigsForSystem } = await import('../src/cli/installer.js');
+    const targets = getMcpConfigsForSystem();
+    expect(targets.length).toBeGreaterThanOrEqual(3);
+    const ids = targets.map((t) => t.id);
+    expect(ids).toContain('antigravity');
+    expect(ids).toContain('claude');
+    expect(ids).toContain('cursor');
+    for (const t of targets) {
+      expect(typeof t.detected).toBe('boolean');
+      expect(typeof t.configPath).toBe('string');
+    }
+  });
 });
